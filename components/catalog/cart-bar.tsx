@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { ShoppingCart } from "lucide-react"
 
 type Props = {
@@ -16,8 +17,8 @@ export function CartBar({ count, total }: Props) {
         visible ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-full opacity-0"
       }`}
     >
-      <button
-        type="button"
+      <Link
+        href="/checkout"
         className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 rounded-2xl bg-emerald-600 px-4 py-3.5 text-white shadow-lg shadow-emerald-600/30 transition active:scale-[0.99]"
       >
         <span className="flex items-center gap-3">
@@ -41,7 +42,7 @@ export function CartBar({ count, total }: Props) {
             ${total.toFixed(2)}
           </span>
         </span>
-      </button>
+      </Link>
     </div>
   )
 }

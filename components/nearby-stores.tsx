@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { Star, Clock, Bike, BadgePercent, Heart } from "lucide-react"
 
 type Store = {
@@ -93,12 +94,12 @@ export function NearbyStores() {
               </div>
 
               {i === 0 && (
-                <button
-                  type="button"
-                  className="mt-4 w-full rounded-2xl bg-emerald-600 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 active:scale-[0.99]"
+                <Link
+                  href="/catalogo"
+                  className="mt-4 block w-full rounded-2xl bg-emerald-600 py-3 text-center text-sm font-semibold text-white transition hover:bg-emerald-700 active:scale-[0.99]"
                 >
                   Comprar ahora
-                </button>
+                </Link>
               )}
             </div>
           </article>
