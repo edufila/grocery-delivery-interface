@@ -18,7 +18,7 @@ const stores: Store[] = [
     name: "Gran Abasto Girasol",
     tag: "Ahorro Mayorista",
     eta: "35-45 min",
-    fee: "Bs. 15,00",
+    fee: "Bs. 12,50",
     rating: "4.8",
     reviews: "2.4k",
     image: "/images/store-girasol.png",
