@@ -93,7 +93,11 @@ export default async function PerfilPage() {
 
         <section className="mt-4 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm shadow-gray-100">
           <h2 className="mb-4 text-base font-semibold text-gray-900">Tus datos</h2>
-          <ProfileForm userId={user.id} profile={profile} />
+          <ProfileForm
+            userId={user.id}
+            profile={profile}
+            nameLocked={profile?.role === "shopper"}
+          />
         </section>
 
         <section className="mt-4 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm shadow-gray-100">

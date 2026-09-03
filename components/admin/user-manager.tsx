@@ -11,6 +11,7 @@ export type AdminUser = {
   id: string
   email: string | null
   full_name: string | null
+  avatar_url: string | null
   handle: string | null
   role: Role
 }
@@ -37,6 +38,12 @@ export function UserManager({ users, meId }: { users: AdminUser[]; meId: string 
   const [handles, setHandles] = useState<Record<string, string>>(
     Object.fromEntries(users.map((u) => [u.id, u.handle ?? ""])),
   )
+  const [names, setNames] = useState<Record<string, string>>(
+    Object.fromEntries(users.map((u) => [u.id, u.full_name ?? ""])),
+  )
+  const [avatars, setAvatars] = useState<Record<string, string>>(
+    Object.fromEntries(users.map((u) => [u.id, u.avatar_url ?? ""])),
+  )
 
   const term = query.trim().toLowerCase()
   const shown = term
@@ -54,6 +61,22 @@ export function UserManager({ users, meId }: { users: AdminUser[]; meId: string 
     const { error: rpcError } = await createClient().rpc("admin_set_role", {
       p_user: user.id,
       p_role: role,
+    })
+    setBusyId(null)
+    if (rpcError) {
+      setError(rpcError.message)
+      return
+    }
+    router.refresh()
+  }
+
+  async function saveIdentity(user: AdminUser) {
+    setBusyId(user.id)
+    setError("")
+    const { error: rpcError } = await createClient().rpc("admin_set_identity", {
+      p_user: user.id,
+      p_full_name: names[user.id] ?? "",
+      p_avatar_url: avatars[user.id] ?? "",
     })
     setBusyId(null)
     if (rpcError) {
@@ -150,7 +173,53 @@ export function UserManager({ users, meId }: { users: AdminUser[]; meId: string 
               </div>
 
               {esShopper && (
-                <div className="mt-3 flex items-center gap-2">
+                <div className="mt-3 rounded-xl bg-gray-50 p-3">
+                  <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                    Como lo ve el cliente
+                  </p>
+
+                  <div className="mt-2 flex items-center gap-3">
+                    {avatars[user.id] ? (
+                      <img
+                        src={avatars[user.id]}
+                        alt=""
+                        className="h-11 w-11 shrink-0 rounded-full bg-gray-200 object-cover"
+                      />
+                    ) : (
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-200 text-xs text-gray-500">
+                        sin foto
+                      </span>
+                    )}
+                    <input
+                      value={names[user.id] ?? ""}
+                      onChange={(event) => setNames({ ...names, [user.id]: event.target.value })}
+                      placeholder="Nombre visible"
+                      aria-label="Nombre visible del shopper"
+                      className="h-11 min-w-0 flex-1 rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500"
+                    />
+                  </div>
+
+                  <input
+                    value={avatars[user.id] ?? ""}
+                    onChange={(event) => setAvatars({ ...avatars, [user.id]: event.target.value })}
+                    placeholder="URL de la foto: /images/shoppers/andres.jpg"
+                    aria-label="Foto del shopper"
+                    className="mt-2 h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => void saveIdentity(user)}
+                    disabled={busyId === user.id}
+                    className="mt-2 flex h-11 w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-semibold text-white transition active:scale-[0.99] disabled:bg-gray-200 disabled:text-gray-400"
+                  >
+                    Guardar nombre y foto
+                  </button>
+                </div>
+              )}
+
+              {esShopper && (
+                <div className="mt-2 flex items-center gap-2">
                   <span className="relative flex-1">
                     <AtSign
                       className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"

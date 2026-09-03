@@ -6,6 +6,7 @@ import { ArrowLeft, Check, MapPin } from "lucide-react"
 import { OrderLiveRefresh } from "@/components/live-refresh"
 import { DeliveryCodeCard } from "@/components/tracking/delivery-code-card"
 import { OrderMap } from "@/components/tracking/order-map"
+import { ShopperCard, type OrderShopper } from "@/components/tracking/shopper-card"
 import { ShopperChat } from "@/components/tracking/shopper-chat"
 import {
   formatMoney,
@@ -55,6 +56,10 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
   const currentStep = STATUS_FLOW.indexOf(order.status)
   const cancelled = order.status === "cancelado"
 
+  // Solo devuelve nombre, foto y @: no expone teléfono ni correo del shopper.
+  const { data: shopperRows } = await supabase.rpc("order_shopper", { p_order_id: order.id })
+  const shopper = (shopperRows as OrderShopper[] | null)?.[0] ?? null
+
   // Solo el dueño del pedido puede leerlo: el shopper no tiene política acá.
   const { data: deliveryCode } = await supabase
     .from("order_delivery_codes")
@@ -102,6 +107,8 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
             route={order.status === "en_camino"}
           />
         )}
+
+        {shopper && !cancelled && <ShopperCard shopper={shopper} />}
 
         {deliveryCode && order.status !== "entregado" && !cancelled && (
           <DeliveryCodeCard

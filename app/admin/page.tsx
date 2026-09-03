@@ -73,7 +73,7 @@ export default async function AdminPage() {
         >(),
       supabase
         .from("profiles")
-        .select("id, email, full_name, handle, role")
+        .select("id, email, full_name, avatar_url, handle, role")
         .order("role")
         .returns<AdminUser[]>(),
     ])

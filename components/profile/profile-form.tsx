@@ -10,6 +10,8 @@ import type { Profile } from "@/lib/profile"
 type Props = {
   userId: string
   profile: Profile | null
+  /** El nombre del shopper lo asigna la empresa: la base rechaza el cambio. */
+  nameLocked?: boolean
 }
 
 const MESES = [
@@ -43,7 +45,7 @@ function isRealDate(year: string, month: string, day: string) {
   )
 }
 
-export function ProfileForm({ userId, profile }: Props) {
+export function ProfileForm({ userId, profile, nameLocked = false }: Props) {
   const router = useRouter()
   const supabase = createClient()
 
@@ -86,12 +88,16 @@ export function ProfileForm({ userId, profile }: Props) {
     setError("")
     setSaved(false)
 
-    const { error: saveError } = await supabase.from("profiles").upsert({
-      id: userId,
-      full_name: fullName.trim(),
-      birth_date: birthDate || null,
-      phone: phone.trim() || null,
-    })
+    // Si el nombre está bloqueado ni siquiera lo mandamos: la base lo rechaza
+    // y el error se llevaría puesto el guardado del teléfono y la fecha.
+    const { error: saveError } = await supabase
+      .from("profiles")
+      .update({
+        ...(nameLocked ? {} : { full_name: fullName.trim() }),
+        birth_date: birthDate || null,
+        phone: phone.trim() || null,
+      })
+      .eq("id", userId)
 
     setSaving(false)
 
@@ -124,8 +130,15 @@ export function ProfileForm({ userId, profile }: Props) {
           autoComplete="name"
           enterKeyHint="next"
           placeholder="María González"
-          className="mt-2 h-14 w-full rounded-2xl border border-gray-200 bg-white px-4 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
+          disabled={nameLocked}
+          className="mt-2 h-14 w-full rounded-2xl border border-gray-200 bg-white px-4 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 disabled:bg-gray-50 disabled:text-gray-500"
         />
+        {nameLocked && (
+          <p className="mt-1.5 text-xs leading-relaxed text-gray-500">
+            Tu nombre y tu foto los asigna el abasto: son los que ve el cliente cuando le llevás el
+            pedido.
+          </p>
+        )}
       </div>
 
       <fieldset>
