@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { redirect } from "next/navigation"
-import { ChevronRight, LogOut, Mail, PackageSearch } from "lucide-react"
+import { ChevronRight, LogOut, Mail, PackageSearch, SlidersHorizontal } from "lucide-react"
 
 import { BottomNav } from "@/components/bottom-nav"
 import { AddressManager } from "@/components/profile/address-manager"
@@ -40,6 +40,7 @@ export default async function PerfilPage() {
     .maybeSingle<Profile & { role?: Role }>()
 
   const esShopper = !!profile?.role && SHOPPER_ROLES.includes(profile.role)
+  const esAdmin = profile?.role === "admin" || profile?.role === "dev"
 
   const { data: addresses } = await supabase
     .from("addresses")
@@ -99,6 +100,24 @@ export default async function PerfilPage() {
           <h2 className="mb-4 text-base font-semibold text-gray-900">Direcciones de entrega</h2>
           <AddressManager userId={user.id} addresses={addresses ?? []} />
         </section>
+
+        {esAdmin && (
+          <Link
+            href="/admin"
+            className="mt-4 flex items-center gap-3 rounded-3xl border border-gray-200 bg-white p-5 transition active:scale-[0.99]"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100">
+              <SlidersHorizontal className="h-5 w-5 text-gray-600" aria-hidden="true" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold text-gray-900">Administración</span>
+              <span className="block text-sm text-gray-500">
+                Tiendas, precios, tarifas y pedidos
+              </span>
+            </span>
+            <ChevronRight className="h-5 w-5 shrink-0 text-gray-400" aria-hidden="true" />
+          </Link>
+        )}
 
         {esShopper && (
           <Link
