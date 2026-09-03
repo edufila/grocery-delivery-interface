@@ -3,7 +3,9 @@ import { redirect } from "next/navigation"
 import { LogOut, Mail } from "lucide-react"
 
 import { BottomNav } from "@/components/bottom-nav"
+import { AddressManager } from "@/components/profile/address-manager"
 import { ProfileForm } from "@/components/profile/profile-form"
+import type { Address } from "@/lib/orders"
 import { isProfileComplete, type Profile } from "@/lib/profile"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/server"
@@ -35,6 +37,14 @@ export default async function PerfilPage() {
     .select("*")
     .eq("id", user.id)
     .maybeSingle<Profile>()
+
+  const { data: addresses } = await supabase
+    .from("addresses")
+    .select("id, label, detail, is_default")
+    .eq("user_id", user.id)
+    .order("is_default", { ascending: false })
+    .order("created_at", { ascending: true })
+    .returns<Address[]>()
 
   const displayName = profile?.full_name || user.email || "Mi cuenta"
   const avatarUrl = user.user_metadata?.avatar_url as string | undefined
@@ -80,6 +90,11 @@ export default async function PerfilPage() {
         <section className="mt-4 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm shadow-gray-100">
           <h2 className="mb-4 text-base font-semibold text-gray-900">Tus datos</h2>
           <ProfileForm userId={user.id} profile={profile} />
+        </section>
+
+        <section className="mt-4 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm shadow-gray-100">
+          <h2 className="mb-4 text-base font-semibold text-gray-900">Direcciones de entrega</h2>
+          <AddressManager userId={user.id} addresses={addresses ?? []} />
         </section>
 
         <form action="/auth/sign-out" method="post" className="mt-6">

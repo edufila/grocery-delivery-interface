@@ -1,25 +1,73 @@
 "use client"
 
-import { useMemo, useState } from "react"
-import { ArrowLeft, ShoppingBag, ShoppingCart } from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
+import { ArrowLeft, Loader2, MapPin, ShoppingBag, ShoppingCart } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+
 import { CartItemList, type CartLine } from "./cart-item-list"
 import { SubstitutionOptions } from "./substitution-options"
 import { PaymentMethods } from "./payment-methods"
 import { OrderSummary } from "./order-summary"
 import { useCart } from "@/lib/cart"
+import type { Address } from "@/lib/orders"
+import { createClient } from "@/lib/supabase/client"
+import { isSupabaseConfigured } from "@/lib/supabase/config"
 
 const SERVICE_FEE = 1.99
 const DELIVERY_FEE = 3.5
 
+type Session = {
+  loading: boolean
+  userId: string | null
+  address: Address | null
+}
+
 export function CheckoutView() {
+  const router = useRouter()
   const { lines, subtotal, ready, add, removeOne, removeAll, clear } = useCart()
 
   const [substitution, setSubstitution] = useState("shopper")
   const [payment, setPayment] = useState("pago-movil")
-  const [placed, setPlaced] = useState(false)
+  const [session, setSession] = useState<Session>({ loading: true, userId: null, address: null })
+  const [placing, setPlacing] = useState(false)
+  const [error, setError] = useState("")
 
-  // El carrito guarda ids y cantidades; la lista quiere una fila armada.
+  useEffect(() => {
+    if (!isSupabaseConfigured) {
+      setSession({ loading: false, userId: null, address: null })
+      return
+    }
+
+    let cancelled = false
+
+    void (async () => {
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (!user) {
+        if (!cancelled) setSession({ loading: false, userId: null, address: null })
+        return
+      }
+
+      const { data } = await supabase
+        .from("addresses")
+        .select("id, label, detail, is_default")
+        .eq("user_id", user.id)
+        .order("is_default", { ascending: false })
+        .limit(1)
+        .maybeSingle<Address>()
+
+      if (!cancelled) setSession({ loading: false, userId: user.id, address: data ?? null })
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const items = useMemo<CartLine[]>(
     () =>
       lines.map(({ product, qty }) => ({
@@ -35,10 +83,61 @@ export function CheckoutView() {
 
   const hasItems = items.length > 0
   const total = subtotal + (hasItems ? SERVICE_FEE + DELIVERY_FEE : 0)
+  const canPlace = hasItems && !!session.userId && !!session.address && !placing
 
-  function placeOrder() {
-    setPlaced(true)
+  async function placeOrder() {
+    if (!session.userId || !session.address || placing) return
+
+    setPlacing(true)
+    setError("")
+
+    const supabase = createClient()
+
+    const { data: order, error: orderError } = await supabase
+      .from("orders")
+      .insert({
+        user_id: session.userId,
+        address_label: session.address.label,
+        address_detail: session.address.detail,
+        substitution_policy: substitution,
+        payment_method: payment,
+        subtotal,
+        service_fee: SERVICE_FEE,
+        delivery_fee: DELIVERY_FEE,
+        total,
+      })
+      .select("id, code")
+      .single<{ id: string; code: string }>()
+
+    if (orderError || !order) {
+      setPlacing(false)
+      setError(
+        orderError?.message.includes("does not exist")
+          ? "Falta correr la migración de pedidos en Supabase."
+          : "No pudimos registrar el pedido. Intentá de nuevo.",
+      )
+      return
+    }
+
+    const { error: itemsError } = await supabase.from("order_items").insert(
+      lines.map(({ product, qty }) => ({
+        order_id: order.id,
+        product_id: product.id,
+        name: product.name,
+        unit: product.unit,
+        unit_price: product.price,
+        qty,
+      })),
+    )
+
+    if (itemsError) {
+      setPlacing(false)
+      setError("El pedido se creó pero no pudimos guardar los productos. Escribinos.")
+      return
+    }
+
     clear()
+    router.push(`/pedidos/${order.code}`)
   }
 
   return (
@@ -55,29 +154,7 @@ export function CheckoutView() {
       </header>
 
       <main className="mx-auto max-w-lg space-y-4 px-4 py-4">
-        {placed ? (
-          <section className="rounded-3xl border border-emerald-100 bg-white p-6 text-center">
-            <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50">
-              <ShoppingBag className="h-7 w-7 text-emerald-600" aria-hidden="true" />
-            </span>
-            <h2 className="mt-4 text-xl font-semibold text-gray-900">¡Pedido realizado!</h2>
-            <p className="mt-2 text-sm leading-relaxed text-gray-500">
-              Tu shopper ya está armando la compra. Podés seguirla en tiempo real.
-            </p>
-            <Link
-              href="/tracking"
-              className="mt-6 flex h-14 w-full items-center justify-center rounded-2xl bg-emerald-600 text-base font-semibold text-white transition active:scale-[0.99]"
-            >
-              Seguir mi pedido
-            </Link>
-            <Link
-              href="/catalogo"
-              className="mt-3 flex h-14 w-full items-center justify-center rounded-2xl border border-gray-200 bg-white text-base font-semibold text-gray-700 transition active:scale-[0.99]"
-            >
-              Seguir comprando
-            </Link>
-          </section>
-        ) : !ready ? (
+        {!ready ? (
           <p className="py-16 text-center text-sm text-gray-400">Cargando tu carrito...</p>
         ) : !hasItems ? (
           <section className="rounded-3xl border border-gray-100 bg-white p-8 text-center">
@@ -97,29 +174,101 @@ export function CheckoutView() {
           </section>
         ) : (
           <>
+            <DeliveryCard session={session} />
             <CartItemList items={items} onInc={add} onDec={removeOne} onRemove={removeAll} />
             <SubstitutionOptions value={substitution} onChange={setSubstitution} />
             <PaymentMethods value={payment} onChange={setPayment} />
             <OrderSummary subtotal={subtotal} serviceFee={SERVICE_FEE} deliveryFee={DELIVERY_FEE} />
+            {error && (
+              <p role="alert" className="text-sm text-rose-600">
+                {error}
+              </p>
+            )}
           </>
         )}
       </main>
 
-      {!placed && hasItems && (
+      {hasItems && (
         <div className="fixed inset-x-0 bottom-0 z-20 border-t border-gray-100 bg-white/95 p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] backdrop-blur">
           <div className="mx-auto max-w-lg">
             <button
               type="button"
-              onClick={placeOrder}
-              className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-6 text-base font-semibold text-white shadow-lg shadow-emerald-600/25 transition active:scale-[0.99]"
+              onClick={() => void placeOrder()}
+              disabled={!canPlace}
+              className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-6 text-base font-semibold text-white shadow-lg shadow-emerald-600/25 transition active:scale-[0.99] disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none"
             >
-              <ShoppingBag className="h-5 w-5" />
-              Realizar pedido
-              <span className="tabular-nums">· ${total.toFixed(2)}</span>
+              {placing ? (
+                <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+              ) : (
+                <ShoppingBag className="h-5 w-5" aria-hidden="true" />
+              )}
+              {placing ? "Registrando..." : "Realizar pedido"}
+              {!placing && <span className="tabular-nums">· ${total.toFixed(2)}</span>}
             </button>
           </div>
         </div>
       )}
     </div>
+  )
+}
+
+/** Dónde se entrega. Sin esto no se puede pedir, y hay que decirlo claro. */
+function DeliveryCard({ session }: { session: Session }) {
+  if (session.loading) {
+    return (
+      <section className="rounded-2xl border border-gray-100 bg-white p-4 text-sm text-gray-400">
+        Buscando tu dirección...
+      </section>
+    )
+  }
+
+  if (!session.userId) {
+    return (
+      <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+        <h2 className="text-sm font-semibold text-amber-900">Entrá para pedir</h2>
+        <p className="mt-1 text-sm leading-relaxed text-amber-800">
+          Necesitamos saber quién sos y a dónde llevar el pedido.
+        </p>
+        <Link
+          href="/login?next=/checkout"
+          className="mt-3 flex h-12 w-full items-center justify-center rounded-xl bg-amber-900 text-sm font-semibold text-white"
+        >
+          Iniciar sesión
+        </Link>
+      </section>
+    )
+  }
+
+  if (!session.address) {
+    return (
+      <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+        <h2 className="text-sm font-semibold text-amber-900">Falta tu dirección</h2>
+        <p className="mt-1 text-sm leading-relaxed text-amber-800">
+          Cargá una dirección de entrega antes de confirmar el pedido.
+        </p>
+        <Link
+          href="/perfil"
+          className="mt-3 flex h-12 w-full items-center justify-center rounded-xl bg-amber-900 text-sm font-semibold text-white"
+        >
+          Agregar dirección
+        </Link>
+      </section>
+    )
+  }
+
+  return (
+    <section className="flex items-start gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-50">
+        <MapPin className="h-4 w-4 text-emerald-600" aria-hidden="true" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">Entregar en</p>
+        <p className="text-sm font-semibold text-gray-900">{session.address.label}</p>
+        <p className="truncate text-sm text-gray-500">{session.address.detail}</p>
+      </div>
+      <Link href="/perfil" className="min-h-9 shrink-0 text-sm font-medium text-emerald-600">
+        Cambiar
+      </Link>
+    </section>
   )
 }
