@@ -57,7 +57,9 @@ export function DeliveryTopBar() {
 
   return (
     <>
-      <header className="sticky top-0 z-30 border-b border-gray-100 bg-white/90 backdrop-blur-md">
+      {/* Sin sticky propio: quien lo usa ya lo ancla. Anidar dos sticky con
+          fondo translúcido hacía que la barra se viera duplicada al scrollear. */}
+      <header className="border-b border-gray-100 bg-white/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3">
           <button
             type="button"
