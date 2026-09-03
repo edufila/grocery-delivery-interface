@@ -59,6 +59,13 @@ export function OrderMap({
   const [position, setPosition] = useState<Point | null>(shopper)
   const [failed, setFailed] = useState(false)
 
+  // La posición puede llegar por dos vías: Realtime, para el cliente, o esta
+  // prop, cuando el shopper se ve a sí mismo desde su propio GPS. Sin esto el
+  // estado inicial quedaba congelado y el punto verde no aparecía nunca.
+  useEffect(() => {
+    if (shopper) setPosition(shopper)
+  }, [shopper?.lat, shopper?.lng])
+
   // Escucha los cambios del pedido: cuando el shopper manda su posición, la
   // fila se actualiza y llega acá sin recargar la página.
   useEffect(() => {
