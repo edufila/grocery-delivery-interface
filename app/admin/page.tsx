@@ -100,9 +100,13 @@ export default async function AdminPage() {
       <div className="mx-auto flex max-w-3xl flex-col gap-8 px-4 pb-16 pt-6">
         <Section
           title="Usuarios"
-          hint="Quién puede entrar a dónde. El @ es el nombre con el que el cliente ve a su shopper, y el shopper no lo puede cambiar."
+          hint={
+            profile.role === "dev"
+              ? "Quién puede entrar a dónde. El @ es el nombre con el que el cliente ve a su shopper, y el shopper no lo puede cambiar."
+              : "Puedes dar y quitar el rol de shopper. Los roles de admin y dev los reparte un dev."
+          }
         >
-          <UserManager users={users ?? []} meId={user.id} />
+          <UserManager users={users ?? []} meId={user.id} soyDev={profile.role === "dev"} />
         </Section>
 
         <Section

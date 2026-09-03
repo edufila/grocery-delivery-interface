@@ -112,21 +112,24 @@ export default async function PerfilPage() {
           <AddressManager userId={user.id} addresses={addresses ?? []} />
         </section>
 
+        {/* Índigo, no el negro de antes: se distingue del verde del shopper sin
+            parecer un botón apagado, y no se confunde con el ámbar de los
+            avisos ni con el rojo de lo que borra. */}
         {esAdmin && (
           <Link
             href="/admin"
-            className="mt-4 flex items-center gap-3 rounded-3xl bg-gray-900 p-5 transition active:scale-[0.99]"
+            className="mt-4 flex items-center gap-3 rounded-3xl bg-indigo-600 p-5 transition active:scale-[0.99]"
           >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15">
               <SlidersHorizontal className="h-5 w-5 text-white" aria-hidden="true" />
             </span>
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-semibold text-white">Administración</span>
-              <span className="block text-sm text-gray-400">
+              <span className="block text-sm text-indigo-100">
                 Tiendas, precios, tarifas y pedidos
               </span>
             </span>
-            <ChevronRight className="h-5 w-5 shrink-0 text-gray-500" aria-hidden="true" />
+            <ChevronRight className="h-5 w-5 shrink-0 text-indigo-200" aria-hidden="true" />
           </Link>
         )}
 

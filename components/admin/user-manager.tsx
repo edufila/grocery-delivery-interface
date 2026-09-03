@@ -24,6 +24,9 @@ const ROLES: { value: Role; label: string }[] = [
   { value: "dev", label: "Dev" },
 ]
 
+/** Las llaves del panel: solo un dev las reparte. */
+const ROLES_ALTOS: Role[] = ["admin", "dev"]
+
 const ROLE_STYLE: Record<Role, string> = {
   cliente: "bg-gray-100 text-gray-600",
   shopper: "bg-emerald-50 text-emerald-700",
@@ -31,7 +34,16 @@ const ROLE_STYLE: Record<Role, string> = {
   dev: "bg-gray-900 text-white",
 }
 
-export function UserManager({ users, meId }: { users: AdminUser[]; meId: string }) {
+export function UserManager({
+  users,
+  meId,
+  soyDev,
+}: {
+  users: AdminUser[]
+  meId: string
+  /** Un admin maneja el abasto, pero las llaves del panel las da un dev. */
+  soyDev: boolean
+}) {
   const router = useRouter()
   const [query, setQuery] = useState("")
   const [busyId, setBusyId] = useState<string | null>(null)
@@ -184,26 +196,41 @@ export function UserManager({ users, meId }: { users: AdminUser[]; meId: string 
 
               {!abierto ? null : (
               <div className="border-t border-gray-100 p-3">
+              {/* Un admin no reparte llaves del panel: ni puede dar admin o
+                  dev, ni tocarle el rol a quien ya lo tiene. La base lo
+                  rechaza igual; esto es para no ofrecer botones muertos. */}
               <div className="flex flex-wrap gap-1.5">
-                {ROLES.map((role) => (
-                  <button
-                    key={role.value}
-                    type="button"
-                    onClick={() => void setRole(user, role.value)}
-                    disabled={busyId === user.id || user.role === role.value}
-                    className={`min-h-9 rounded-full px-3 text-sm font-medium transition ${
-                      user.role === role.value
-                        ? "bg-gray-900 text-white"
-                        : "border border-gray-200 text-gray-600 active:bg-gray-50"
-                    } disabled:opacity-60`}
-                  >
-                    {role.label}
-                  </button>
-                ))}
+                {ROLES.map((role) => {
+                  const bloqueado =
+                    !soyDev && (ROLES_ALTOS.includes(role.value) || ROLES_ALTOS.includes(user.role))
+
+                  return (
+                    <button
+                      key={role.value}
+                      type="button"
+                      onClick={() => void setRole(user, role.value)}
+                      disabled={busyId === user.id || user.role === role.value || bloqueado}
+                      title={bloqueado ? "Solo un dev puede repartir estos roles" : undefined}
+                      className={`min-h-9 rounded-full px-3 text-sm font-medium transition ${
+                        user.role === role.value
+                          ? "bg-gray-900 text-white"
+                          : "border border-gray-200 text-gray-600 active:bg-gray-50"
+                      } disabled:opacity-60`}
+                    >
+                      {role.label}
+                    </button>
+                  )
+                })}
                 {busyId === user.id && (
                   <Loader2 className="mt-2 h-4 w-4 animate-spin text-gray-400" aria-hidden="true" />
                 )}
               </div>
+
+              {!soyDev && ROLES_ALTOS.includes(user.role) && (
+                <p className="mt-2 text-xs leading-relaxed text-gray-500">
+                  El rol de un admin o un dev solo lo cambia un dev.
+                </p>
+              )}
 
               {esShopper && (
                 <div className="mt-3 rounded-xl bg-gray-50 p-3">
