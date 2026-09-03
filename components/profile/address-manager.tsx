@@ -2,63 +2,79 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Check, Loader2, MapPin, Plus, Trash2 } from "lucide-react"
+import { Check, Loader2, MapPin, MapPinOff, Pencil, Plus, Trash2 } from "lucide-react"
 
 import { createClient } from "@/lib/supabase/client"
 import type { Address } from "@/lib/orders"
 import { UseMyLocation, type Coords } from "./use-my-location"
 
+type Draft = { id: string | null; label: string; detail: string; coords: Coords }
+
+const EMPTY: Draft = { id: null, label: "", detail: "", coords: null }
+
 export function AddressManager({ userId, addresses }: { userId: string; addresses: Address[] }) {
   const router = useRouter()
   const supabase = createClient()
 
-  const [adding, setAdding] = useState(false)
-  // La primera casi siempre es la casa: evita que el botón quede gris sin
-  // explicación porque falta un campo que la persona no miró.
-  const [label, setLabel] = useState(addresses.length === 0 ? "Casa" : "")
-  const [detail, setDetail] = useState("")
-  const [coords, setCoords] = useState<Coords>(null)
+  const [draft, setDraft] = useState<Draft | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
 
-  const canAdd = label.trim().length >= 2 && detail.trim().length >= 5 && !busy
+  const editing = draft?.id != null
+  const canSave =
+    !!draft && draft.label.trim().length >= 2 && draft.detail.trim().length >= 5 && !busy
 
-  async function add(event: React.FormEvent) {
+  function startAdd() {
+    setDraft({ ...EMPTY, label: addresses.length === 0 ? "Casa" : "" })
+    setError("")
+  }
+
+  function startEdit(address: Address) {
+    setDraft({
+      id: address.id,
+      label: address.label,
+      detail: address.detail,
+      coords: address.lat != null && address.lng != null ? { lat: address.lat, lng: address.lng } : null,
+    })
+    setError("")
+  }
+
+  async function save(event: React.FormEvent) {
     event.preventDefault()
-    if (!canAdd) return
+    if (!draft || !canSave) return
+
     setBusy(true)
     setError("")
 
-    const { error: insertError } = await supabase.from("addresses").insert({
-      user_id: userId,
-      label: label.trim(),
-      detail: detail.trim(),
-      lat: coords?.lat ?? null,
-      lng: coords?.lng ?? null,
-      // La primera que carga queda como la de siempre.
-      is_default: addresses.length === 0,
-    })
+    const values = {
+      label: draft.label.trim(),
+      detail: draft.detail.trim(),
+      lat: draft.coords?.lat ?? null,
+      lng: draft.coords?.lng ?? null,
+    }
+
+    const { error: saveError } = draft.id
+      ? await supabase.from("addresses").update(values).eq("id", draft.id)
+      : await supabase
+          .from("addresses")
+          .insert({ ...values, user_id: userId, is_default: addresses.length === 0 })
 
     setBusy(false)
-    if (insertError) {
+    if (saveError) {
       setError(
-        insertError.message.includes("does not exist")
-          ? "Falta correr la migración de pedidos en Supabase."
+        saveError.message.includes("does not exist")
+          ? "Falta correr la migración de direcciones en Supabase."
           : "No pudimos guardar la dirección.",
       )
       return
     }
 
-    setLabel("")
-    setDetail("")
-    setCoords(null)
-    setAdding(false)
+    setDraft(null)
     router.refresh()
   }
 
   async function makeDefault(id: string) {
     setBusy(true)
-    // Primero bajamos la actual: hay un índice único que impide dos por defecto.
     await supabase.from("addresses").update({ is_default: false }).eq("user_id", userId)
     await supabase.from("addresses").update({ is_default: true }).eq("id", id)
     setBusy(false)
@@ -69,12 +85,13 @@ export function AddressManager({ userId, addresses }: { userId: string; addresse
     setBusy(true)
     await supabase.from("addresses").delete().eq("id", id)
     setBusy(false)
+    if (draft?.id === id) setDraft(null)
     router.refresh()
   }
 
   return (
     <div className="flex flex-col gap-3">
-      {addresses.length === 0 && !adding && (
+      {addresses.length === 0 && !draft && (
         <p className="text-sm leading-relaxed text-gray-500">
           Todavía no cargaste ninguna dirección. Hace falta al menos una para poder pedir.
         </p>
@@ -82,86 +99,121 @@ export function AddressManager({ userId, addresses }: { userId: string; addresse
 
       {addresses.length > 0 && (
         <ul className="flex flex-col gap-2">
-          {addresses.map((address) => (
-            <li
-              key={address.id}
-              className={`flex items-start gap-3 rounded-2xl border p-3 ${
-                address.is_default ? "border-emerald-500 bg-emerald-50/50" : "border-gray-200"
-              }`}
-            >
-              <span
-                className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
-                  address.is_default ? "bg-emerald-100" : "bg-gray-100"
+          {addresses.map((address) => {
+            const sinPin = address.lat == null || address.lng == null
+            return (
+              <li
+                key={address.id}
+                className={`flex items-start gap-3 rounded-2xl border p-3 ${
+                  address.is_default ? "border-emerald-500 bg-emerald-50/50" : "border-gray-200"
                 }`}
               >
-                <MapPin
-                  className={`h-4 w-4 ${address.is_default ? "text-emerald-600" : "text-gray-400"}`}
-                  aria-hidden="true"
-                />
-              </span>
+                <span
+                  className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+                    address.is_default ? "bg-emerald-100" : "bg-gray-100"
+                  }`}
+                >
+                  {sinPin ? (
+                    <MapPinOff className="h-4 w-4 text-amber-600" aria-hidden="true" />
+                  ) : (
+                    <MapPin
+                      className={`h-4 w-4 ${address.is_default ? "text-emerald-600" : "text-gray-400"}`}
+                      aria-hidden="true"
+                    />
+                  )}
+                </span>
 
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-gray-900">{address.label}</p>
-                <p className="text-sm text-gray-500">{address.detail}</p>
-                {!address.is_default && (
-                  <button
-                    type="button"
-                    onClick={() => void makeDefault(address.id)}
-                    disabled={busy}
-                    className="mt-1 min-h-9 text-sm font-medium text-emerald-600 disabled:text-gray-400"
-                  >
-                    Usar como principal
-                  </button>
-                )}
-                {address.is_default && (
-                  <p className="mt-1 flex items-center gap-1 text-xs font-medium text-emerald-700">
-                    <Check className="h-3.5 w-3.5" aria-hidden="true" /> Principal
-                  </p>
-                )}
-              </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-gray-900">{address.label}</p>
+                  <p className="text-sm text-gray-500">{address.detail}</p>
 
-              <button
-                type="button"
-                onClick={() => void remove(address.id)}
-                disabled={busy}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-gray-400 active:bg-gray-100 disabled:opacity-50"
-                aria-label={`Eliminar ${address.label}`}
-              >
-                <Trash2 className="h-4 w-4" aria-hidden="true" />
-              </button>
-            </li>
-          ))}
+                  {sinPin && (
+                    <p className="mt-1 text-xs leading-relaxed text-amber-700">
+                      Sin punto en el mapa. Editala y marcá dónde entregar, o el seguimiento no
+                      puede dibujar el mapa.
+                    </p>
+                  )}
+
+                  <div className="mt-1.5 flex flex-wrap items-center gap-x-4">
+                    <button
+                      type="button"
+                      onClick={() => startEdit(address)}
+                      disabled={busy}
+                      className="flex min-h-9 items-center gap-1.5 text-sm font-medium text-emerald-600 disabled:text-gray-400"
+                    >
+                      <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                      Editar
+                    </button>
+
+                    {!address.is_default && (
+                      <button
+                        type="button"
+                        onClick={() => void makeDefault(address.id)}
+                        disabled={busy}
+                        className="min-h-9 text-sm font-medium text-emerald-600 disabled:text-gray-400"
+                      >
+                        Usar como principal
+                      </button>
+                    )}
+                    {address.is_default && (
+                      <span className="flex min-h-9 items-center gap-1 text-xs font-medium text-emerald-700">
+                        <Check className="h-3.5 w-3.5" aria-hidden="true" /> Principal
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => void remove(address.id)}
+                  disabled={busy}
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-gray-400 active:bg-gray-100 disabled:opacity-50"
+                  aria-label={`Eliminar ${address.label}`}
+                >
+                  <Trash2 className="h-4 w-4" aria-hidden="true" />
+                </button>
+              </li>
+            )
+          })}
         </ul>
       )}
 
-      {adding ? (
-        <form onSubmit={add} className="flex flex-col gap-3 rounded-2xl border border-gray-200 p-3">
+      {draft ? (
+        <form onSubmit={save} className="flex flex-col gap-3 rounded-2xl border border-gray-200 p-3">
+          <h3 className="text-sm font-semibold text-gray-900">
+            {editing ? "Editar dirección" : "Nueva dirección"}
+          </h3>
+
           <div>
             <label htmlFor="addr_label" className="block text-sm font-medium text-gray-700">
               Nombre
             </label>
             <input
               id="addr_label"
-              value={label}
-              onChange={(event) => setLabel(event.target.value)}
+              value={draft.label}
+              onChange={(event) => setDraft({ ...draft, label: event.target.value })}
               placeholder="Casa, Trabajo..."
               className="mt-1.5 h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-emerald-500"
             />
           </div>
+
           <div>
             <label htmlFor="addr_detail" className="block text-sm font-medium text-gray-700">
               Dirección
             </label>
             <input
               id="addr_detail"
-              value={detail}
-              onChange={(event) => setDetail(event.target.value)}
+              value={draft.detail}
+              onChange={(event) => setDraft({ ...draft, detail: event.target.value })}
               placeholder="Av. Las Delicias, Urb. El Bosque"
               className="mt-1.5 h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-emerald-500"
             />
           </div>
 
-          <UseMyLocation coords={coords} onCapture={setCoords} />
+          <UseMyLocation
+            coords={draft.coords}
+            onCapture={(coords) => setDraft((d) => (d ? { ...d, coords } : d))}
+          />
 
           {error && (
             <p role="alert" className="text-sm text-rose-600">
@@ -169,18 +221,10 @@ export function AddressManager({ userId, addresses }: { userId: string; addresse
             </p>
           )}
 
-          {!canAdd && !busy && (label.trim() || detail.trim()) && (
-            <p className="text-sm text-gray-500">
-              {label.trim().length < 2
-                ? "Ponele un nombre a la dirección, como Casa o Trabajo."
-                : "Escribí la dirección completa para poder guardarla."}
-            </p>
-          )}
-
           <div className="flex gap-2">
             <button
               type="submit"
-              disabled={!canAdd}
+              disabled={!canSave}
               className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-semibold text-white disabled:bg-gray-200 disabled:text-gray-400"
             >
               {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
@@ -189,7 +233,7 @@ export function AddressManager({ userId, addresses }: { userId: string; addresse
             <button
               type="button"
               onClick={() => {
-                setAdding(false)
+                setDraft(null)
                 setError("")
               }}
               className="h-12 rounded-xl border border-gray-200 px-4 text-sm font-semibold text-gray-600"
@@ -201,7 +245,7 @@ export function AddressManager({ userId, addresses }: { userId: string; addresse
       ) : (
         <button
           type="button"
-          onClick={() => setAdding(true)}
+          onClick={startAdd}
           className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-gray-300 text-sm font-semibold text-gray-600 active:bg-gray-50"
         >
           <Plus className="h-4 w-4" aria-hidden="true" />

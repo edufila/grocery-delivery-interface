@@ -4,8 +4,7 @@ import { notFound, redirect } from "next/navigation"
 import { ArrowLeft, MapPin } from "lucide-react"
 
 import { OrderLiveRefresh } from "@/components/live-refresh"
-import { LocationShare } from "@/components/shopper/location-share"
-import { ShopperActions } from "@/components/shopper/shopper-actions"
+import { ShopperPanel } from "@/components/shopper/shopper-panel"
 import {
   formatMoney,
   formatOrderDate,
@@ -135,9 +134,7 @@ export default async function ShopperOrderPage({
           </p>
         </section>
 
-        {mine && <LocationShare orderId={order.id} />}
-
-        <ShopperActions order={order} userId={user.id} />
+        <ShopperPanel order={order} userId={user.id} />
       </div>
     </main>
   )

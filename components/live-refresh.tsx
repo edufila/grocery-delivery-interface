@@ -55,7 +55,29 @@ export function OrderLiveRefresh({
     }
   }, [orderId, router])
 
+  usePolling(router.refresh)
+
   return null
+}
+
+/**
+ * Realtime depende de que la tabla esté publicada en la base, y si eso falta
+ * la pantalla se queda quieta sin avisar. Este intervalo garantiza que se
+ * actualice igual. Solo con la pestaña a la vista: en segundo plano no sirve
+ * de nada y gasta datos.
+ */
+function usePolling(refresh: () => void, everyMs = 15_000) {
+  useEffect(() => {
+    const tick = () => {
+      if (document.visibilityState === "visible") refresh()
+    }
+    const id = setInterval(tick, everyMs)
+    document.addEventListener("visibilitychange", tick)
+    return () => {
+      clearInterval(id)
+      document.removeEventListener("visibilitychange", tick)
+    }
+  }, [refresh, everyMs])
 }
 
 /**
@@ -84,6 +106,8 @@ export function OrdersLiveRefresh() {
       void supabase.removeChannel(channel)
     }
   }, [router])
+
+  usePolling(router.refresh)
 
   return null
 }

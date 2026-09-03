@@ -263,6 +263,33 @@ export function DeliveryTopBar() {
                         )
                       })}
                     </ul>
+
+                    {/* El formulario lleva mapa: va acá adentro, que scrollea,
+                        y no en el pie fijo donde no entraría. */}
+                    {adding && (
+                      <form onSubmit={addAddress} className="mt-3 flex flex-col gap-3">
+                        <input
+                          value={label}
+                          onChange={(event) => setLabel(event.target.value)}
+                          placeholder="Nombre: Casa, Trabajo..."
+                          aria-label="Nombre de la dirección"
+                          className="h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500"
+                        />
+                        <input
+                          value={detail}
+                          onChange={(event) => setDetail(event.target.value)}
+                          placeholder="Av. Las Delicias, Urb. El Bosque"
+                          aria-label="Dirección"
+                          className="h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500"
+                        />
+                        <UseMyLocation coords={coords} onCapture={setCoords} />
+                        {error && (
+                          <p role="alert" className="text-sm text-rose-600">
+                            {error}
+                          </p>
+                        )}
+                      </form>
+                    )}
                   </>
                 )}
               </div>
@@ -274,48 +301,27 @@ export function DeliveryTopBar() {
               <div className="shrink-0 border-t border-gray-100 px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
                 <div className="mx-auto w-full max-w-md">
                   {adding ? (
-                    <form onSubmit={addAddress} className="flex flex-col gap-3">
-                      <input
-                        value={label}
-                        onChange={(event) => setLabel(event.target.value)}
-                        placeholder="Nombre: Casa, Trabajo..."
-                        aria-label="Nombre de la dirección"
-                        className="h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500"
-                      />
-                      <input
-                        value={detail}
-                        onChange={(event) => setDetail(event.target.value)}
-                        placeholder="Av. Las Delicias, Urb. El Bosque"
-                        aria-label="Dirección"
-                        className="h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500"
-                      />
-                      <UseMyLocation coords={coords} onCapture={setCoords} />
-                      {error && (
-                        <p role="alert" className="text-sm text-rose-600">
-                          {error}
-                        </p>
-                      )}
-                      <div className="flex gap-2">
-                        <button
-                          type="submit"
-                          disabled={busy || label.trim().length < 2 || detail.trim().length < 5}
-                          className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-semibold text-white disabled:bg-gray-200 disabled:text-gray-400"
-                        >
-                          {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
-                          Guardar y usar
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setAdding(false)
-                            setError("")
-                          }}
-                          className="h-12 rounded-xl border border-gray-200 px-4 text-sm font-semibold text-gray-600"
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-                    </form>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={(event) => void addAddress(event)}
+                        disabled={busy || label.trim().length < 2 || detail.trim().length < 5}
+                        className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-semibold text-white disabled:bg-gray-200 disabled:text-gray-400"
+                      >
+                        {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+                        Guardar y usar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAdding(false)
+                          setError("")
+                        }}
+                        className="h-12 rounded-xl border border-gray-200 px-4 text-sm font-semibold text-gray-600"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
                   ) : (
                     <button
                       type="button"

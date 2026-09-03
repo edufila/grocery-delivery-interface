@@ -1,9 +1,11 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { ArrowLeft, Loader2, MapPin, ShoppingBag, ShoppingCart } from "lucide-react"
+import { Loader2, MapPin, ShoppingBag, ShoppingCart } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+
+import { BackButton } from "@/components/back-button"
 
 import { CartItemList, type CartLine } from "./cart-item-list"
 import { SubstitutionOptions } from "./substitution-options"
@@ -120,13 +122,7 @@ export function CheckoutView() {
     <div className="min-h-dvh bg-gray-50 pb-28">
       <header className="sticky top-0 z-20 border-b border-gray-100 bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-lg items-center gap-2 px-4 py-3">
-          <Link
-            href="/catalogo"
-            aria-label="Volver al catálogo"
-            className="-ml-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-gray-600 transition active:bg-gray-100"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
+          <BackButton fallback="/catalogo" label="Volver" />
           <h1 className="text-lg font-semibold text-gray-900">Carrito y pago</h1>
         </div>
       </header>

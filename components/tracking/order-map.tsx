@@ -17,6 +17,8 @@ type Props = {
   shopper: Point | null
   /** Con el pedido entregado o cancelado dejamos de escuchar posiciones. */
   live?: boolean
+  /** El shopper se ve a sí mismo, así que la leyenda no dice lo mismo. */
+  labels?: { destination: string; shopper: string }
 }
 
 /**
@@ -44,7 +46,13 @@ function marker(color: string, label: string) {
   return el
 }
 
-export function OrderMap({ orderId, destination, shopper, live = true }: Props) {
+export function OrderMap({
+  orderId,
+  destination,
+  shopper,
+  live = true,
+  labels = { destination: "Tu dirección", shopper: "Tu shopper" },
+}: Props) {
   const container = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
   const shopperMarker = useRef<MapLibreMarker | null>(null)
@@ -174,11 +182,11 @@ export function OrderMap({ orderId, destination, shopper, live = true }: Props) 
       <div className="flex items-center gap-4 px-4 py-3 text-xs text-gray-500">
         <span className="flex items-center gap-1.5">
           <span className="h-2.5 w-2.5 rounded-full bg-gray-900" aria-hidden="true" />
-          Tu dirección
+          {labels.destination}
         </span>
         <span className="flex items-center gap-1.5">
           <span className="h-2.5 w-2.5 rounded-full bg-emerald-600" aria-hidden="true" />
-          {position ? "Tu shopper" : "Shopper sin ubicación todavía"}
+          {position ? labels.shopper : "Sin ubicación todavía"}
         </span>
       </div>
     </section>

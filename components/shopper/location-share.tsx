@@ -14,7 +14,15 @@ type Estado = {
   error: string
 }
 
-export function LocationShare({ orderId }: { orderId: string }) {
+export function LocationShare({
+  orderId,
+  onSharingChange,
+  onPosition,
+}: {
+  orderId: string
+  onSharingChange?: (sharing: boolean) => void
+  onPosition?: (coords: { lat: number; lng: number }) => void
+}) {
   const [estado, setEstado] = useState<Estado>({ sharing: false, lastSent: null, error: "" })
   const watchRef = useRef<number | null>(null)
   const lastSentAt = useRef(0)
@@ -38,6 +46,10 @@ export function LocationShare({ orderId }: { orderId: string }) {
 
     watchRef.current = navigator.geolocation.watchPosition(
       async (position) => {
+        // El mapa de al lado se mueve con cada lectura, aunque a la base solo
+        // le mandemos una cada tanto.
+        onPosition?.({ lat: position.coords.latitude, lng: position.coords.longitude })
+
         const now = Date.now()
         if (now - lastSentAt.current < SEND_EVERY_MS) return
         lastSentAt.current = now
@@ -58,6 +70,7 @@ export function LocationShare({ orderId }: { orderId: string }) {
         }))
       },
       (geoError) => {
+        onSharingChange?.(false)
         setEstado((e) => ({
           ...e,
           sharing: false,
@@ -71,6 +84,7 @@ export function LocationShare({ orderId }: { orderId: string }) {
     )
 
     setEstado((e) => ({ ...e, sharing: true, error: "" }))
+    onSharingChange?.(true)
 
     // Mantiene la pantalla encendida: con el teléfono bloqueado el navegador
     // suspende el JavaScript y la posición deja de viajar.
@@ -89,6 +103,7 @@ export function LocationShare({ orderId }: { orderId: string }) {
     void wakeLockRef.current?.release()
     wakeLockRef.current = null
     setEstado((e) => ({ ...e, sharing: false }))
+    onSharingChange?.(false)
   }
 
   return (

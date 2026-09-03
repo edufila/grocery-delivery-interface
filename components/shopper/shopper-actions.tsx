@@ -7,7 +7,16 @@ import { Check, Keyboard, Loader2 } from "lucide-react"
 import { NEXT_STATUS_ACTION, nextStatus, type Order } from "@/lib/orders"
 import { createClient } from "@/lib/supabase/client"
 
-export function ShopperActions({ order, userId }: { order: Order; userId: string }) {
+export function ShopperActions({
+  order,
+  userId,
+  sharing = false,
+}: {
+  order: Order
+  userId: string
+  /** Salir a entregar sin transmitir deja al cliente sin saber dónde estás. */
+  sharing?: boolean
+}) {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
@@ -31,6 +40,8 @@ export function ShopperActions({ order, userId }: { order: Order; userId: string
   const siguiente = nextStatus(order.status)
   // La entrega no se marca con un update: la base exige el código del cliente.
   const needsCode = mine && order.status === "en_camino"
+  // Salir a entregar es el paso que el cliente sigue en el mapa.
+  const bloqueadoPorUbicacion = mine && siguiente === "en_camino" && !sharing
 
   async function deliver() {
     if (code.length !== 4) return
@@ -187,15 +198,23 @@ export function ShopperActions({ order, userId }: { order: Order; userId: string
           Tomar este pedido
         </button>
       ) : siguiente ? (
-        <button
-          type="button"
-          onClick={() => void advance()}
-          disabled={busy}
-          className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 text-base font-semibold text-white transition active:scale-[0.99] disabled:bg-gray-200 disabled:text-gray-400"
-        >
-          {busy && <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />}
-          {NEXT_STATUS_ACTION[siguiente] ?? "Avanzar"}
-        </button>
+        <>
+          {bloqueadoPorUbicacion && (
+            <p className="rounded-2xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-800">
+              Encendé <span className="font-semibold">Compartir mi ubicación</span> antes de salir.
+              El cliente tiene que poder ver por dónde vas.
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={() => void advance()}
+            disabled={busy || bloqueadoPorUbicacion}
+            className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 text-base font-semibold text-white transition active:scale-[0.99] disabled:bg-gray-200 disabled:text-gray-400"
+          >
+            {busy && <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />}
+            {NEXT_STATUS_ACTION[siguiente] ?? "Avanzar"}
+          </button>
+        </>
       ) : (
         <p className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-50 text-base font-semibold text-emerald-700">
           <Check className="h-5 w-5" aria-hidden="true" />
