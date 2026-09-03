@@ -4,12 +4,14 @@ import { PackageSearch, Store } from "lucide-react"
 
 import { BottomNav } from "@/components/bottom-nav"
 import { Buscador } from "@/components/buscar/buscador"
+import { CategoriaChips } from "@/components/buscar/categoria-chips"
 import { pageTitle } from "@/lib/brand"
+import { toCategory, type Category } from "@/lib/categories"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/server"
 
 export const metadata: Metadata = {
-  title: pageTitle("Buscar"),
+  title: pageTitle("Explorar"),
 }
 
 type Fila = {
@@ -22,40 +24,52 @@ type Fila = {
 }
 
 /**
- * Busca en todos los abastos a la vez.
+ * La pantalla general: busca y filtra en TODOS los abastos.
  *
- * El buscador del inicio mandaba al catálogo de Girasol, así que buscar "leche"
- * solo miraba ahí: si La Cosecha la tenía, el cliente no se enteraba. Y el
- * problema crecía con cada abasto que se sumara.
+ * Antes, tanto el buscador del inicio como las categorías y el "Explorar" de
+ * la barra caían en el catálogo de Girasol. Buscar "leche" o tocar "Lácteos"
+ * solo miraba ahí, y lo de los demás locales no aparecía nunca.
  *
- * Los resultados no se agregan al carrito desde aquí, llevan al catálogo de su
- * abasto. Un pedido es de un solo local: dejar mezclar desde una lista de
+ * La regla que sigue la app: lo de afuera es general, lo de adentro de un
+ * abasto es de ese abasto. Las categorías del catálogo de una tienda siguen
+ * filtrando solo su catálogo, que es lo correcto ahí.
+ *
+ * Los resultados llevan al catálogo de su abasto en vez de agregarse al
+ * carrito: un pedido es de un solo local, y dejar mezclar desde una lista de
  * varios sería armar el problema en vez de resolverlo.
  */
 export default async function BuscarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>
+  searchParams: Promise<{ q?: string; categoria?: string; mayorista?: string }>
 }) {
-  const { q } = await searchParams
-  const termino = (q ?? "").trim()
+  const params = await searchParams
+  const termino = (params.q ?? "").trim()
+  const categoria: Category = toCategory(params.categoria)
+  const soloMayorista = params.mayorista === "1"
+
+  const filtraCategoria = categoria !== "Todos"
+  const filtraTexto = termino.length >= 2
+  const hayFiltro = filtraTexto || filtraCategoria || soloMayorista
 
   let resultados: Fila[] = []
   let tiendas = new Map<string, string>()
 
-  if (isSupabaseConfigured && termino.length >= 2) {
+  if (isSupabaseConfigured && hayFiltro) {
     const supabase = await createClient()
 
+    let consulta = supabase
+      .from("products")
+      .select("id, name, unit, price, image, store_id")
+      .eq("active", true)
+
+    // El % a los dos lados: la gente escribe "pan" buscando "Harina PAN".
+    if (filtraTexto) consulta = consulta.ilike("name", `%${termino}%`)
+    if (filtraCategoria) consulta = consulta.eq("category", categoria)
+    if (soloMayorista) consulta = consulta.eq("wholesale", true)
+
     const [{ data: productos }, { data: locales }] = await Promise.all([
-      supabase
-        .from("products")
-        .select("id, name, unit, price, image, store_id")
-        .eq("active", true)
-        // El % a los dos lados: la gente escribe "pan" buscando "Harina PAN".
-        .ilike("name", `%${termino}%`)
-        .order("name")
-        .limit(60)
-        .returns<Fila[]>(),
+      consulta.order("name").limit(90).returns<Fila[]>(),
       supabase
         .from("stores")
         .select("id, name")
@@ -68,7 +82,7 @@ export default async function BuscarPage({
     resultados = (productos ?? []).filter((p) => tiendas.has(p.store_id))
   }
 
-  // Agrupados por abasto, porque el precio del mismo producto cambia en cada uno.
+  // Agrupados por abasto, porque el mismo producto cuesta distinto en cada uno.
   const porTienda = new Map<string, Fila[]>()
   for (const fila of resultados) {
     const lista = porTienda.get(fila.store_id) ?? []
@@ -76,18 +90,25 @@ export default async function BuscarPage({
     porTienda.set(fila.store_id, lista)
   }
 
+  const queSeBusco = filtraTexto
+    ? `"${termino}"`
+    : filtraCategoria
+      ? categoria
+      : "productos al mayor"
+
   return (
     <main className="min-h-dvh bg-gray-50 pb-24">
       <header className="pt-barra-estado sticky top-0 z-30 border-b border-gray-100 bg-white">
         <div className="mx-auto max-w-md px-4 py-3">
-          <Buscador valorInicial={termino} />
+          <Buscador valorInicial={termino} categoria={categoria} mayorista={soloMayorista} />
         </div>
+        <CategoriaChips activa={categoria} termino={termino} mayorista={soloMayorista} />
       </header>
 
       <div className="mx-auto max-w-md px-4 py-4">
-        {termino.length < 2 ? (
+        {!hayFiltro ? (
           <p className="py-16 text-center text-sm leading-relaxed text-gray-500">
-            Escribe al menos dos letras para buscar en todos los abastos.
+            Elige una categoría o escribe qué buscas. Miramos en todos los abastos a la vez.
           </p>
         ) : resultados.length === 0 ? (
           <div className="py-16 text-center">
@@ -95,7 +116,7 @@ export default async function BuscarPage({
               <PackageSearch className="h-6 w-6 text-gray-400" aria-hidden="true" />
             </span>
             <p className="mt-4 text-sm leading-relaxed text-gray-500">
-              No encontramos nada con &ldquo;{termino}&rdquo; en ningún abasto.
+              No encontramos {queSeBusco} en ningún abasto.
             </p>
           </div>
         ) : (
@@ -115,7 +136,7 @@ export default async function BuscarPage({
                     <span className="truncate">{tiendas.get(storeId)}</span>
                   </h2>
                   <Link
-                    href={`/catalogo?tienda=${storeId}&q=${encodeURIComponent(termino)}`}
+                    href={enlaceATienda(storeId, { termino, categoria, soloMayorista })}
                     className="shrink-0 text-sm font-medium text-emerald-600"
                   >
                     Ver ahí
@@ -156,4 +177,16 @@ export default async function BuscarPage({
       <BottomNav />
     </main>
   )
+}
+
+/** "Ver ahí" abre el catálogo de ese abasto con el mismo filtro puesto. */
+function enlaceATienda(
+  storeId: string,
+  filtro: { termino: string; categoria: Category; soloMayorista: boolean },
+) {
+  const partes = [`tienda=${storeId}`]
+  if (filtro.termino) partes.push(`q=${encodeURIComponent(filtro.termino)}`)
+  if (filtro.categoria !== "Todos") partes.push(`categoria=${encodeURIComponent(filtro.categoria)}`)
+  if (filtro.soloMayorista) partes.push("mayorista=1")
+  return `/catalogo?${partes.join("&")}`
 }

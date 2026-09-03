@@ -11,7 +11,16 @@ import { BackButton } from "@/components/back-button"
  * estado suelto: así el resultado se puede compartir, y el botón de atrás del
  * teléfono vuelve a la búsqueda anterior en vez de salirse de la pantalla.
  */
-export function Buscador({ valorInicial }: { valorInicial: string }) {
+export function Buscador({
+  valorInicial,
+  categoria,
+  mayorista,
+}: {
+  valorInicial: string
+  /** Se conserva al escribir: filtrar por texto no debe borrar la categoría. */
+  categoria: string
+  mayorista: boolean
+}) {
   const router = useRouter()
   const [texto, setTexto] = useState(valorInicial)
 
@@ -29,11 +38,15 @@ export function Buscador({ valorInicial }: { valorInicial: string }) {
 
     const id = setTimeout(() => {
       const limpio = texto.trim()
-      router.replace(limpio ? `/buscar?q=${encodeURIComponent(limpio)}` : "/buscar")
+      const partes: string[] = []
+      if (limpio) partes.push(`q=${encodeURIComponent(limpio)}`)
+      if (categoria && categoria !== "Todos") partes.push(`categoria=${encodeURIComponent(categoria)}`)
+      if (mayorista) partes.push("mayorista=1")
+      router.replace(partes.length ? `/buscar?${partes.join("&")}` : "/buscar")
     }, 350)
 
     return () => clearTimeout(id)
-  }, [texto, valorInicial, router])
+  }, [texto, valorInicial, categoria, mayorista, router])
 
   return (
     <div className="flex items-center gap-1">

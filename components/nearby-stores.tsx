@@ -90,16 +90,12 @@ export function NearbyStores({ stores }: { stores: Store[] }) {
 
   return (
     <section className="pt-2" aria-labelledby="stores-heading">
-      <div className="mx-auto flex max-w-md items-center justify-between px-4">
+      {/* Sin "Ver todos": esta lista ya son todos los abastos activos. El
+          enlace llevaba al catálogo del primero, que no era ver todos nada. */}
+      <div className="mx-auto max-w-md px-4">
         <h2 id="stores-heading" className="text-base font-semibold text-gray-900">
           Abastos cercanos
         </h2>
-        <Link
-          href="/catalogo"
-          className="-mr-2 flex min-h-11 items-center px-2 text-sm font-medium text-emerald-600"
-        >
-          Ver todos
-        </Link>
       </div>
 
       <div className="mx-auto max-w-md space-y-4 px-4 py-4">

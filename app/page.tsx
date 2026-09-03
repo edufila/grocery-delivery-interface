@@ -1,6 +1,5 @@
 import { DeliveryTopBar } from "@/components/delivery-top-bar"
 import { SearchBar } from "@/components/search-bar"
-import { CategoryCarousel } from "@/components/category-carousel"
 import { NearbyStores } from "@/components/nearby-stores"
 import { BottomNav } from "@/components/bottom-nav"
 import type { Store } from "@/lib/admin"
@@ -29,8 +28,10 @@ export default async function HomePage() {
         </div>
       </div>
 
+      {/* Sin categorías de productos aquí: el inicio es para elegir abasto.
+          Las categorías viven dentro del catálogo de cada uno, y en Explorar
+          para buscar en todos a la vez. */}
       <div className="pb-28">
-        <CategoryCarousel />
         <NearbyStores stores={stores} />
       </div>
 

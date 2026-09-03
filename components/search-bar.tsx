@@ -37,7 +37,7 @@ export function SearchBar() {
         </label>
         <button
           type="button"
-          onClick={() => router.push("/catalogo?mayorista=1")}
+          onClick={() => router.push("/buscar?mayorista=1")}
           className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-600 text-white transition active:scale-95"
           aria-label="Ver solo productos al mayor"
         >

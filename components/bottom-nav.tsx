@@ -17,7 +17,9 @@ type NavItem = {
 
 const items: NavItem[] = [
   { label: "Home", href: "/", Icon: Home },
-  { label: "Explorar", href: "/catalogo", Icon: Compass },
+  // A /buscar y no al catálogo: explorar es en todos los abastos, no en el
+  // primero de la lista, que es donde caía antes.
+  { label: "Explorar", href: "/buscar", Icon: Compass },
   { label: "Pedidos", href: "/pedidos", Icon: ClipboardList },
   { label: "Perfil", href: "/perfil", Icon: User },
 ]
