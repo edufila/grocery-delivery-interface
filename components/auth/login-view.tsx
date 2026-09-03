@@ -8,34 +8,13 @@ import { cn } from "@/lib/utils"
 import { createClient } from "@/lib/supabase/client"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 
-const COUNTRY_CODE = "+58"
-const PHONE_LENGTH = 10
 const CODE_LENGTH = 6
 const RESEND_SECONDS = 60
 
-// Canal del código de un solo uso. Para pasarlo a email (gratis, sin proveedor
-// de SMS) hay que cambiar esto a "email" y pedir email en vez de teléfono:
-// signInWithOtp({ email }) y verifyOtp({ email, token, type: "email" }).
-const OTP_TYPE = "sms" as const
+type Step = "email" | "code"
 
-type Step = "phone" | "code"
-
-/** Deja solo dígitos y saca el 0 o el 58 que la gente suele anteponer. */
-function normalizePhone(raw: string) {
-  let digits = raw.replace(/\D/g, "")
-  if (digits.startsWith("58")) digits = digits.slice(2)
-  if (digits.startsWith("0")) digits = digits.slice(1)
-  return digits.slice(0, PHONE_LENGTH)
-}
-
-/** 4141234567 -> "414 123 4567" */
-function formatPhone(digits: string) {
-  const parts = [digits.slice(0, 3), digits.slice(3, 6), digits.slice(6, 10)]
-  return parts.filter(Boolean).join(" ")
-}
-
-function isValidPhone(digits: string) {
-  return digits.length === PHONE_LENGTH && digits.startsWith("4")
+function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value.trim())
 }
 
 /** Traduce los errores de Supabase a algo que se entienda. */
@@ -43,9 +22,10 @@ function friendlyError(message: string) {
   const m = message.toLowerCase()
   if (m.includes("invalid") && m.includes("token")) return "El código no es correcto. Revisalo e intentá de nuevo."
   if (m.includes("expired")) return "El código venció. Pedí uno nuevo."
-  if (m.includes("rate limit") || m.includes("too many")) return "Demasiados intentos. Esperá un momento antes de reintentar."
-  if (m.includes("invalid") && m.includes("phone")) return "Ese número no parece válido."
-  if (m.includes("sms") || m.includes("provider")) return "No pudimos enviar el SMS. Revisá la configuración del proveedor."
+  if (m.includes("rate limit") || m.includes("too many") || m.includes("seconds"))
+    return "Demasiados intentos. Esperá un momento antes de reintentar."
+  if (m.includes("invalid") && m.includes("email")) return "Ese correo no parece válido."
+  if (m.includes("signups not allowed")) return "Los registros nuevos están deshabilitados en Supabase."
   return "Algo salió mal. Intentá de nuevo en un momento."
 }
 
@@ -53,8 +33,8 @@ export function LoginView({ next, initialError }: { next: string; initialError?:
   const router = useRouter()
   const supabase = useMemo(() => (isSupabaseConfigured ? createClient() : null), [])
 
-  const [step, setStep] = useState<Step>("phone")
-  const [phone, setPhone] = useState("")
+  const [step, setStep] = useState<Step>("email")
+  const [email, setEmail] = useState("")
   const [code, setCode] = useState("")
   const [pending, setPending] = useState(false)
   const [googlePending, setGooglePending] = useState(false)
@@ -67,7 +47,7 @@ export function LoginView({ next, initialError }: { next: string; initialError?:
   const codeInputRef = useRef<HTMLInputElement>(null)
   const submittedCodeRef = useRef("")
 
-  const e164 = `${COUNTRY_CODE}${phone}`
+  const cleanEmail = email.trim().toLowerCase()
 
   // Cuenta regresiva para poder reenviar el código.
   useEffect(() => {
@@ -82,11 +62,11 @@ export function LoginView({ next, initialError }: { next: string; initialError?:
   }, [step])
 
   async function requestCode() {
-    if (!supabase || pending || !isValidPhone(phone)) return
+    if (!supabase || pending || !isValidEmail(email)) return
     setPending(true)
     setError("")
 
-    const { error: otpError } = await supabase.auth.signInWithOtp({ phone: e164 })
+    const { error: otpError } = await supabase.auth.signInWithOtp({ email: cleanEmail })
 
     setPending(false)
     if (otpError) {
@@ -107,9 +87,9 @@ export function LoginView({ next, initialError }: { next: string; initialError?:
     setError("")
 
     const { error: verifyError } = await supabase.auth.verifyOtp({
-      phone: e164,
+      email: cleanEmail,
       token: value,
-      type: OTP_TYPE,
+      type: "email",
     })
 
     if (verifyError) {
@@ -147,7 +127,7 @@ export function LoginView({ next, initialError }: { next: string; initialError?:
     const digits = raw.replace(/\D/g, "").slice(0, CODE_LENGTH)
     setCode(digits)
     if (error) setError("")
-    // Autoenvío al completar los 6 dígitos (incluye el autocompletado del SMS).
+    // Autoenvío al completar los 6 dígitos.
     if (digits.length === CODE_LENGTH && digits !== submittedCodeRef.current) {
       void verifyCode(digits)
     }
@@ -164,7 +144,7 @@ export function LoginView({ next, initialError }: { next: string; initialError?:
           <button
             type="button"
             onClick={() => {
-              setStep("phone")
+              setStep("email")
               setError("")
               setCode("")
             }}
@@ -181,24 +161,21 @@ export function LoginView({ next, initialError }: { next: string; initialError?:
 
         <header className="pt-6">
           <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
-            {step === "phone" ? "Ingresá a tu cuenta" : "Verificá tu número"}
+            {step === "email" ? "Ingresá a tu cuenta" : "Revisá tu correo"}
           </h1>
           <p className="mt-2 text-sm leading-relaxed text-gray-500">
-            {step === "phone" ? (
-              "Te mandamos un código por SMS para confirmar que sos vos."
+            {step === "email" ? (
+              "Te mandamos un código a tu correo para confirmar que sos vos."
             ) : (
               <>
-                Enviamos un código de {CODE_LENGTH} dígitos al{" "}
-                <span className="font-medium text-gray-900">
-                  {COUNTRY_CODE} {formatPhone(phone)}
-                </span>
-                .
+                Enviamos un código de {CODE_LENGTH} dígitos a{" "}
+                <span className="font-medium text-gray-900">{cleanEmail}</span>.
               </>
             )}
           </p>
         </header>
 
-        {step === "phone" ? (
+        {step === "email" ? (
           <form
             className="pt-8"
             onSubmit={(event) => {
@@ -206,34 +183,32 @@ export function LoginView({ next, initialError }: { next: string; initialError?:
               void requestCode()
             }}
           >
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-              Número de celular
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              Correo electrónico
             </label>
-            <div className="mt-2 flex items-center gap-2 rounded-2xl border border-gray-200 bg-white px-4 focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-500/10">
-              <span className="shrink-0 text-base font-medium text-gray-500">{COUNTRY_CODE}</span>
-              <span className="h-6 w-px shrink-0 bg-gray-200" aria-hidden="true" />
-              <input
-                id="phone"
-                name="phone"
-                type="tel"
-                inputMode="numeric"
-                autoComplete="tel-national"
-                enterKeyHint="go"
-                placeholder="414 123 4567"
-                value={formatPhone(phone)}
-                onChange={(event) => {
-                  setPhone(normalizePhone(event.target.value))
-                  if (error) setError("")
-                }}
-                className="h-14 w-full bg-transparent text-base text-gray-900 outline-none placeholder:text-gray-400"
-              />
-            </div>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              autoCapitalize="none"
+              spellCheck={false}
+              enterKeyHint="go"
+              placeholder="tunombre@correo.com"
+              value={email}
+              onChange={(event) => {
+                setEmail(event.target.value)
+                if (error) setError("")
+              }}
+              className="mt-2 h-14 w-full rounded-2xl border border-gray-200 bg-white px-4 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
+            />
 
             {error && <ErrorText>{error}</ErrorText>}
 
             <button
               type="submit"
-              disabled={!isValidPhone(phone) || pending}
+              disabled={!isValidEmail(email) || pending}
               className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 text-base font-semibold text-white transition active:scale-[0.99] disabled:bg-gray-200 disabled:text-gray-400"
             >
               {pending && <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />}
@@ -310,9 +285,7 @@ export function LoginView({ next, initialError }: { next: string; initialError?:
 
             <div className="mt-8 text-center">
               {secondsLeft > 0 ? (
-                <p className="text-sm text-gray-400">
-                  Podés pedir otro código en {secondsLeft}s
-                </p>
+                <p className="text-sm text-gray-400">Podés pedir otro código en {secondsLeft}s</p>
               ) : (
                 <button
                   type="button"

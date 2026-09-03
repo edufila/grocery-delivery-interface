@@ -82,19 +82,22 @@ try {
 console.log("\nProveedores de login\n")
 
 const google = settings.external?.google === true
-const phone = settings.external?.phone === true
+const email = settings.external?.email === true
 
 if (google) ok("Google está habilitado.")
 else {
-  bad("Google está deshabilitado. Authentication → Providers → Google.")
+  bad("Google está deshabilitado. Authentication → Sign In / Providers → Google.")
   problemas++
 }
 
-if (phone) ok("El ingreso por teléfono está habilitado.")
+if (email) ok("El ingreso por email está habilitado.")
 else {
-  bad("El teléfono está deshabilitado. Authentication → Providers → Phone (necesita un proveedor de SMS).")
+  bad("El email está deshabilitado. Authentication → Sign In / Providers → Email.")
   problemas++
 }
+
+// El código de 6 dígitos no llega si la plantilla solo manda el enlace mágico.
+warn("Revisá que la plantilla Magic Link incluya {{ .Token }}, o llegará un enlace en vez del código.")
 
 if (settings.disable_signup === true) {
   warn("Los registros nuevos están deshabilitados: solo van a poder entrar usuarios ya existentes.")
