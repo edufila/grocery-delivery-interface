@@ -9,7 +9,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Gran Abasto Girasol",
     short_name: "Girasol",
-    description: "Pedí tus víveres y recibilos en casa.",
+    description: "Pide tus víveres y recibilos en casa.",
     start_url: "/",
     display: "standalone",
     background_color: "#ffffff",

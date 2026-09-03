@@ -15,7 +15,7 @@ export function statusDescription(status: OrderStatus, shopperId: string | null)
   switch (status) {
     case "confirmado":
       return shopperId
-        ? "Ya tenés shopper asignado. En breve empieza tu compra."
+        ? "Ya tienes shopper asignado. En breve empieza tu compra."
         : "Estamos buscando un shopper disponible para tu pedido."
     case "preparando":
       return "Tu shopper está recorriendo el abasto."

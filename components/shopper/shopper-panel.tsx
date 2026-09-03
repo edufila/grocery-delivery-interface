@@ -66,8 +66,8 @@ export function ShopperPanel({
         live={false}
         route
         labels={{
-          destination: yendoAlAbasto ? (store?.name ?? "El abasto") : "Entregar acá",
-          shopper: "Vos",
+          destination: yendoAlAbasto ? (store?.name ?? "El abasto") : "Entregar aquí",
+          shopper: "Tú",
         }}
       />
 

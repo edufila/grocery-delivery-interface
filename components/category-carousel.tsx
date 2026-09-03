@@ -7,7 +7,7 @@ import { categories, type Category } from "@/lib/categories"
 type Look = { Icon: LucideIcon; color: string; bg: string }
 
 /**
- * El orden sale de lib/categories: acá solo se define cómo se ve cada una.
+ * El orden sale de lib/categories: aquí solo se define cómo se ve cada una.
  * Las que todavía no tienen ícono no salen en el carrusel, pero sí como
  * pestaña en el catálogo.
  */

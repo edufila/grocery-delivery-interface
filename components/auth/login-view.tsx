@@ -20,13 +20,13 @@ function isValidEmail(value: string) {
 /** Traduce los errores de Supabase a algo que se entienda. */
 function friendlyError(message: string) {
   const m = message.toLowerCase()
-  if (m.includes("invalid") && m.includes("token")) return "El código no es correcto. Revisalo e intentá de nuevo."
-  if (m.includes("expired")) return "El código venció. Pedí uno nuevo."
+  if (m.includes("invalid") && m.includes("token")) return "El código no es correcto. Revísalo e intenta de nuevo."
+  if (m.includes("expired")) return "El código venció. Pide uno nuevo."
   if (m.includes("rate limit") || m.includes("too many") || m.includes("seconds"))
-    return "Demasiados intentos. Esperá un momento antes de reintentar."
+    return "Demasiados intentos. Espera un momento antes de reintentar."
   if (m.includes("invalid") && m.includes("email")) return "Ese correo no parece válido."
   if (m.includes("signups not allowed")) return "Los registros nuevos están deshabilitados en Supabase."
-  return "Algo salió mal. Intentá de nuevo en un momento."
+  return "Algo salió mal. Intenta de nuevo en un momento."
 }
 
 export function LoginView({ next, initialError }: { next: string; initialError?: string }) {
@@ -40,7 +40,7 @@ export function LoginView({ next, initialError }: { next: string; initialError?:
   const [pending, setPending] = useState(false)
   const [googlePending, setGooglePending] = useState(false)
   const [error, setError] = useState(
-    initialError === "oauth" ? "No se pudo completar el ingreso. Probá otra vez." : "",
+    initialError === "oauth" ? "No se pudo completar el ingreso. Prueba otra vez." : "",
   )
   const [secondsLeft, setSecondsLeft] = useState(0)
 
@@ -164,7 +164,7 @@ export function LoginView({ next, initialError }: { next: string; initialError?:
           <>
             <header className="pt-6">
               <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
-                Ingresá a tu cuenta
+                Ingresa a tu cuenta
               </h1>
               <p className="mt-2 text-sm leading-relaxed text-gray-500">
                 Te mandamos un código a tu correo. Sin contraseñas.
@@ -238,11 +238,11 @@ export function LoginView({ next, initialError }: { next: string; initialError?:
             </span>
 
             <h1 className="pt-6 text-2xl font-semibold tracking-tight text-gray-900">
-              Revisá tu correo
+              Revisa tu correo
             </h1>
             <p className="mt-2 text-sm leading-relaxed text-gray-500">
               Lo enviamos a <span className="font-medium text-gray-900">{cleanEmail}</span>. Si trae
-              un código, escribilo acá.
+              un código, escribilo aquí.
             </p>
 
             <div
@@ -293,13 +293,13 @@ export function LoginView({ next, initialError }: { next: string; initialError?:
 
             <p className="mt-6 rounded-2xl bg-gray-50 px-4 py-3 text-sm leading-relaxed text-gray-600">
               ¿El correo trae un enlace en vez de un código? Abrilo, pero{" "}
-              <span className="font-semibold">desde este mismo navegador</span>: si lo abrís en otro
+              <span className="font-semibold">desde este mismo navegador</span>: si lo abres en otro
               dispositivo, el acceso no se completa.
             </p>
 
             <div className="mt-8 text-center">
               {secondsLeft > 0 ? (
-                <p className="text-sm text-gray-400">Podés pedir otro enlace en {secondsLeft}s</p>
+                <p className="text-sm text-gray-400">Puedes pedir otro enlace en {secondsLeft}s</p>
               ) : (
                 <button
                   type="button"
@@ -342,8 +342,8 @@ function MissingConfigNotice() {
           <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">NEXT_PUBLIC_SUPABASE_URL</code> y{" "}
           <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">NEXT_PUBLIC_SUPABASE_ANON_KEY</code>{" "}
           en un archivo <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">.env.local</code>.
-          Copiá <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">.env.local.example</code> y
-          completá los valores de tu proyecto.
+          Copia <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">.env.local.example</code> y
+          completa los valores de tu proyecto.
         </p>
       </div>
     </main>

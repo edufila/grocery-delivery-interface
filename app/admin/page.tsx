@@ -92,7 +92,7 @@ export default async function AdminPage() {
           </Link>
           <div>
             <h1 className="text-lg font-semibold text-gray-900">Administración</h1>
-            <p className="text-sm text-gray-500">Entrás como {profile.role}</p>
+            <p className="text-sm text-gray-500">Entras como {profile.role}</p>
           </div>
         </div>
       </header>

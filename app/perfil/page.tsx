@@ -87,7 +87,7 @@ export default async function PerfilPage() {
 
         {!isProfileComplete(profile) && (
           <p className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-800">
-            Completá tu nombre y teléfono para que el shopper pueda ubicarte con tu pedido.
+            Completa tu nombre y teléfono para que el shopper pueda ubicarte con tu pedido.
           </p>
         )}
 

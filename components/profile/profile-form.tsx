@@ -105,7 +105,7 @@ export function ProfileForm({ userId, profile, nameLocked = false }: Props) {
       setError(
         saveError.message.includes("relation") || saveError.message.includes("does not exist")
           ? "La tabla de perfiles todavía no existe en Supabase. Falta correr la migración."
-          : "No pudimos guardar los cambios. Intentá de nuevo.",
+          : "No pudimos guardar los cambios. Intenta de nuevo.",
       )
       return
     }
@@ -188,7 +188,7 @@ export function ProfileForm({ userId, profile, nameLocked = false }: Props) {
         </div>
         {!dateOk && (
           <p className="mt-2 text-sm text-rose-600">
-            {dateFilled ? "Esa fecha no existe." : "Completá los tres campos o dejalos vacíos."}
+            {dateFilled ? "Esa fecha no existe." : "Completa los tres campos o dejalos vacíos."}
           </p>
         )}
       </fieldset>

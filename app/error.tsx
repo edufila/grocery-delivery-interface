@@ -26,7 +26,7 @@ export default function Error({
           Se nos rompió algo
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-gray-500">
-          No es culpa tuya. Probá de nuevo y, si sigue pasando, escribinos.
+          No es culpa tuya. Prueba de nuevo y, si sigue pasando, escríbenos.
         </p>
 
         {error.digest && (

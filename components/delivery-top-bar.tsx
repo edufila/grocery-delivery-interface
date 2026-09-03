@@ -107,7 +107,7 @@ export function DeliveryTopBar() {
     setError("")
     const supabase = createClient()
 
-    // La nueva queda como principal: si la estás agregando acá, es a dónde querés que llegue.
+    // La nueva queda como principal: si la estás agregando aquí, es a dónde quieres que llegue.
     await supabase.from("addresses").update({ is_default: false }).eq("user_id", userId)
     const { error: insertError } = await supabase.from("addresses").insert({
       user_id: userId,
@@ -138,8 +138,8 @@ export function DeliveryTopBar() {
     : selected
       ? selected.detail
       : userId
-        ? "Agregá tu dirección"
-        : "Entrá para elegir dirección"
+        ? "Agrega tu dirección"
+        : "Entra para elegir dirección"
 
   return (
     <>
@@ -208,7 +208,7 @@ export function DeliveryTopBar() {
                 {!userId && !loading ? (
                   <div className="py-4">
                     <p className="text-sm leading-relaxed text-gray-500">
-                      Entrá a tu cuenta para guardar tus direcciones y que te lleguen los pedidos.
+                      Entra a tu cuenta para guardar tus direcciones y que te lleguen los pedidos.
                     </p>
                     <Link
                       href="/login"
@@ -268,7 +268,7 @@ export function DeliveryTopBar() {
                       })}
                     </ul>
 
-                    {/* El formulario lleva mapa: va acá adentro, que scrollea,
+                    {/* El formulario lleva mapa: va aquí adentro, que scrollea,
                         y no en el pie fijo donde no entraría. */}
                     {adding && (
                       <form onSubmit={addAddress} className="mt-3 flex flex-col gap-3">
@@ -289,7 +289,7 @@ export function DeliveryTopBar() {
                         <UseMyLocation coords={coords} onCapture={setCoords} />
                         {!coords && (
                           <p className="rounded-xl bg-amber-50 px-3 py-2.5 text-sm leading-relaxed text-amber-800">
-                            Marcá el punto en el mapa para poder guardar.
+                            Marca el punto en el mapa para poder guardar.
                           </p>
                         )}
                         {error && (

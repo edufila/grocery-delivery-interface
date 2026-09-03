@@ -1,7 +1,7 @@
 // Módulo sin "use client" a propósito: lo consumen tanto la página del catálogo
 // (componente de servidor) como el header (componente de cliente). Si viviera en
 // un archivo "use client", el servidor recibiría una referencia en vez del array.
-// El orden de acá manda: lo usan las pestañas del catálogo y el carrusel del
+// El orden de aquí manda: lo usan las pestañas del catálogo y el carrusel del
 // inicio. Se cambia una vez y los dos lados quedan iguales.
 export const categories = [
   "Todos",

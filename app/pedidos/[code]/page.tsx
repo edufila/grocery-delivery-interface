@@ -61,7 +61,7 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
   const { data: shopperRows } = await supabase.rpc("order_shopper", { p_order_id: order.id })
   const shopper = (shopperRows as OrderShopper[] | null)?.[0] ?? null
 
-  // Solo el dueño del pedido puede leerlo: el shopper no tiene política acá.
+  // Solo el dueño del pedido puede leerlo: el shopper no tiene política aquí.
   const { data: deliveryCode } = await supabase
     .from("order_delivery_codes")
     .select("code, attempts")

@@ -15,7 +15,7 @@ type Message = {
 /**
  * Chat entre el cliente y el shopper de un pedido. Los mensajes viven en la
  * base y llegan por Realtime: antes existían solo en la pantalla de quien los
- * escribía, así que el otro nunca los veía.
+ * escribea, así que el otro nunca los veía.
  */
 export function OrderChat({
   orderId,
@@ -119,7 +119,7 @@ export function OrderChat({
       setError(
         sendError.message.includes("does not exist")
           ? "Falta correr la migración del chat en Supabase."
-          : "No se pudo enviar. Probá de nuevo.",
+          : "No se pudo enviar. Prueba de nuevo.",
       )
       return
     }
@@ -173,7 +173,7 @@ export function OrderChat({
             <div className="flex-1 space-y-3 overflow-y-auto overscroll-contain px-5 py-4">
               {messages.length === 0 && (
                 <p className="py-8 text-center text-sm leading-relaxed text-gray-400">
-                  Todavía no hay mensajes. Escribí acá si hace falta coordinar algo del pedido.
+                  Todavía no hay mensajes. Escribe aquí si hace falta coordinar algo del pedido.
                 </p>
               )}
 
@@ -220,7 +220,7 @@ export function OrderChat({
               <input
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
-                placeholder="Escribí tu mensaje..."
+                placeholder="Escribe tu mensaje..."
                 aria-label="Mensaje"
                 enterKeyHint="send"
                 maxLength={1000}

@@ -44,7 +44,7 @@ export default async function ShopperPage() {
     return <SinPermiso rol={profile?.role ?? "cliente"} />
   }
 
-  // RLS ya limita a disponibles + propios; acá solo los separamos.
+  // RLS ya limita a disponibles + propios; aquí solo los separamos.
   const { data: orders } = await supabase
     .from("orders")
     .select("id, code, status, total, created_at, address_label, shopper_id")
@@ -69,7 +69,7 @@ export default async function ShopperPage() {
           </Link>
           <div>
             <h1 className="text-lg font-semibold text-gray-900">Panel del shopper</h1>
-            <p className="text-sm text-gray-500">Entrás como {profile.role}</p>
+            <p className="text-sm text-gray-500">Entras como {profile.role}</p>
           </div>
         </div>
       </header>
@@ -77,10 +77,10 @@ export default async function ShopperPage() {
       <OrdersLiveRefresh />
 
       <div className="mx-auto flex max-w-md flex-col gap-6 px-4 pb-16 pt-5">
-        <Grupo titulo="En curso" vacio="No tenés pedidos tomados." pedidos={mios} />
+        <Grupo titulo="En curso" vacio="No tienes pedidos tomados." pedidos={mios} />
         <Grupo
           titulo="Disponibles"
-          vacio="No hay pedidos esperando. Cuando alguien compre, aparece acá."
+          vacio="No hay pedidos esperando. Cuando alguien compre, aparece aquí."
           pedidos={disponibles}
         />
         {entregados.length > 0 && (
@@ -158,7 +158,7 @@ function SinPermiso({ rol }: { rol: string }) {
       <div className="mx-auto w-full max-w-md px-5 text-center">
         <h1 className="text-xl font-semibold text-gray-900">Esta zona es para shoppers</h1>
         <p className="mt-3 text-sm leading-relaxed text-gray-600">
-          Tu cuenta figura como <span className="font-semibold">{rol}</span>. Para entrar acá hace
+          Tu cuenta figura como <span className="font-semibold">{rol}</span>. Para entrar aquí hace
           falta el rol shopper, admin o dev.
         </p>
         <p className="mt-3 text-sm leading-relaxed text-gray-500">

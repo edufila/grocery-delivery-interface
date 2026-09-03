@@ -46,7 +46,7 @@ export function ProductCatalog({
     query.trim().length > 0
       ? `No encontramos productos con "${query.trim()}".`
       : wholesaleOnly
-        ? "No hay productos al mayor acá."
+        ? "No hay productos al mayor aquí."
         : category === "Todos"
           ? `${storeName} todavía no cargó productos.`
           : `Todavía no hay productos en ${category}.`

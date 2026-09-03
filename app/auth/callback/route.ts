@@ -4,7 +4,7 @@ import { safeNextPath } from "@/lib/safe-path"
 import { createClient } from "@/lib/supabase/server"
 
 /**
- * Vuelta de Google OAuth: Supabase redirige acá con un `code` que hay que
+ * Vuelta de Google OAuth: Supabase redirige aquí con un `code` que hay que
  * canjear por una sesión antes de mandar al usuario a donde iba.
  */
 export async function GET(request: Request) {

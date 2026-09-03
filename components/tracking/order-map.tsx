@@ -97,7 +97,7 @@ export function OrderMap({
   }, [shopper?.lat, shopper?.lng])
 
   // Escucha los cambios del pedido: cuando el shopper manda su posición, la
-  // fila se actualiza y llega acá sin recargar la página.
+  // fila se actualiza y llega aquí sin recargar la página.
   useEffect(() => {
     if (!live) return
     const supabase = createClient()
@@ -275,7 +275,7 @@ export function OrderMap({
   if (failed) {
     return (
       <section className="rounded-2xl border border-gray-100 bg-white p-5 text-center text-sm text-gray-500">
-        No pudimos cargar el mapa. Revisá tu conexión.
+        No pudimos cargar el mapa. Revisa tu conexión.
       </section>
     )
   }

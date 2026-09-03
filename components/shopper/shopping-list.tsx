@@ -42,7 +42,7 @@ export function ShoppingList({
       setError(
         rpcError.message.includes("does not exist")
           ? "Falta correr la migración de faltantes en Supabase."
-          : "No se pudo marcar. Probá de nuevo.",
+          : "No se pudo marcar. Prueba de nuevo.",
       )
       return
     }

@@ -9,7 +9,7 @@ import { isSupabaseConfigured, supabaseAnonKey, supabaseUrl } from "@/lib/supaba
  * Rutas que exigen sesión iniciada.
  *
  * Mientras no haya ningún proveedor de login habilitado en Supabase, solo
- * protegemos el perfil: si acá metemos /checkout o /tracking, la app queda
+ * protegemos el perfil: si aquí metemos /checkout o /tracking, la app queda
  * inusable porque el login todavía no se puede completar. Volver a agregarlos
  * cuando la autenticación funcione de punta a punta.
  */

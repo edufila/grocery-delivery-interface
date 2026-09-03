@@ -120,7 +120,7 @@ export function UseMyLocation({
         setBusy(false)
         setError(
           geoError.code === geoError.PERMISSION_DENIED
-            ? "Bloqueaste el permiso. Podés mover el pin a mano igual."
+            ? "Bloqueaste el permiso. Puedes mover el pin a mano igual."
             : "No pudimos leer tu ubicación. Movés el pin a mano y listo.",
         )
       },
@@ -135,7 +135,7 @@ export function UseMyLocation({
       </div>
 
       <p className="text-center text-xs leading-relaxed text-gray-500">
-        Arrastrá el pin, o tocá el mapa, hasta la puerta exacta donde querés que te entreguen.
+        Arrastra el pin, o toca el mapa, hasta la puerta exacta donde quieres que te entreguen.
       </p>
 
       <button

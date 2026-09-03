@@ -62,7 +62,7 @@ export default async function PedidosPage() {
             </span>
             <h2 className="mt-4 text-lg font-semibold text-gray-900">Todavía no pediste nada</h2>
             <p className="mt-2 text-sm leading-relaxed text-gray-500">
-              Cuando hagas tu primer pedido lo vas a ver acá, con su seguimiento.
+              Cuando hagas tu primer pedido lo vas a ver aquí, con su seguimiento.
             </p>
             <Link
               href="/catalogo"

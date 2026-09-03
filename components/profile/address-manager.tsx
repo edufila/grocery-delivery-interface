@@ -28,7 +28,7 @@ export function AddressManager({ userId, addresses }: { userId: string; addresse
   }, [draft?.id, draft === null])
 
   const editing = draft?.id != null
-  // El pin es obligatorio: acá la gente no maneja nombres de calles, y sin el
+  // El pin es obligatorio: aquí la gente no maneja nombres de calles, y sin el
   // punto en el mapa el repartidor no tiene a dónde ir.
   const canSave =
     !!draft &&
@@ -142,7 +142,7 @@ export function AddressManager({ userId, addresses }: { userId: string; addresse
 
                   {sinPin && (
                     <p className="mt-1 text-xs leading-relaxed text-amber-700">
-                      Sin punto en el mapa. Editala y marcá dónde entregar, o el seguimiento no
+                      Sin punto en el mapa. Editala y marca dónde entregar, o el seguimiento no
                       puede dibujar el mapa.
                     </p>
                   )}
@@ -241,7 +241,7 @@ export function AddressManager({ userId, addresses }: { userId: string; addresse
 
           {!draft.coords && (
             <p className="rounded-xl bg-amber-50 px-3 py-2.5 text-sm leading-relaxed text-amber-800">
-              Marcá el punto en el mapa para poder guardar. Sin eso no hay forma de llegar.
+              Marca el punto en el mapa para poder guardar. Sin eso no hay forma de llegar.
             </p>
           )}
 

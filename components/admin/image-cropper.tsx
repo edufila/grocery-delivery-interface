@@ -8,7 +8,7 @@ export type CropShape = { width: number; height: number; round?: boolean }
 /**
  * Encuadre antes de subir. La foto del teléfono nunca viene con la proporción
  * que necesita la tarjeta, y recortarla sola por el centro deja al producto
- * afuera. Acá se arrastra y se acerca hasta que quede como tiene que verse.
+ * afuera. Aquí se arrastra y se acerca hasta que quede como tiene que verse.
  */
 export function ImageCropper({
   file,
@@ -162,7 +162,7 @@ export function ImageCropper({
       </label>
 
       <p className="text-center text-xs leading-relaxed text-gray-500">
-        Arrastrá la foto para mover el encuadre. Se guarda a {shape.width}×{shape.height}.
+        Arrastra la foto para mover el encuadre. Se guarda a {shape.width}×{shape.height}.
       </p>
 
       <div className="flex gap-2">

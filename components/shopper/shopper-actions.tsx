@@ -57,7 +57,7 @@ export function ShopperActions({
     setBusy(false)
 
     if (rpcError) {
-      setError("No pudimos confirmar la entrega. Probá de nuevo.")
+      setError("No pudimos confirmar la entrega. Prueba de nuevo.")
       return
     }
 
@@ -108,7 +108,7 @@ export function ShopperActions({
     setBusy(false)
 
     if (updateError) {
-      setError("No pudimos tomarlo. Probá de nuevo.")
+      setError("No pudimos tomarlo. Prueba de nuevo.")
       return
     }
     if (!data || data.length === 0) {
@@ -149,7 +149,7 @@ export function ShopperActions({
         <section className="rounded-2xl border border-gray-100 bg-white p-5">
           <h2 className="text-base font-semibold text-gray-900">Código de entrega</h2>
           <p className="mt-1 text-sm leading-relaxed text-gray-500">
-            Pedíselo al cliente al entregarle el pedido. Son 4 dígitos.
+            Pídeselo al cliente al entregarle el pedido. Son 4 dígitos.
           </p>
 
           <input

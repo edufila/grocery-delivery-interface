@@ -192,7 +192,7 @@ export function ImagePicker({
                 <p className="py-8 text-center text-sm text-gray-400">Cargando...</p>
               ) : files.length === 0 ? (
                 <p className="py-8 text-center text-sm text-gray-500">
-                  Todavía no hay fotos acá. Subí la primera.
+                  Todavía no hay fotos aquí. Sube la primera.
                 </p>
               ) : (
                 <ul className="grid grid-cols-3 gap-2 pb-2 sm:grid-cols-4">

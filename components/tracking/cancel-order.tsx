@@ -30,12 +30,12 @@ export function CancelOrder({ orderId }: { orderId: string }) {
     setBusy(false)
 
     if (cancelError) {
-      setError("No pudimos cancelarlo. Probá de nuevo.")
+      setError("No pudimos cancelarlo. Prueba de nuevo.")
       return
     }
     if (!data || data.length === 0) {
       // La política deja de aplicar en cuanto alguien lo toma.
-      setError("Un shopper ya lo tomó, así que no se puede cancelar. Escribile por el chat.")
+      setError("Un shopper ya lo tomó, así que no se puede cancelar. Escríbele por el chat.")
       router.refresh()
       return
     }
@@ -59,7 +59,7 @@ export function CancelOrder({ orderId }: { orderId: string }) {
     <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4">
       <p className="text-sm leading-relaxed text-rose-900">
         ¿Seguro? El pedido queda cancelado y no se puede reabrir. Si ya te asignaron shopper, mejor
-        escribile por el chat.
+        escríbele por el chat.
       </p>
 
       {error && (

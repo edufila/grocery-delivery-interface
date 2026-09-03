@@ -31,7 +31,7 @@ export function DeliveryCodeCard({
     setBusy(false)
 
     if (rpcError || !data) {
-      setError("No pudimos generar uno nuevo. Probá de nuevo.")
+      setError("No pudimos generar uno nuevo. Prueba de nuevo.")
       return
     }
     setCode(data as string)
@@ -45,7 +45,7 @@ export function DeliveryCodeCard({
       </p>
       <p className="mt-2 font-mono text-4xl font-bold tracking-[0.3em] text-white">{code}</p>
       <p className="mt-3 text-sm leading-relaxed text-gray-400">
-        Dáselo al shopper cuando te entregue el pedido. Solo vos lo ves: sirve para confirmar que la
+        Dáselo al shopper cuando te entregue el pedido. Solo tú lo ves: sirve para confirmar que la
         entrega fue a la persona correcta.
       </p>
 

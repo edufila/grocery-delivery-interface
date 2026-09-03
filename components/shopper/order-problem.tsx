@@ -76,7 +76,7 @@ export function OrderProblem({ orderId }: { orderId: string }) {
         <>
           <h2 className="text-sm font-semibold text-amber-900">¿Qué pasó?</h2>
           <p className="mt-1 text-sm leading-relaxed text-amber-800">
-            Si podés seguir pero no ahora, soltalo y vuelve a la lista para otro shopper. Si el
+            Si puedes seguir pero no ahora, soltalo y vuelve a la lista para otro shopper. Si el
             pedido no se puede cumplir, cancelalo explicando por qué: el cliente lo va a leer.
           </p>
 

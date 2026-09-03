@@ -99,7 +99,7 @@ export function CheckoutView() {
     const supabase = createClient()
 
     // Solo mandamos qué y cuánto. Los precios y el total los pone la base
-    // contra el catálogo: si viajaran desde acá, se podrían adulterar.
+    // contra el catálogo: si viajaran desde aquí, se podrían adulterar.
     const { data: code, error: rpcError } = await supabase.rpc("place_order", {
       p_items: lines.map(({ product, qty }) => ({ product_id: product.id, qty })),
       p_address_id: session.address.id,
@@ -113,7 +113,7 @@ export function CheckoutView() {
       setError(
         rpcError?.message.includes("does not exist")
           ? "Falta correr la migración del catálogo en Supabase."
-          : "No pudimos registrar el pedido. Intentá de nuevo.",
+          : "No pudimos registrar el pedido. Intenta de nuevo.",
       )
       return
     }
@@ -141,7 +141,7 @@ export function CheckoutView() {
             </span>
             <h2 className="mt-4 text-lg font-semibold text-gray-900">Tu carrito está vacío</h2>
             <p className="mt-2 text-sm leading-relaxed text-gray-500">
-              Agregá productos del catálogo y volvé acá para confirmar el pedido.
+              Agrega productos del catálogo y vuelve aquí para confirmar el pedido.
             </p>
             <Link
               href="/catalogo"
@@ -220,9 +220,9 @@ function DeliveryCard({ session }: { session: Session }) {
   if (!session.userId) {
     return (
       <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-        <h2 className="text-sm font-semibold text-amber-900">Entrá para pedir</h2>
+        <h2 className="text-sm font-semibold text-amber-900">Entra para pedir</h2>
         <p className="mt-1 text-sm leading-relaxed text-amber-800">
-          Necesitamos saber quién sos y a dónde llevar el pedido.
+          Necesitamos saber quién eres y a dónde llevar el pedido.
         </p>
         <Link
           href="/login?next=/checkout"
@@ -239,7 +239,7 @@ function DeliveryCard({ session }: { session: Session }) {
       <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
         <h2 className="text-sm font-semibold text-amber-900">Falta tu dirección</h2>
         <p className="mt-1 text-sm leading-relaxed text-amber-800">
-          Cargá una dirección de entrega antes de confirmar el pedido.
+          Carga una dirección de entrega antes de confirmar el pedido.
         </p>
         <Link
           href="/perfil"
