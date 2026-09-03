@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Loader2, Phone, X } from "lucide-react"
+import { BadgeCheck, Loader2, Phone, X } from "lucide-react"
 
 import {
   formatMoney,
@@ -30,6 +30,28 @@ export function DetallePedido({ orderId, onClose }: { orderId: string; onClose: 
   const [shopper, setShopper] = useState<Persona | null>(null)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState("")
+  const [verificando, setVerificando] = useState(false)
+
+  async function verificar() {
+    setVerificando(true)
+    const { error: rpcError } = await createClient().rpc("verify_payment", {
+      p_order_id: orderId,
+      p_ok: true,
+    })
+    setVerificando(false)
+
+    if (rpcError) {
+      setError(
+        rpcError.message.includes("does not exist")
+          ? "Falta correr la migración de pagos en Supabase."
+          : rpcError.message,
+      )
+      return
+    }
+    setOrden((previa) =>
+      previa ? { ...previa, payment_verified_at: new Date().toISOString() } : previa,
+    )
+  }
 
   useEffect(() => {
     let cancelado = false
@@ -240,6 +262,42 @@ export function DetallePedido({ orderId, onClose }: { orderId: string; onClose: 
                     valor={PAYMENT_LABEL[orden.payment_method] ?? orden.payment_method}
                   />
                 </dl>
+
+                {/* Lo que el cliente dice que transfirió. Verificarlo es mirar
+                    el banco: la app no tiene forma de saberlo sola. */}
+                {orden.payment_reference ? (
+                  <div className="mt-3 rounded-xl border border-gray-200 p-3">
+                    <p className="text-sm text-gray-900">
+                      Referencia reportada:{" "}
+                      <span className="font-mono font-semibold">{orden.payment_reference}</span>
+                    </p>
+                    {orden.payment_verified_at ? (
+                      <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-emerald-700">
+                        <BadgeCheck className="h-4 w-4" aria-hidden="true" />
+                        Verificada
+                      </p>
+                    ) : (
+                      <>
+                        <p className="mt-1 text-xs leading-relaxed text-gray-500">
+                          Búscala en tu banco antes de confirmar. Esto no comprueba nada solo.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => void verificar()}
+                          disabled={verificando}
+                          className="mt-2 flex h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white disabled:bg-gray-200 disabled:text-gray-400"
+                        >
+                          {verificando && (
+                            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                          )}
+                          Confirmar que el pago llegó
+                        </button>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <p className="mt-3 text-sm text-gray-500">El cliente todavía no reportó el pago.</p>
+                )}
               </Bloque>
             </div>
           )}

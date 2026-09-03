@@ -13,6 +13,7 @@ import { PaymentMethods } from "./payment-methods"
 import { OrderSummary } from "./order-summary"
 import { useCart } from "@/lib/cart"
 import { nombreDesdeId } from "@/lib/carrito"
+import { fetchMetodosPago, sePuedeOfrecer, type MetodoPago } from "@/lib/pagos"
 import type { Address } from "@/lib/orders"
 import { createClient } from "@/lib/supabase/client"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
@@ -45,6 +46,8 @@ function mensajeDeError(mensaje: string | undefined) {
   if (mensaje.includes("does not exist")) return "Falta correr la migración del catálogo en Supabase."
 
   for (const conocido of [
+    "Ese método de pago ya no está disponible",
+    "Se agotó:",
     "No se puede pedir de dos abastos",
     "no tiene el punto marcado",
     "El carrito está vacío",
@@ -75,13 +78,16 @@ export function CheckoutView() {
   } = useCart()
 
   const [substitution, setSubstitution] = useState("shopper")
-  const [payment, setPayment] = useState("pago-movil")
+  // Sin método elegido hasta saber cuáles hay: el que estaba fijo aquí podía
+  // no estar ofreciéndose, y el pedido entraba con algo que nadie sabe cobrar.
+  const [payment, setPayment] = useState("")
   const [note, setNote] = useState("")
   const [session, setSession] = useState<Session>({ loading: true, userId: null, address: null })
   const [placing, setPlacing] = useState(false)
   const [error, setError] = useState("")
   const [tiendas, setTiendas] = useState<Tienda[]>([])
   const [serviceFee, setServiceFee] = useState(SERVICE_FEE)
+  const [metodos, setMetodos] = useState<MetodoPago[]>([])
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
@@ -154,6 +160,27 @@ export function CheckoutView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storeIds.join(",")])
 
+  /** Los métodos que hoy se pueden cumplir, y el primero queda elegido. */
+  useEffect(() => {
+    if (!isSupabaseConfigured) return
+    let cancelado = false
+
+    void (async () => {
+      const todos = await fetchMetodosPago(createClient())
+      if (cancelado) return
+
+      const ofrecibles = todos.filter(sePuedeOfrecer)
+      setMetodos(ofrecibles)
+      setPayment((actual) =>
+        ofrecibles.some((m) => m.id === actual) ? actual : (ofrecibles[0]?.id ?? ""),
+      )
+    })()
+
+    return () => {
+      cancelado = true
+    }
+  }, [])
+
   const items = useMemo<CartLine[]>(
     () =>
       lines.map(({ product, qty }) => ({
@@ -186,7 +213,14 @@ export function CheckoutView() {
    */
   const noPedibles = [...agotados.map((l) => l.product.id), ...perdidos]
   const canPlace =
-    hasItems && !!session.userId && addressPinned && !mezclado && noPedibles.length === 0 && !placing
+    hasItems &&
+    !!session.userId &&
+    addressPinned &&
+    !mezclado &&
+    noPedibles.length === 0 &&
+    // Sin método de pago no hay pedido: la base lo rechazaría igual.
+    payment.length > 0 &&
+    !placing
 
   async function placeOrder() {
     if (!session.userId || !session.address || placing) return
@@ -323,7 +357,7 @@ export function CheckoutView() {
             </section>
 
             <SubstitutionOptions value={substitution} onChange={setSubstitution} />
-            <PaymentMethods value={payment} onChange={setPayment} />
+            <PaymentMethods value={payment} onChange={setPayment} metodos={metodos} />
             <OrderSummary subtotal={subtotal} serviceFee={serviceFee} deliveryFee={deliveryFee} />
             {error && (
               <p role="alert" className="text-sm text-rose-600">

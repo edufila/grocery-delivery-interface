@@ -111,6 +111,11 @@ export type Order = {
   /** Lo que se paga de verdad, una vez que el shopper revisó la cesta. */
   final_subtotal: number | null
   final_total: number | null
+  /** Lo que el cliente reportó de su transferencia. */
+  payment_reference: string | null
+  payment_reported_at: string | null
+  /** Cuándo el abasto confirmó que el dinero llegó. */
+  payment_verified_at: string | null
   created_at: string
 }
 

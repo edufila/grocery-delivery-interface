@@ -7,6 +7,7 @@ import { OrderLiveRefresh } from "@/components/live-refresh"
 import { DeliveryCodeCard } from "@/components/tracking/delivery-code-card"
 import { OrderMap } from "@/components/tracking/order-map"
 import { CancelOrder } from "@/components/tracking/cancel-order"
+import { PagarPedido } from "@/components/tracking/pagar-pedido"
 import { RepetirPedido } from "@/components/tracking/repetir-pedido"
 import { OrderChat } from "@/components/tracking/order-chat"
 import { ShopperCard, type OrderShopper } from "@/components/tracking/shopper-card"
@@ -70,6 +71,19 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
     .eq("order_id", order.id)
     .maybeSingle<{ code: string; attempts: number }>()
 
+  // A dónde pagar. Los datos los carga el panel, no viven en el código.
+  const { data: metodo } = await supabase
+    .from("payment_methods")
+    .select("instructions, needs_reference")
+    .eq("id", order.payment_method)
+    .maybeSingle<{ instructions: string | null; needs_reference: boolean }>()
+
+  const hayQuePagar =
+    !cancelled &&
+    order.status !== "entregado" &&
+    !!metodo?.needs_reference &&
+    !!metodo.instructions?.trim()
+
   return (
     <main className="min-h-dvh bg-gray-50">
       {/* El interior se alinea con el contenido: si no, en pantalla ancha la
@@ -108,6 +122,17 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
             }
             live={order.status !== "entregado"}
             route={order.status === "en_camino"}
+          />
+        )}
+
+        {/* Arriba de todo mientras no esté pagado: es lo que traba el pedido. */}
+        {hayQuePagar && (
+          <PagarPedido
+            orderId={order.id}
+            total={order.final_total ?? order.total}
+            instrucciones={metodo.instructions!.trim()}
+            referencia={order.payment_reference}
+            verificado={order.payment_verified_at != null}
           />
         )}
 

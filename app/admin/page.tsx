@@ -8,7 +8,9 @@ import { SettingsEditor } from "@/components/admin/settings-editor"
 import { StoreEditor } from "@/components/admin/store-editor"
 import { StoreProducts } from "@/components/admin/store-products"
 import { UserManager, type AdminUser } from "@/components/admin/user-manager"
+import { PaymentEditor } from "@/components/admin/payment-editor"
 import { pageTitle } from "@/lib/brand"
+import { fetchMetodosPago } from "@/lib/pagos"
 import type { AdminProduct, Settings, Store } from "@/lib/admin"
 import type { Order, Role } from "@/lib/orders"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
@@ -55,6 +57,8 @@ export default async function AdminPage() {
       </main>
     )
   }
+
+  const metodos = await fetchMetodosPago(supabase)
 
   const [{ data: stores }, { data: products }, { data: settings }, { data: orders }, { data: users }] =
     await Promise.all([
@@ -144,8 +148,15 @@ export default async function AdminPage() {
         </Section>
 
         <Section
+          title="Cobros"
+          hint="A dónde paga el cliente. Lo ve tal cual, con los saltos de línea. Sin datos cargados, el método no se le ofrece aunque esté activo."
+        >
+          <PaymentEditor metodos={metodos} />
+        </Section>
+
+        <Section
           title="Pedidos"
-          hint="Para limpiar los de prueba. Se borra el pedido con sus productos y su código."
+          hint="Toca uno para ver qué pidió y a quién. Las casillas son para borrar los de prueba: se va el pedido con sus productos y su código."
         >
           <OrdersCleanup orders={orders ?? []} />
         </Section>
