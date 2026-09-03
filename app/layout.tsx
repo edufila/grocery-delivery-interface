@@ -34,13 +34,19 @@ export const viewport: Viewport = {
   ],
 }
 
+/**
+ * La app está diseñada en claro: todas las superficies son bg-white y el texto
+ * gray-900. La clase "light" en <html> desactiva el bloque de
+ * prefers-color-scheme de globals.css; sin ella, en un dispositivo en modo
+ * oscuro el texto heredado se vuelve blanco y desaparece sobre las tarjetas.
+ */
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="es" className="light">
       <body className="antialiased">
         <CartProvider>{children}</CartProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}

@@ -12,7 +12,9 @@ export function AddressManager({ userId, addresses }: { userId: string; addresse
   const supabase = createClient()
 
   const [adding, setAdding] = useState(false)
-  const [label, setLabel] = useState("")
+  // La primera casi siempre es la casa: evita que el botón quede gris sin
+  // explicación porque falta un campo que la persona no miró.
+  const [label, setLabel] = useState(addresses.length === 0 ? "Casa" : "")
   const [detail, setDetail] = useState("")
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
@@ -138,7 +140,7 @@ export function AddressManager({ userId, addresses }: { userId: string; addresse
               value={label}
               onChange={(event) => setLabel(event.target.value)}
               placeholder="Casa, Trabajo..."
-              className="mt-1.5 h-12 w-full rounded-xl border border-gray-200 px-3 text-base outline-none focus:border-emerald-500"
+              className="mt-1.5 h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-emerald-500"
             />
           </div>
           <div>
@@ -150,13 +152,21 @@ export function AddressManager({ userId, addresses }: { userId: string; addresse
               value={detail}
               onChange={(event) => setDetail(event.target.value)}
               placeholder="Av. Las Delicias, Urb. El Bosque"
-              className="mt-1.5 h-12 w-full rounded-xl border border-gray-200 px-3 text-base outline-none focus:border-emerald-500"
+              className="mt-1.5 h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-emerald-500"
             />
           </div>
 
           {error && (
             <p role="alert" className="text-sm text-rose-600">
               {error}
+            </p>
+          )}
+
+          {!canAdd && !busy && (label.trim() || detail.trim()) && (
+            <p className="text-sm text-gray-500">
+              {label.trim().length < 2
+                ? "Ponele un nombre a la dirección, como Casa o Trabajo."
+                : "Escribí la dirección completa para poder guardarla."}
             </p>
           )}
 
