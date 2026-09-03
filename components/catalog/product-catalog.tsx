@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import { CambiarAbasto } from "./cambiar-abasto"
 import { CatalogHeader } from "./catalog-header"
 import { ProductCard } from "./product-card"
 import { CartBar } from "./cart-bar"
@@ -10,6 +11,7 @@ import type { Product } from "@/lib/products"
 
 type Props = {
   products: Product[]
+  storeId: string
   storeName: string
   storeTag?: string
   initialQuery?: string
@@ -19,6 +21,7 @@ type Props = {
 
 export function ProductCatalog({
   products,
+  storeId,
   storeName,
   storeTag,
   initialQuery = "",
@@ -53,6 +56,7 @@ export function ProductCatalog({
 
   return (
     <div className="min-h-dvh bg-gray-50 pb-28">
+      <CambiarAbasto storeId={storeId} storeName={storeName} />
       <CatalogHeader
         storeName={storeName}
         storeTag={storeTag}

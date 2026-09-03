@@ -16,6 +16,11 @@ import type { Address } from "@/lib/orders"
 import { createClient } from "@/lib/supabase/client"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 
+/**
+ * Solo por si no se pueden leer las de verdad. Las tarifas que valen salen de
+ * la base: si aquí quedaran fijas, al cambiar el costo de envío desde el panel
+ * el cliente vería un total y se le cobraría otro.
+ */
 const SERVICE_FEE = 1.99
 const DELIVERY_FEE = 3.5
 
@@ -25,9 +30,35 @@ type Session = {
   address: Address | null
 }
 
+type Tienda = { id: string; name: string; delivery_fee: number }
+
+/**
+ * `place_order` rechaza el pedido con mensajes escritos para que los lea una
+ * persona: que la dirección no tiene punto en el mapa, que el carrito mezcla
+ * dos abastos, que un producto ya no existe. Antes se tapaban todos con
+ * "Intenta de nuevo", que además es un mal consejo: reintentar no arregla
+ * ninguno de esos.
+ */
+function mensajeDeError(mensaje: string | undefined) {
+  if (!mensaje) return "No pudimos registrar el pedido. Intenta de nuevo."
+  if (mensaje.includes("does not exist")) return "Falta correr la migración del catálogo en Supabase."
+
+  for (const conocido of [
+    "No se puede pedir de dos abastos",
+    "no tiene el punto marcado",
+    "El carrito está vacío",
+    "Esa dirección no es tuya",
+    "Hay que iniciar sesión",
+  ]) {
+    if (mensaje.includes(conocido)) return mensaje
+  }
+
+  return "No pudimos registrar el pedido. Intenta de nuevo."
+}
+
 export function CheckoutView() {
   const router = useRouter()
-  const { lines, subtotal, ready, add, removeOne, removeAll, clear } = useCart()
+  const { lines, subtotal, ready, storeIds, add, removeOne, removeAll, keepOnly, clear } = useCart()
 
   const [substitution, setSubstitution] = useState("shopper")
   const [payment, setPayment] = useState("pago-movil")
@@ -35,6 +66,8 @@ export function CheckoutView() {
   const [session, setSession] = useState<Session>({ loading: true, userId: null, address: null })
   const [placing, setPlacing] = useState(false)
   const [error, setError] = useState("")
+  const [tiendas, setTiendas] = useState<Tienda[]>([])
+  const [serviceFee, setServiceFee] = useState(SERVICE_FEE)
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
@@ -71,6 +104,42 @@ export function CheckoutView() {
     }
   }, [])
 
+  /**
+   * Las tarifas se leen de la base, que es de donde las toma `place_order` al
+   * cobrar. Antes estaban escritas aquí: cambiar el envío desde el panel dejaba
+   * al cliente viendo un total que no era el que se le iba a cobrar.
+   */
+  useEffect(() => {
+    if (!isSupabaseConfigured || storeIds.length === 0) return
+    let cancelled = false
+
+    void (async () => {
+      const supabase = createClient()
+      const [{ data: filas }, { data: ajustes }] = await Promise.all([
+        supabase
+          .from("stores")
+          .select("id, name, delivery_fee")
+          .in("id", storeIds)
+          .returns<Tienda[]>(),
+        supabase
+          .from("settings")
+          .select("service_fee")
+          .eq("id", "global")
+          .maybeSingle<{ service_fee: number }>(),
+      ])
+
+      if (cancelled) return
+      if (filas) setTiendas(filas.map((t) => ({ ...t, delivery_fee: Number(t.delivery_fee) })))
+      if (ajustes?.service_fee != null) setServiceFee(Number(ajustes.service_fee))
+    })()
+
+    return () => {
+      cancelled = true
+    }
+    // La lista de ids, no el arreglo: se arma nuevo en cada render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeIds.join(",")])
+
   const items = useMemo<CartLine[]>(
     () =>
       lines.map(({ product, qty }) => ({
@@ -85,10 +154,19 @@ export function CheckoutView() {
   )
 
   const hasItems = items.length > 0
-  const total = subtotal + (hasItems ? SERVICE_FEE + DELIVERY_FEE : 0)
+  // El envío lo pone el abasto del carrito, que es de donde lo saca la base.
+  const deliveryFee = tiendas[0]?.delivery_fee ?? DELIVERY_FEE
+  const total = subtotal + (hasItems ? serviceFee + deliveryFee : 0)
   // Sin punto en el mapa el repartidor no tiene a dónde ir: no se puede pedir.
   const addressPinned = session.address?.lat != null && session.address?.lng != null
-  const canPlace = hasItems && !!session.userId && addressPinned && !placing
+  /**
+   * Red de seguridad: al entrar a otro abasto se pregunta qué hacer con el
+   * carrito, así que mezclado no debería llegar nunca. Pero un carrito viejo
+   * guardado en el teléfono desde antes de ese aviso sí puede estar mezclado, y
+   * la base lo rechazaría al final sin decir qué quitar.
+   */
+  const mezclado = storeIds.length > 1
+  const canPlace = hasItems && !!session.userId && addressPinned && !mezclado && !placing
 
   async function placeOrder() {
     if (!session.userId || !session.address || placing) return
@@ -110,11 +188,7 @@ export function CheckoutView() {
 
     if (rpcError || !code) {
       setPlacing(false)
-      setError(
-        rpcError?.message.includes("does not exist")
-          ? "Falta correr la migración del catálogo en Supabase."
-          : "No pudimos registrar el pedido. Intenta de nuevo.",
-      )
+      setError(mensajeDeError(rpcError?.message))
       return
     }
 
@@ -152,6 +226,30 @@ export function CheckoutView() {
           </section>
         ) : (
           <>
+            {mezclado && (
+              <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                <p className="text-sm font-semibold text-amber-900">
+                  Tu carrito tiene productos de dos abastos
+                </p>
+                <p className="mt-1 text-sm leading-relaxed text-amber-800">
+                  Cada pedido es de uno solo, porque el shopper hace un recorrido. Elige con cuál
+                  te quedas; lo del otro se quita del carrito.
+                </p>
+                <div className="mt-3 flex flex-col gap-2">
+                  {tiendas.map((tienda) => (
+                    <button
+                      key={tienda.id}
+                      type="button"
+                      onClick={() => keepOnly(tienda.id)}
+                      className="flex h-12 w-full items-center justify-center rounded-xl bg-amber-600 px-4 text-sm font-semibold text-white"
+                    >
+                      Dejar solo lo de {tienda.name}
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
+
             <DeliveryCard session={session} />
             <CartItemList items={items} onInc={add} onDec={removeOne} onRemove={removeAll} />
             <section className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
@@ -173,7 +271,7 @@ export function CheckoutView() {
 
             <SubstitutionOptions value={substitution} onChange={setSubstitution} />
             <PaymentMethods value={payment} onChange={setPayment} />
-            <OrderSummary subtotal={subtotal} serviceFee={SERVICE_FEE} deliveryFee={DELIVERY_FEE} />
+            <OrderSummary subtotal={subtotal} serviceFee={serviceFee} deliveryFee={deliveryFee} />
             {error && (
               <p role="alert" className="text-sm text-rose-600">
                 {error}

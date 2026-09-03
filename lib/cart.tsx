@@ -18,9 +18,17 @@ type CartValue = {
   subtotal: number
   /** false hasta leer el storage y el catálogo. */
   ready: boolean
+  /**
+   * Los abastos que hay en el carrito. Un pedido es de uno solo -- el shopper
+   * hace un recorrido -- y la base rechaza los mezclados, así que hay que
+   * poder avisar antes de que el cliente llegue al final.
+   */
+  storeIds: string[]
   add: (id: string) => void
   removeOne: (id: string) => void
   removeAll: (id: string) => void
+  /** Deja en el carrito solo lo de ese abasto. */
+  keepOnly: (storeId: string) => void
   clear: () => void
 }
 
@@ -102,8 +110,23 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const clear = useCallback(() => setQuantities({}), [])
 
+  const keepOnly = useCallback(
+    (storeId: string) => {
+      setQuantities((prev) => {
+        const next: Record<string, number> = {}
+        for (const [id, qty] of Object.entries(prev)) {
+          // Lo que ya no está en el catálogo se va: no se puede saber de quién era.
+          if (byId.get(id)?.store_id === storeId) next[id] = qty
+        }
+        return next
+      })
+    },
+    [byId],
+  )
+
   const value = useMemo<CartValue>(() => {
     const lines: CartLine[] = []
+    const tiendas = new Set<string>()
     let count = 0
     let subtotal = 0
 
@@ -112,12 +135,25 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       // Un producto que salió del catálogo simplemente no se muestra ni suma.
       if (!product) continue
       lines.push({ product, qty })
+      tiendas.add(product.store_id)
       count += qty
       subtotal += product.price * qty
     }
 
-    return { quantities, lines, count, subtotal, ready: loaded, add, removeOne, removeAll, clear }
-  }, [quantities, byId, loaded, add, removeOne, removeAll, clear])
+    return {
+      quantities,
+      lines,
+      count,
+      subtotal,
+      ready: loaded,
+      storeIds: [...tiendas],
+      add,
+      removeOne,
+      removeAll,
+      keepOnly,
+      clear,
+    }
+  }, [quantities, byId, loaded, add, removeOne, removeAll, keepOnly, clear])
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>
 }

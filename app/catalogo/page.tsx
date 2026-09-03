@@ -19,6 +19,7 @@ export default async function CatalogoPage({
     return (
       <ProductCatalog
         products={[]}
+        storeId="girasol"
         storeName={APP_NAME}
         initialQuery=""
         initialCategory="Todos"
@@ -43,6 +44,7 @@ export default async function CatalogoPage({
   return (
     <ProductCatalog
       products={products}
+      storeId={store.id}
       storeName={store.name}
       storeTag={store.tag ?? undefined}
       initialQuery={params.q ?? ""}
