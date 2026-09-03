@@ -18,7 +18,11 @@ export const metadata: Metadata = {
   generator: 'v0.app',
   /**
    * Sin esto, al pasar el link por WhatsApp agarraba el ícono de 180 píxeles y
-   * lo estiraba: por eso se veía borroso. Estas plataformas quieren 1200x630.
+   * lo estiraba: por eso se veía borroso.
+   *
+   * Va cuadrada y no apaisada porque así WhatsApp deja la miniatura chiquita al
+   * lado del texto en vez del banner grande. Es la propia imagen la que decide
+   * eso, no hay ninguna etiqueta para pedirlo.
    */
   openGraph: {
     type: 'website',
@@ -29,14 +33,15 @@ export const metadata: Metadata = {
     images: [
       {
         url: '/og.png',
-        width: 1200,
-        height: 630,
+        width: 600,
+        height: 600,
         alt: 'Una cesta con frutas y verduras',
       },
     ],
   },
   twitter: {
-    card: 'summary_large_image',
+    // "summary" es la tarjeta chica; "summary_large_image" es el banner.
+    card: 'summary',
     title: `${APP_NAME} · Delivery de supermercado`,
     description: DESCRIPCION,
     images: ['/og.png'],

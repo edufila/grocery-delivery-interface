@@ -2,13 +2,14 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
 
+import { resumirCarrito, type CartLine } from "@/lib/carrito"
 import { createClient } from "@/lib/supabase/client"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { fetchProducts, type Product } from "@/lib/products"
 
 const STORAGE_KEY = "carrito"
 
-export type CartLine = { product: Product; qty: number }
+export type { CartLine }
 
 type CartValue = {
   /** Cantidades por id de producto. */
@@ -24,11 +25,17 @@ type CartValue = {
    * poder avisar antes de que el cliente llegue al final.
    */
   storeIds: string[]
+  /** Lo que estaba guardado y ya no está en el catálogo. */
+  perdidos: string[]
   add: (id: string) => void
   removeOne: (id: string) => void
   removeAll: (id: string) => void
   /** Deja en el carrito solo lo de ese abasto. */
   keepOnly: (storeId: string) => void
+  /** Saca del carrito lo que ya no existe. */
+  descartarPerdidos: () => void
+  /** Pisa el carrito entero. Lo usa "volver a pedir". */
+  reemplazar: (cantidades: Record<string, number>) => void
   clear: () => void
 }
 
@@ -110,6 +117,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const clear = useCallback(() => setQuantities({}), [])
 
+  const reemplazar = useCallback((cantidades: Record<string, number>) => {
+    const limpio: Record<string, number> = {}
+    for (const [id, qty] of Object.entries(cantidades)) {
+      if (Number.isFinite(qty) && qty > 0) limpio[id] = Math.floor(qty)
+    }
+    setQuantities(limpio)
+  }, [])
+
   const keepOnly = useCallback(
     (storeId: string) => {
       setQuantities((prev) => {
@@ -124,36 +139,50 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     [byId],
   )
 
-  const value = useMemo<CartValue>(() => {
-    const lines: CartLine[] = []
-    const tiendas = new Set<string>()
-    let count = 0
-    let subtotal = 0
+  const resumen = useMemo(() => resumirCarrito(quantities, byId), [quantities, byId])
 
-    for (const [id, qty] of Object.entries(quantities)) {
-      const product = byId.get(id)
-      // Un producto que salió del catálogo simplemente no se muestra ni suma.
-      if (!product) continue
-      lines.push({ product, qty })
-      tiendas.add(product.store_id)
-      count += qty
-      subtotal += product.price * qty
-    }
+  const descartarPerdidos = useCallback(() => {
+    setQuantities((prev) => {
+      const next: Record<string, number> = {}
+      for (const [id, qty] of Object.entries(prev)) {
+        if (byId.has(id)) next[id] = qty
+      }
+      return next
+    })
+  }, [byId])
 
-    return {
+  const value = useMemo<CartValue>(
+    () => ({
       quantities,
-      lines,
-      count,
-      subtotal,
+      ...resumen,
+      /**
+       * Mientras el catálogo no llegó, el mapa está vacío y TODO parecería
+       * perdido. Sin esto, cada carga de pantalla mostraría por un instante que
+       * los productos ya no existen.
+       */
+      perdidos: loaded ? resumen.perdidos : [],
       ready: loaded,
-      storeIds: [...tiendas],
       add,
       removeOne,
       removeAll,
       keepOnly,
+      descartarPerdidos,
+      reemplazar,
       clear,
-    }
-  }, [quantities, byId, loaded, add, removeOne, removeAll, keepOnly, clear])
+    }),
+    [
+      quantities,
+      resumen,
+      loaded,
+      add,
+      removeOne,
+      removeAll,
+      keepOnly,
+      descartarPerdidos,
+      reemplazar,
+      clear,
+    ],
+  )
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>
 }

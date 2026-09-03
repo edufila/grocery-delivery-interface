@@ -7,6 +7,7 @@ import { OrderLiveRefresh } from "@/components/live-refresh"
 import { DeliveryCodeCard } from "@/components/tracking/delivery-code-card"
 import { OrderMap } from "@/components/tracking/order-map"
 import { CancelOrder } from "@/components/tracking/cancel-order"
+import { RepetirPedido } from "@/components/tracking/repetir-pedido"
 import { OrderChat } from "@/components/tracking/order-chat"
 import { ShopperCard, type OrderShopper } from "@/components/tracking/shopper-card"
 import {
@@ -291,6 +292,14 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
 
         {order.status === "confirmado" && !order.shopper_id && (
           <CancelOrder orderId={order.id} />
+        )}
+
+        {/* Solo con el pedido cerrado: mientras está en curso, lo que quiere
+            el cliente es seguirlo, no arrancar otro igual. */}
+        {(order.status === "entregado" || cancelled) && (
+          <RepetirPedido
+            items={lines.map((item) => ({ product_id: item.product_id, qty: item.qty }))}
+          />
         )}
 
         <section className="rounded-2xl border border-gray-100 bg-white p-5">

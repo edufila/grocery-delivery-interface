@@ -15,7 +15,9 @@ export function SearchBar() {
         onSubmit={(event) => {
           event.preventDefault()
           const term = query.trim()
-          router.push(term ? `/catalogo?q=${encodeURIComponent(term)}` : "/catalogo")
+          // A /buscar y no al catálogo: desde el inicio se busca en todos los
+          // abastos. Antes caía en el de Girasol y lo de los demás no aparecía.
+          router.push(term ? `/buscar?q=${encodeURIComponent(term)}` : "/buscar")
         }}
       >
         <label className="relative flex-1">
@@ -29,7 +31,7 @@ export function SearchBar() {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             enterKeyHint="search"
-            placeholder="Buscar productos..."
+            placeholder="Buscar en todos los abastos..."
             className="w-full rounded-2xl border border-gray-200 bg-gray-50 py-3 pl-11 pr-4 text-base text-gray-900 placeholder:text-gray-400 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
           />
         </label>

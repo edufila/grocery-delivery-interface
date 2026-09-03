@@ -12,6 +12,7 @@ import { SubstitutionOptions } from "./substitution-options"
 import { PaymentMethods } from "./payment-methods"
 import { OrderSummary } from "./order-summary"
 import { useCart } from "@/lib/cart"
+import { nombreDesdeId } from "@/lib/carrito"
 import type { Address } from "@/lib/orders"
 import { createClient } from "@/lib/supabase/client"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
@@ -58,7 +59,19 @@ function mensajeDeError(mensaje: string | undefined) {
 
 export function CheckoutView() {
   const router = useRouter()
-  const { lines, subtotal, ready, storeIds, add, removeOne, removeAll, keepOnly, clear } = useCart()
+  const {
+    lines,
+    subtotal,
+    ready,
+    storeIds,
+    perdidos,
+    add,
+    removeOne,
+    removeAll,
+    keepOnly,
+    descartarPerdidos,
+    clear,
+  } = useCart()
 
   const [substitution, setSubstitution] = useState("shopper")
   const [payment, setPayment] = useState("pago-movil")
@@ -226,6 +239,30 @@ export function CheckoutView() {
           </section>
         ) : (
           <>
+            {/* Se agotaron o los desactivaron mientras el carrito esperaba en
+                el teléfono. Antes se caían solos y el cliente llegaba aquí con
+                menos cosas de las que puso, sin enterarse. */}
+            {perdidos.length > 0 && (
+              <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                <p className="text-sm font-semibold text-amber-900">
+                  {perdidos.length === 1
+                    ? "Un producto de tu carrito ya no está disponible"
+                    : `${perdidos.length} productos de tu carrito ya no están disponibles`}
+                </p>
+                <p className="mt-1 text-sm leading-relaxed text-amber-800">
+                  {perdidos.map(nombreDesdeId).join(", ")}. El abasto los quitó del catálogo, así
+                  que no entran en este pedido.
+                </p>
+                <button
+                  type="button"
+                  onClick={descartarPerdidos}
+                  className="mt-3 flex h-11 items-center justify-center rounded-xl bg-amber-600 px-4 text-sm font-semibold text-white"
+                >
+                  Entendido, quitarlos
+                </button>
+              </section>
+            )}
+
             {mezclado && (
               <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
                 <p className="text-sm font-semibold text-amber-900">
