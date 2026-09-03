@@ -58,7 +58,7 @@ export function NewProduct({
     if (saveError) {
       setError(
         saveError.code === "23505"
-          ? `Ya existe un producto con el identificador "${id}". Cambiale el nombre.`
+          ? `Ya existe un producto con el identificador "${id}". Cámbiale el nombre.`
           : "No pudimos crearlo. ¿Tu rol sigue siendo admin o dev?",
       )
       return

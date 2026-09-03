@@ -1,6 +1,7 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import { RegistrarSW } from '@/components/pwa/registrar-sw'
 import { APP_NAME, APP_SHORT_NAME } from '@/lib/brand'
 import { CartProvider } from '@/lib/cart'
 
@@ -56,6 +57,7 @@ export default function RootLayout({
     <html lang="es" className="light">
       <body className="antialiased">
         <CartProvider>{children}</CartProvider>
+        <RegistrarSW />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

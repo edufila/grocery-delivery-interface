@@ -242,7 +242,7 @@ export function LoginView({ next, initialError }: { next: string; initialError?:
             </h1>
             <p className="mt-2 text-sm leading-relaxed text-gray-500">
               Lo enviamos a <span className="font-medium text-gray-900">{cleanEmail}</span>. Si trae
-              un código, escribilo aquí.
+              un código, escríbelo aquí.
             </p>
 
             <div

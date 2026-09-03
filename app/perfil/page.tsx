@@ -6,6 +6,7 @@ import { ChevronRight, LogOut, Mail, PackageSearch, SlidersHorizontal } from "lu
 import { BottomNav } from "@/components/bottom-nav"
 import { AddressManager } from "@/components/profile/address-manager"
 import { ProfileForm } from "@/components/profile/profile-form"
+import { InstalarApp } from "@/components/pwa/instalar-app"
 import { pageTitle } from "@/lib/brand"
 import { SHOPPER_ROLES, type Address, type Role } from "@/lib/orders"
 import { isProfileComplete, type Profile } from "@/lib/profile"
@@ -85,6 +86,11 @@ export default async function PerfilPage() {
             )}
           </div>
         </section>
+
+        {/* Se muestra solo si el teléfono puede instalarla y todavía no está. */}
+        <div className="mt-4 empty:mt-0">
+          <InstalarApp />
+        </div>
 
         {!isProfileComplete(profile) && (
           <p className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-800">

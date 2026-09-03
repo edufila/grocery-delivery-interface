@@ -72,18 +72,18 @@ export function ShopperActions({
 
     if (result?.motivo === "bloqueado") {
       setBlocked(true)
-      setError("Se agotaron los intentos. Pedile al cliente que genere un código nuevo.")
+      setError("Se agotaron los intentos. Pídele al cliente que genere un código nuevo.")
       return
     }
     if (result?.motivo === "no_corresponde") {
-      setError("Este pedido ya no está en camino. Refrescá la pantalla.")
+      setError("Este pedido ya no está en camino. Refresca la pantalla.")
       return
     }
 
     const quedan = result?.restantes ?? 0
     if (quedan <= 0) {
       setBlocked(true)
-      setError("Se agotaron los intentos. Pedile al cliente que genere un código nuevo.")
+      setError("Se agotaron los intentos. Pídele al cliente que genere un código nuevo.")
       return
     }
     setError(
@@ -124,14 +124,27 @@ export function ShopperActions({
     setBusy(true)
     setError("")
     const supabase = createClient()
-    const { error: updateError } = await supabase
+
+    // Mismo cuidado que en take(): si entre que se abrió la pantalla y este
+    // toque el pedido cambió de manos, la política de la base no deja tocar la
+    // fila, pero eso no es un error para Supabase: son cero filas. Sin mirar
+    // cuántas volvieron diríamos que avanzó sin haber avanzado nada.
+    const { data, error: updateError } = await supabase
       .from("orders")
-      .update({ status: siguiente, shopper_id: userId })
+      .update({ status: siguiente })
       .eq("id", order.id)
+      .eq("shopper_id", userId)
+      .select("id")
 
     setBusy(false)
+
     if (updateError) {
       setError("No pudimos actualizar el estado.")
+      return
+    }
+    if (!data || data.length === 0) {
+      setError("Este pedido ya no es tuyo. Refresca la pantalla.")
+      router.refresh()
       return
     }
     router.refresh()
@@ -201,7 +214,7 @@ export function ShopperActions({
         <>
           {bloqueadoPorUbicacion && (
             <p className="rounded-2xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-800">
-              Encendé <span className="font-semibold">Compartir mi ubicación</span> antes de salir.
+              Enciende <span className="font-semibold">Compartir mi ubicación</span> antes de salir.
               El cliente tiene que poder ver por dónde vas.
             </p>
           )}

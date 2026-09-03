@@ -105,6 +105,16 @@ export function StoreEditor({ store }: { store: Store }) {
         </div>
       </div>
 
+      {/* La calificación y las reseñas no salen de ningún lado: son texto que
+          se escribe aquí y el cliente lo ve como si fuera real. */}
+      {(draft.rating || draft.reviews) && (
+        <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2.5 text-sm leading-relaxed text-amber-800">
+          <span className="font-semibold">Ojo con la calificación y las reseñas.</span> Nadie ha
+          calificado todavía: esos números los escribes tú y el cliente los ve como si fueran de
+          otros compradores. Déjalos vacíos hasta que haya calificaciones de verdad.
+        </p>
+      )}
+
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         {STORE_TEXT_FIELDS.filter((field) => field.key !== "image").map((field) => (
           <label key={field.key} className="block">

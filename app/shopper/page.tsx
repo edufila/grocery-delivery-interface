@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 import { ArrowLeft, ChevronRight, PackageSearch } from "lucide-react"
 
 import { OrdersLiveRefresh } from "@/components/live-refresh"
+import { AvisoPedidos } from "@/components/shopper/aviso-pedidos"
 import { pageTitle } from "@/lib/brand"
 import {
   formatMoney,
@@ -78,6 +79,7 @@ export default async function ShopperPage() {
       <OrdersLiveRefresh />
 
       <div className="mx-auto flex max-w-md flex-col gap-6 px-4 pb-16 pt-5">
+        <AvisoPedidos userId={user.id} />
         <Grupo titulo="En curso" vacio="No tienes pedidos tomados." pedidos={mios} />
         <Grupo
           titulo="Disponibles"

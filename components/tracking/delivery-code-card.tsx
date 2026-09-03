@@ -58,7 +58,7 @@ export function DeliveryCodeCard({
 
       {blocked && (
         <p className="mt-3 text-sm text-rose-300">
-          Se agotaron los cinco intentos. Generá un código nuevo para que el shopper pueda cerrar la
+          Se agotaron los cinco intentos. Genera un código nuevo para que el shopper pueda cerrar la
           entrega.
         </p>
       )}
