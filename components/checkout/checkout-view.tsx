@@ -142,15 +142,17 @@ export function CheckoutView() {
 
   return (
     <div className="min-h-dvh bg-gray-50 pb-28">
-      <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-gray-100 bg-white/90 px-4 py-3 backdrop-blur">
-        <Link
-          href="/catalogo"
-          aria-label="Volver al catálogo"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-gray-600 transition active:bg-gray-100"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Link>
-        <h1 className="text-lg font-semibold text-gray-900">Carrito y pago</h1>
+      <header className="sticky top-0 z-20 border-b border-gray-100 bg-white/90 backdrop-blur">
+        <div className="mx-auto flex max-w-lg items-center gap-2 px-4 py-3">
+          <Link
+            href="/catalogo"
+            aria-label="Volver al catálogo"
+            className="-ml-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-gray-600 transition active:bg-gray-100"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          <h1 className="text-lg font-semibold text-gray-900">Carrito y pago</h1>
+        </div>
       </header>
 
       <main className="mx-auto max-w-lg space-y-4 px-4 py-4">

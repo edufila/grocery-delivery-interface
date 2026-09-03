@@ -54,17 +54,21 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
 
   return (
     <main className="min-h-dvh bg-gray-50">
-      <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-gray-100 bg-white/90 px-4 py-3 backdrop-blur">
-        <Link
-          href="/pedidos"
-          aria-label="Volver a tus pedidos"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-gray-600 transition active:bg-gray-100"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Link>
-        <div className="min-w-0">
-          <h1 className="truncate text-lg font-semibold text-gray-900">Pedido {order.code}</h1>
-          <p className="truncate text-sm text-gray-500">{formatOrderDate(order.created_at)}</p>
+      {/* El interior se alinea con el contenido: si no, en pantalla ancha la
+          flecha queda sola contra el borde y el resto centrado. */}
+      <header className="sticky top-0 z-20 border-b border-gray-100 bg-white/90 backdrop-blur">
+        <div className="mx-auto flex max-w-lg items-center gap-2 px-4 py-3">
+          <Link
+            href="/pedidos"
+            aria-label="Volver a tus pedidos"
+            className="-ml-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-gray-600 transition active:bg-gray-100"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          <div className="min-w-0">
+            <h1 className="truncate text-lg font-semibold text-gray-900">Pedido {order.code}</h1>
+            <p className="truncate text-sm text-gray-500">{formatOrderDate(order.created_at)}</p>
+          </div>
         </div>
       </header>
 

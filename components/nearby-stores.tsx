@@ -14,6 +14,8 @@ type Store = {
   rating: string
   reviews: string
   image: string
+  /** Sin catálogo propio todavía: la tarjeta no lleva a ningún lado. */
+  href: string | null
 }
 
 const stores: Store[] = [
@@ -25,6 +27,7 @@ const stores: Store[] = [
     rating: "4.8",
     reviews: "2.4k",
     image: "/images/store-girasol.png",
+    href: "/catalogo",
   },
   {
     name: "Mercado La Cosecha",
@@ -34,6 +37,7 @@ const stores: Store[] = [
     rating: "4.6",
     reviews: "1.1k",
     image: "/images/store-cosecha.png",
+    href: null,
   },
 ]
 
@@ -77,10 +81,10 @@ export function NearbyStores() {
       </div>
 
       <div className="mx-auto max-w-md space-y-4 px-4 py-4">
-        {stores.map((store, i) => (
+        {stores.map((store) => (
           <article
             key={store.name}
-            className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm shadow-gray-100"
+            className="relative overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm shadow-gray-100 transition active:scale-[0.995]"
           >
             <div className="relative h-36 w-full">
               <img
@@ -96,7 +100,7 @@ export function NearbyStores() {
                 type="button"
                 onClick={() => toggleFavorite(store.name)}
                 aria-pressed={favorites.includes(store.name)}
-                className="absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-gray-700 backdrop-blur transition active:scale-95"
+                className="absolute right-3 top-3 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-gray-700 backdrop-blur transition active:scale-95"
                 aria-label={
                   favorites.includes(store.name)
                     ? `Quitar ${store.name} de favoritos`
@@ -114,7 +118,20 @@ export function NearbyStores() {
 
             <div className="p-4">
               <div className="flex items-start justify-between gap-2">
-                <h3 className="text-base font-semibold text-gray-900">{store.name}</h3>
+                {/* Enlace estirado: cubre toda la tarjeta sin anidar botones
+                    dentro de un <a>, así el corazón sigue siendo clicable. */}
+                <h3 className="text-base font-semibold text-gray-900">
+                  {store.href ? (
+                    <Link
+                      href={store.href}
+                      className="after:absolute after:inset-0 after:content-['']"
+                    >
+                      {store.name}
+                    </Link>
+                  ) : (
+                    store.name
+                  )}
+                </h3>
                 <span className="flex shrink-0 items-center gap-1 rounded-lg bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700">
                   <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" aria-hidden="true" />
                   {store.rating}
@@ -134,13 +151,17 @@ export function NearbyStores() {
                 </span>
               </div>
 
-              {i === 0 && (
+              {store.href ? (
                 <Link
-                  href="/catalogo"
-                  className="mt-4 block w-full rounded-2xl bg-emerald-600 py-3 text-center text-sm font-semibold text-white transition hover:bg-emerald-700 active:scale-[0.99]"
+                  href={store.href}
+                  className="relative z-20 mt-4 flex h-12 w-full items-center justify-center rounded-2xl bg-emerald-600 text-sm font-semibold text-white transition active:scale-[0.99]"
                 >
                   Comprar ahora
                 </Link>
+              ) : (
+                <p className="mt-4 flex h-12 w-full items-center justify-center rounded-2xl bg-gray-100 text-sm font-semibold text-gray-500">
+                  Próximamente
+                </p>
               )}
             </div>
           </article>
