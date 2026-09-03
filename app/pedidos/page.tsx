@@ -25,13 +25,20 @@ export default async function PedidosPage() {
 
   const { data: orders } = await supabase
     .from("orders")
-    .select("id, code, status, total, created_at, address_label, shopper_id")
+    .select("id, code, status, total, final_total, created_at, address_label, shopper_id")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
     .returns<
       Pick<
         Order,
-        "id" | "code" | "status" | "total" | "created_at" | "address_label" | "shopper_id"
+        | "id"
+        | "code"
+        | "status"
+        | "total"
+        | "final_total"
+        | "created_at"
+        | "address_label"
+        | "shopper_id"
       >[]
     >()
 
@@ -93,7 +100,7 @@ export default async function PedidosPage() {
                     </p>
                   </div>
                   <span className="shrink-0 text-base font-semibold tabular-nums text-gray-900">
-                    {formatMoney(order.total)}
+                    {formatMoney(order.final_total ?? order.total)}
                   </span>
                   <ChevronRight className="h-5 w-5 shrink-0 text-gray-300" aria-hidden="true" />
                 </Link>

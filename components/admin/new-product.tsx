@@ -6,18 +6,8 @@ import { Loader2, Plus } from "lucide-react"
 
 import { ImagePicker } from "@/components/admin/image-picker"
 import { categories } from "@/lib/categories"
+import { slugify } from "@/lib/slug"
 import { createClient } from "@/lib/supabase/client"
-
-/** "Harina de Maíz PAN" -> "harina-de-maiz-pan" */
-function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 40)
-}
 
 export function NewProduct({ stores }: { stores: { id: string; name: string }[] }) {
   const router = useRouter()

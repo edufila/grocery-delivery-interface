@@ -12,12 +12,44 @@ type Row = Pick<
   "id" | "code" | "status" | "total" | "created_at" | "address_label" | "shopper_id"
 >
 
+const FILTERS = [
+  { value: "todos", label: "Todos" },
+  { value: "sin_tomar", label: "Sin tomar" },
+  { value: "en_curso", label: "En curso" },
+  { value: "entregado", label: "Entregados" },
+  { value: "cancelado", label: "Cancelados" },
+] as const
+
 export function OrdersCleanup({ orders }: { orders: Row[] }) {
   const router = useRouter()
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
   const [confirming, setConfirming] = useState(false)
+  const [filter, setFilter] = useState<string>("todos")
+  const [query, setQuery] = useState("")
+
+  const term = query.trim().toLowerCase()
+  const shown = orders.filter((order) => {
+    if (term && !order.code.toLowerCase().includes(term)) return false
+    switch (filter) {
+      case "sin_tomar":
+        return order.status === "confirmado" && !order.shopper_id
+      case "en_curso":
+        return ["confirmado", "preparando", "en_camino"].includes(order.status) && !!order.shopper_id
+      case "entregado":
+        return order.status === "entregado"
+      case "cancelado":
+        return order.status === "cancelado"
+      default:
+        return true
+    }
+  })
+
+  function selectAllShown() {
+    setSelected(new Set(shown.map((o) => o.id)))
+    setConfirming(false)
+  }
 
   function toggle(id: string) {
     setSelected((prev) => {
@@ -63,9 +95,53 @@ export function OrdersCleanup({ orders }: { orders: Row[] }) {
         </p>
       )}
 
-      <ul className="flex flex-col gap-2">
-        {orders.map((order) => (
-          <li key={order.id}>
+      <div className="flex flex-wrap gap-1.5">
+        {FILTERS.map((f) => (
+          <button
+            key={f.value}
+            type="button"
+            onClick={() => setFilter(f.value)}
+            className={`min-h-9 rounded-full px-3 text-sm font-medium transition ${
+              filter === f.value
+                ? "bg-gray-900 text-white"
+                : "border border-gray-200 text-gray-600 active:bg-gray-50"
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      <input
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        placeholder="Buscar por código: GA-4822"
+        aria-label="Buscar pedido por código"
+        className="h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500"
+      />
+
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs text-gray-500">
+          {shown.length} de {orders.length}
+        </p>
+        {shown.length > 0 && (
+          <button
+            type="button"
+            onClick={selectAllShown}
+            className="min-h-9 text-sm font-medium text-emerald-600"
+          >
+            Seleccionar los {shown.length}
+          </button>
+        )}
+      </div>
+
+      {shown.length === 0 && (
+        <p className="text-sm text-gray-500">Ningún pedido coincide con ese filtro.</p>
+      )}
+
+      <ul className="max-h-[60vh] flex-col gap-2 overflow-y-auto overscroll-contain">
+        {shown.map((order) => (
+          <li key={order.id} className="mb-2">
             <label
               className={`flex cursor-pointer items-center gap-3 rounded-2xl border p-3 ${
                 selected.has(order.id)
