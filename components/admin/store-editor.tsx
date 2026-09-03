@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Check, Loader2, MapPin } from "lucide-react"
+import { Check, ChevronDown, Loader2, MapPin } from "lucide-react"
 
 import { UseMyLocation, type Coords } from "@/components/profile/use-my-location"
 import { STORE_TEXT_FIELDS, type Store } from "@/lib/admin"
@@ -15,6 +15,7 @@ export function StoreEditor({ store }: { store: Store }) {
     store.lat != null && store.lng != null ? { lat: store.lat, lng: store.lng } : null,
   )
   const [showMap, setShowMap] = useState(false)
+  const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState("")
@@ -50,19 +51,47 @@ export function StoreEditor({ store }: { store: Store }) {
   }
 
   return (
-    <article className="rounded-2xl border border-gray-200 bg-white p-4">
-      <div className="flex items-center justify-between gap-3">
-        <h3 className="font-mono text-sm font-semibold text-gray-900">{store.id}</h3>
-        <label className="flex items-center gap-2 text-sm text-gray-600">
-          <input
-            type="checkbox"
-            checked={draft.active}
-            onChange={(event) => setDraft({ ...draft, active: event.target.checked })}
-            className="h-4 w-4 accent-emerald-600"
+    <article className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex w-full items-center gap-3 p-4 text-left active:bg-gray-50"
+      >
+        {draft.image && (
+          <img
+            src={draft.image}
+            alt=""
+            className="h-11 w-11 shrink-0 rounded-lg bg-gray-100 object-cover"
           />
-          Visible en el inicio
-        </label>
-      </div>
+        )}
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-sm font-semibold text-gray-900">{draft.name}</span>
+          <span className="flex items-center gap-2 text-xs text-gray-500">
+            <span className="font-mono">{store.id}</span>
+            <span aria-hidden="true">·</span>
+            <span className="tabular-nums">${Number(draft.delivery_fee).toFixed(2)}</span>
+            {!coords && <span className="text-amber-600">sin ubicar</span>}
+            {!draft.active && <span className="text-gray-400">oculta</span>}
+          </span>
+        </span>
+        <ChevronDown
+          className={`h-5 w-5 shrink-0 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`}
+          aria-hidden="true"
+        />
+      </button>
+
+      {!open ? null : (
+        <div className="border-t border-gray-100 p-4">
+      <label className="flex items-center gap-2 text-sm text-gray-600">
+        <input
+          type="checkbox"
+          checked={draft.active}
+          onChange={(event) => setDraft({ ...draft, active: event.target.checked })}
+          className="h-4 w-4 accent-emerald-600"
+        />
+        Visible en el inicio
+      </label>
 
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         {STORE_TEXT_FIELDS.map((field) => (
@@ -137,6 +166,8 @@ export function StoreEditor({ store }: { store: Store }) {
         {saved && !busy && <Check className="h-4 w-4" aria-hidden="true" />}
         {busy ? "Guardando..." : saved ? "Guardado" : "Guardar tienda"}
       </button>
+        </div>
+      )}
     </article>
   )
 }

@@ -104,18 +104,18 @@ export default async function PerfilPage() {
         {esAdmin && (
           <Link
             href="/admin"
-            className="mt-4 flex items-center gap-3 rounded-3xl border border-gray-200 bg-white p-5 transition active:scale-[0.99]"
+            className="mt-4 flex items-center gap-3 rounded-3xl bg-gray-900 p-5 transition active:scale-[0.99]"
           >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100">
-              <SlidersHorizontal className="h-5 w-5 text-gray-600" aria-hidden="true" />
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10">
+              <SlidersHorizontal className="h-5 w-5 text-white" aria-hidden="true" />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-sm font-semibold text-gray-900">Administración</span>
-              <span className="block text-sm text-gray-500">
+              <span className="block text-sm font-semibold text-white">Administración</span>
+              <span className="block text-sm text-gray-400">
                 Tiendas, precios, tarifas y pedidos
               </span>
             </span>
-            <ChevronRight className="h-5 w-5 shrink-0 text-gray-400" aria-hidden="true" />
+            <ChevronRight className="h-5 w-5 shrink-0 text-gray-500" aria-hidden="true" />
           </Link>
         )}
 
