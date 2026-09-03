@@ -8,20 +8,12 @@ export const metadata: Metadata = {
   title: `${APP_NAME} · Delivery de supermercado`,
   description: 'Pide tus víveres y productos del hogar con entrega rápida a domicilio.',
   generator: 'v0.app',
+  // Un solo ícono para claro y oscuro: el fondo verde se ve igual de bien en
+  // los dos, así que no hace falta la pareja con `media` que traía la plantilla.
   icons: {
     icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
+      { url: '/icon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
     ],
     apple: '/apple-icon.png',
   },

@@ -5,7 +5,7 @@
  * Lo usan `make-icons.mjs` (los íconos de la app) y `muestras-icono.mjs`
  * (las variantes para elegir).
  */
-import { deflateSync } from "node:zlib"
+import { deflateSync, inflateSync } from "node:zlib"
 
 /** Lienzo de referencia: todos los dibujos se miden sobre 512 y se escalan. */
 export const BASE = 512
@@ -125,6 +125,193 @@ function chunk(tipo, datos) {
   const crc = Buffer.alloc(4)
   crc.writeUInt32BE(crc32(cuerpo))
   return Buffer.concat([largo, cuerpo, crc])
+}
+
+// ------------------------------------------------------------- decodificar
+
+const CANALES = { 0: 1, 2: 3, 3: 1, 4: 2, 6: 4 }
+
+/** Deshace el filtro por fila que aplica el formato antes de comprimir. */
+function desfiltrar(datos, ancho, alto, bytesPorPixel) {
+  const bytesPorFila = ancho * bytesPorPixel
+  const salida = Buffer.alloc(alto * bytesPorFila)
+
+  for (let y = 0; y < alto; y++) {
+    const filtro = datos[y * (bytesPorFila + 1)]
+    const entra = y * (bytesPorFila + 1) + 1
+    const sale = y * bytesPorFila
+
+    for (let i = 0; i < bytesPorFila; i++) {
+      const crudo = datos[entra + i]
+      const izq = i >= bytesPorPixel ? salida[sale + i - bytesPorPixel] : 0
+      const arriba = y > 0 ? salida[sale - bytesPorFila + i] : 0
+      const diagonal =
+        y > 0 && i >= bytesPorPixel ? salida[sale - bytesPorFila + i - bytesPorPixel] : 0
+
+      let valor
+      switch (filtro) {
+        case 0:
+          valor = crudo
+          break
+        case 1:
+          valor = crudo + izq
+          break
+        case 2:
+          valor = crudo + arriba
+          break
+        case 3:
+          valor = crudo + ((izq + arriba) >> 1)
+          break
+        case 4: {
+          // Paeth: se queda con el vecino que mejor predice el valor.
+          const p = izq + arriba - diagonal
+          const pa = Math.abs(p - izq)
+          const pb = Math.abs(p - arriba)
+          const pc = Math.abs(p - diagonal)
+          valor = crudo + (pa <= pb && pa <= pc ? izq : pb <= pc ? arriba : diagonal)
+          break
+        }
+        default:
+          throw new Error(`Filtro PNG desconocido: ${filtro}`)
+      }
+
+      salida[sale + i] = valor & 0xff
+    }
+  }
+
+  return salida
+}
+
+/**
+ * Lee un PNG de 8 bits por canal y lo devuelve como RGBA plano.
+ * Alcanza para lo que exporta Canva; no cubre entrelazado ni 16 bits.
+ */
+export function leerPng(buffer) {
+  let pos = 8 // firma
+  let ihdr = null
+  const idat = []
+  let paleta = null
+  let transparencia = null
+
+  while (pos < buffer.length) {
+    const largo = buffer.readUInt32BE(pos)
+    const tipo = buffer.toString("ascii", pos + 4, pos + 8)
+    const datos = buffer.subarray(pos + 8, pos + 8 + largo)
+
+    if (tipo === "IHDR") {
+      ihdr = {
+        ancho: datos.readUInt32BE(0),
+        alto: datos.readUInt32BE(4),
+        bits: datos[8],
+        color: datos[9],
+        entrelazado: datos[12],
+      }
+    } else if (tipo === "PLTE") paleta = Buffer.from(datos)
+    else if (tipo === "tRNS") transparencia = Buffer.from(datos)
+    else if (tipo === "IDAT") idat.push(Buffer.from(datos))
+    else if (tipo === "IEND") break
+
+    pos += 12 + largo
+  }
+
+  if (!ihdr) throw new Error("PNG sin cabecera")
+  if (ihdr.bits !== 8) throw new Error(`Solo 8 bits por canal, vino ${ihdr.bits}`)
+  if (ihdr.entrelazado) throw new Error("PNG entrelazado: no soportado")
+
+  const canales = CANALES[ihdr.color]
+  if (!canales) throw new Error(`Tipo de color ${ihdr.color} no soportado`)
+
+  const crudo = desfiltrar(
+    inflateSync(Buffer.concat(idat)),
+    ihdr.ancho,
+    ihdr.alto,
+    canales,
+  )
+
+  const pixels = Buffer.alloc(ihdr.ancho * ihdr.alto * 4)
+  for (let i = 0; i < ihdr.ancho * ihdr.alto; i++) {
+    const e = i * canales
+    const s = i * 4
+    let r
+    let g
+    let b
+    let a = 255
+
+    if (ihdr.color === 3) {
+      const idx = crudo[e]
+      r = paleta[idx * 3]
+      g = paleta[idx * 3 + 1]
+      b = paleta[idx * 3 + 2]
+      if (transparencia && idx < transparencia.length) a = transparencia[idx]
+    } else if (ihdr.color === 0) {
+      r = g = b = crudo[e]
+    } else if (ihdr.color === 4) {
+      r = g = b = crudo[e]
+      a = crudo[e + 1]
+    } else if (ihdr.color === 2) {
+      r = crudo[e]
+      g = crudo[e + 1]
+      b = crudo[e + 2]
+    } else {
+      r = crudo[e]
+      g = crudo[e + 1]
+      b = crudo[e + 2]
+      a = crudo[e + 3]
+    }
+
+    pixels[s] = r
+    pixels[s + 1] = g
+    pixels[s + 2] = b
+    pixels[s + 3] = a
+  }
+
+  return { ancho: ihdr.ancho, alto: ihdr.alto, pixels }
+}
+
+/**
+ * Reduce una imagen promediando el bloque de origen de cada píxel. Es lo que
+ * mantiene legible un ícono al bajarlo a 32 píxeles; tomar una muestra suelta
+ * lo deja dentado.
+ */
+export function redimensionar(origen, anchoOrigen, altoOrigen, destino) {
+  const salida = Buffer.alloc(destino * destino * 4)
+  const escalaX = anchoOrigen / destino
+  const escalaY = altoOrigen / destino
+
+  for (let y = 0; y < destino; y++) {
+    const y0 = Math.floor(y * escalaY)
+    const y1 = Math.max(y0 + 1, Math.floor((y + 1) * escalaY))
+
+    for (let x = 0; x < destino; x++) {
+      const x0 = Math.floor(x * escalaX)
+      const x1 = Math.max(x0 + 1, Math.floor((x + 1) * escalaX))
+
+      let r = 0
+      let g = 0
+      let b = 0
+      let a = 0
+      let n = 0
+
+      for (let sy = y0; sy < y1 && sy < altoOrigen; sy++) {
+        for (let sx = x0; sx < x1 && sx < anchoOrigen; sx++) {
+          const i = (sy * anchoOrigen + sx) * 4
+          r += origen[i]
+          g += origen[i + 1]
+          b += origen[i + 2]
+          a += origen[i + 3]
+          n++
+        }
+      }
+
+      const s = (y * destino + x) * 4
+      salida[s] = Math.round(r / n)
+      salida[s + 1] = Math.round(g / n)
+      salida[s + 2] = Math.round(b / n)
+      salida[s + 3] = Math.round(a / n)
+    }
+  }
+
+  return salida
 }
 
 export function png(size, pixels) {

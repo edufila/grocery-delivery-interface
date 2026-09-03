@@ -1,11 +1,13 @@
 /**
- * Genera los íconos de la app. Los que venían eran el logo negro de la
- * plantilla de v0, que es lo que quedaba en la pantalla de inicio del teléfono.
+ * Dibuja una cesta a mano y la deja como ícono de la app.
  *
  *   node scripts/make-icons.mjs
  *
- * Para probar otros diseños antes de cambiar este, está
- * `scripts/muestras-icono.mjs`, que escribe variantes en una carpeta aparte.
+ * OJO: hoy el ícono que está puesto NO sale de aquí, sino de
+ * `importar-icono.mjs`, que toma la ilustración de assets/icono-origen.png.
+ * Este script queda como respaldo y como base para probar diseños; correrlo
+ * pisa los íconos buenos. Para variantes sin pisar nada está
+ * `muestras-icono.mjs`, que escribe en la carpeta que le pases.
  */
 import { writeFileSync } from "node:fs"
 import { fileURLToPath } from "node:url"
@@ -58,10 +60,9 @@ function colorEn(x, yBruto) {
 
 const salidas = [
   ["apple-icon.png", 180], // el que usa iOS en la pantalla de inicio
-  ["icon-192.png", 192],
+  ["icon-192.png", 192], // el mínimo que Android pide para ofrecer instalar
   ["icon-512.png", 512],
-  ["icon-light-32x32.png", 32],
-  ["icon-dark-32x32.png", 32],
+  ["icon-32.png", 32], // la pestaña del navegador
 ]
 
 for (const [nombre, size] of salidas) {
