@@ -174,7 +174,7 @@ export function DeliveryTopBar() {
 
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-end"
+          className="fixed inset-0 z-50 flex items-end justify-center"
           role="dialog"
           aria-modal="true"
           aria-label="Elegir dirección"
@@ -188,7 +188,7 @@ export function DeliveryTopBar() {
 
           {/* max-h + overflow en la lista: con muchas direcciones la hoja
               scrollea sola en vez de crecer fuera de la pantalla. */}
-          <div className="relative flex max-h-[85dvh] w-full flex-col rounded-t-3xl bg-white pt-2">
+          <div className="relative flex max-h-[85dvh] w-full max-w-lg flex-col rounded-t-3xl bg-white pt-2">
             <div className="mx-auto h-1 w-10 shrink-0 rounded-full bg-gray-200" aria-hidden="true" />
 
             <div className="mx-auto flex w-full max-w-md shrink-0 items-center justify-between px-5 pb-2 pt-4">

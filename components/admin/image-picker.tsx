@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { ImageUp, Loader2, Trash2, X } from "lucide-react"
+import { ImageUp, Loader2, Pencil, Trash2, X } from "lucide-react"
 
 import { ImageCropper, type CropShape } from "@/components/admin/image-cropper"
 import { createClient } from "@/lib/supabase/client"
@@ -113,6 +113,27 @@ export function ImagePicker({
     setBusy(false)
   }
 
+  /**
+   * Reencuadrar una foto ya elegida. Se baja como blob y se abre el recorte
+   * igual que con una recién seleccionada; al confirmar se sube como archivo
+   * nuevo, así el original queda intacto por si otro producto lo usa.
+   */
+  async function reframe() {
+    if (!value) return
+    setError("")
+    try {
+      const res = await fetch(value)
+      if (!res.ok) throw new Error("no se pudo bajar")
+      const blob = await res.blob()
+      const name = value.split("/").pop() ?? "foto.webp"
+      setPending(new File([blob], name, { type: blob.type || "image/webp" }))
+      setOpen(true)
+    } catch {
+      setError("No pudimos abrir esa foto para reencuadrarla.")
+      setOpen(true)
+    }
+  }
+
   async function remove(name: string) {
     setBusy(true)
     await createClient().storage.from(BUCKET).remove([`${folder}/${name}`])
@@ -124,11 +145,18 @@ export function ImagePicker({
     <div>
       <div className="flex items-center gap-2">
         {value ? (
-          <img
-            src={value}
-            alt=""
-            className="h-11 w-11 shrink-0 rounded-lg bg-gray-100 object-cover"
-          />
+          <button
+            type="button"
+            onClick={() => void reframe()}
+            className="group relative h-11 w-11 shrink-0 overflow-hidden rounded-lg bg-gray-100"
+            aria-label="Volver a encuadrar la foto"
+            title="Volver a encuadrar"
+          >
+            <img src={value} alt="" className="h-full w-full object-cover" />
+            <span className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100">
+              <Pencil className="h-4 w-4 text-white" aria-hidden="true" />
+            </span>
+          </button>
         ) : (
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-[10px] text-gray-400">
             sin foto
@@ -141,6 +169,16 @@ export function ImagePicker({
           aria-label="Foto"
           className="h-11 min-w-0 flex-1 rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500"
         />
+        {value && (
+          <button
+            type="button"
+            onClick={() => void reframe()}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-gray-200 text-gray-600 active:bg-gray-50"
+            aria-label="Volver a encuadrar la foto"
+          >
+            <Pencil className="h-4 w-4" aria-hidden="true" />
+          </button>
+        )}
         <button
           type="button"
           onClick={() => setOpen(true)}
@@ -152,14 +190,20 @@ export function ImagePicker({
       </div>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-end" role="dialog" aria-modal="true">
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center"
+          role="dialog"
+          aria-modal="true"
+        >
           <button
             type="button"
             className="absolute inset-0 bg-black/40"
             onClick={() => setOpen(false)}
             aria-label="Cerrar"
           />
-          <div className="relative flex max-h-[85dvh] w-full flex-col rounded-t-3xl bg-white">
+          {/* max-w-lg: en escritorio la hoja ocupaba el ancho entero de la
+              pantalla y todo adentro quedaba desproporcionado. */}
+          <div className="relative flex max-h-[85dvh] w-full max-w-lg flex-col rounded-t-3xl bg-white">
             <div className="flex shrink-0 items-center justify-between px-5 py-4">
               <h2 className="text-base font-semibold text-gray-900">Fotos de {folder}</h2>
               <button

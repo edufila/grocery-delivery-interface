@@ -120,7 +120,9 @@ export function ImageCropper({
   const k = natural && frameW ? coverScale(frameW, frameW * ratio) * zoom : 1
 
   return (
-    <div className="flex flex-col gap-3">
+    // max-w acotado: en pantalla ancha el marco crecía hasta empujar el zoom y
+    // los botones fuera de la vista, y no había forma de confirmar el recorte.
+    <div className="mx-auto flex w-full max-w-[22rem] flex-col gap-3">
       <div
         ref={frameRef}
         onPointerDown={onPointerDown}
