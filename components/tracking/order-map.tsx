@@ -58,6 +58,10 @@ export function OrderMap({
   const shopperMarker = useRef<MapLibreMarker | null>(null)
   const [position, setPosition] = useState<Point | null>(shopper)
   const [failed, setFailed] = useState(false)
+  // El mapa se crea con un import asíncrono. Sin esto, una posición que llega
+  // antes de que termine de cargar se pierde: el efecto del marcador sale
+  // temprano y no vuelve a correr hasta que el shopper se mueva.
+  const [mapReady, setMapReady] = useState(false)
 
   // La posición puede llegar por dos vías: Realtime, para el cliente, o esta
   // prop, cuando el shopper se ve a sí mismo desde su propio GPS. Sin esto el
@@ -115,6 +119,7 @@ export function OrderMap({
           .addTo(map)
 
         mapRef.current = map
+        setMapReady(true)
       } catch {
         if (!cancelled) setFailed(true)
       }
@@ -124,6 +129,8 @@ export function OrderMap({
       cancelled = true
       mapRef.current?.remove()
       mapRef.current = null
+      shopperMarker.current = null
+      setMapReady(false)
     }
   }, [destination])
 
@@ -153,7 +160,7 @@ export function OrderMap({
         { padding: 60, maxZoom: 15, duration: 800 },
       )
     })()
-  }, [position, destination])
+  }, [position, destination, mapReady])
 
   if (!destination) {
     return (
