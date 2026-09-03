@@ -93,56 +93,27 @@ export function CheckoutView() {
 
     const supabase = createClient()
 
-    const { data: order, error: orderError } = await supabase
-      .from("orders")
-      .insert({
-        user_id: session.userId,
-        address_label: session.address.label,
-        address_detail: session.address.detail,
-        address_lat: session.address.lat ?? null,
-        address_lng: session.address.lng ?? null,
-        substitution_policy: substitution,
-        payment_method: payment,
-        subtotal,
-        service_fee: SERVICE_FEE,
-        delivery_fee: DELIVERY_FEE,
-        total,
-      })
-      .select("id, code")
-      .single<{ id: string; code: string }>()
+    // Solo mandamos qué y cuánto. Los precios y el total los pone la base
+    // contra el catálogo: si viajaran desde acá, se podrían adulterar.
+    const { data: code, error: rpcError } = await supabase.rpc("place_order", {
+      p_items: lines.map(({ product, qty }) => ({ product_id: product.id, qty })),
+      p_address_id: session.address.id,
+      p_payment_method: payment,
+      p_substitution: substitution,
+    })
 
-    if (orderError || !order) {
+    if (rpcError || !code) {
       setPlacing(false)
       setError(
-        orderError?.message.includes("does not exist")
-          ? "Falta correr la migración de pedidos en Supabase."
+        rpcError?.message.includes("does not exist")
+          ? "Falta correr la migración del catálogo en Supabase."
           : "No pudimos registrar el pedido. Intentá de nuevo.",
       )
       return
     }
 
-    const { error: itemsError } = await supabase.from("order_items").insert(
-      lines.map(({ product, qty }) => ({
-        order_id: order.id,
-        product_id: product.id,
-        name: product.name,
-        unit: product.unit,
-        unit_price: product.price,
-        qty,
-      })),
-    )
-
-    if (itemsError) {
-      // Un pedido sin renglones no le sirve a nadie y confunde al shopper:
-      // lo dejamos cancelado en vez de abandonarlo a medio armar.
-      await supabase.from("orders").update({ status: "cancelado" }).eq("id", order.id)
-      setPlacing(false)
-      setError("No pudimos guardar los productos. Intentá de nuevo.")
-      return
-    }
-
     clear()
-    router.push(`/pedidos/${order.code}`)
+    router.push(`/pedidos/${code as string}`)
   }
 
   return (

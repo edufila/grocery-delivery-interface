@@ -6,15 +6,17 @@ import { ProductCard } from "./product-card"
 import { CartBar } from "./cart-bar"
 import type { Category } from "@/lib/categories"
 import { useCart } from "@/lib/cart"
-import { products } from "@/lib/products"
+import type { Product } from "@/lib/products"
 
 type Props = {
+  products: Product[]
   initialQuery?: string
   initialCategory?: Category
   initialWholesaleOnly?: boolean
 }
 
 export function ProductCatalog({
+  products,
   initialQuery = "",
   initialCategory = "Todos",
   initialWholesaleOnly = false,
@@ -34,7 +36,7 @@ export function ProductCatalog({
       if (term && !p.name.toLowerCase().includes(term)) return false
       return true
     })
-  }, [category, query, wholesaleOnly])
+  }, [products, category, query, wholesaleOnly])
 
   const sinResultados =
     query.trim().length > 0

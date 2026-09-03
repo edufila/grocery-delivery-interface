@@ -2,7 +2,9 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
 
-import { findProduct, type Product } from "@/lib/products"
+import { createClient } from "@/lib/supabase/client"
+import { isSupabaseConfigured } from "@/lib/supabase/config"
+import { fetchProducts, type Product } from "@/lib/products"
 
 const STORAGE_KEY = "carrito"
 
@@ -14,7 +16,7 @@ type CartValue = {
   lines: CartLine[]
   count: number
   subtotal: number
-  /** false hasta leer localStorage, para no pintar un carrito vacío y corregirlo. */
+  /** false hasta leer el storage y el catálogo. */
   ready: boolean
   add: (id: string) => void
   removeOne: (id: string) => void
@@ -31,10 +33,7 @@ function readStored(): Record<string, number> {
     const parsed = JSON.parse(raw) as Record<string, unknown>
     const clean: Record<string, number> = {}
     for (const [id, qty] of Object.entries(parsed)) {
-      // Ignoramos productos que ya no existen y cantidades corruptas.
-      if (typeof qty === "number" && qty > 0 && findProduct(id)) {
-        clean[id] = Math.floor(qty)
-      }
+      if (typeof qty === "number" && qty > 0) clean[id] = Math.floor(qty)
     }
     return clean
   } catch {
@@ -44,24 +43,42 @@ function readStored(): Record<string, number> {
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [quantities, setQuantities] = useState<Record<string, number>>({})
-  const [ready, setReady] = useState(false)
+  const [products, setProducts] = useState<Product[]>([])
+  const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
     setQuantities(readStored())
-    setReady(true)
+
+    if (!isSupabaseConfigured) {
+      setLoaded(true)
+      return
+    }
+
+    let cancelled = false
+    void (async () => {
+      const list = await fetchProducts(createClient())
+      if (cancelled) return
+      setProducts(list)
+      setLoaded(true)
+    })()
+
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   useEffect(() => {
-    if (!ready) return
+    if (!loaded) return
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(quantities))
     } catch {
       // Storage bloqueado: el carrito vive solo en esta pestaña.
     }
-  }, [quantities, ready])
+  }, [quantities, loaded])
+
+  const byId = useMemo(() => new Map(products.map((p) => [p.id, p])), [products])
 
   const add = useCallback((id: string) => {
-    if (!findProduct(id)) return
     setQuantities((prev) => ({ ...prev, [id]: (prev[id] ?? 0) + 1 }))
   }, [])
 
@@ -91,15 +108,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     let subtotal = 0
 
     for (const [id, qty] of Object.entries(quantities)) {
-      const product = findProduct(id)
+      const product = byId.get(id)
+      // Un producto que salió del catálogo simplemente no se muestra ni suma.
       if (!product) continue
       lines.push({ product, qty })
       count += qty
       subtotal += product.price * qty
     }
 
-    return { quantities, lines, count, subtotal, ready, add, removeOne, removeAll, clear }
-  }, [quantities, ready, add, removeOne, removeAll, clear])
+    return { quantities, lines, count, subtotal, ready: loaded, add, removeOne, removeAll, clear }
+  }, [quantities, byId, loaded, add, removeOne, removeAll, clear])
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>
 }
