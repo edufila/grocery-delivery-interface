@@ -1,5 +1,33 @@
 export type OrderStatus = "confirmado" | "preparando" | "en_camino" | "entregado" | "cancelado"
 
+/**
+ * Un pedido recién hecho está confirmado, pero para el cliente lo que importa
+ * es que todavía no lo tomó nadie. El primer paso cambia de nombre según eso.
+ */
+export function statusLabel(status: OrderStatus, shopperId: string | null) {
+  if (status === "confirmado") {
+    return shopperId ? "Shopper asignado" : "Buscando shopper"
+  }
+  return STATUS_LABEL[status]
+}
+
+export function statusDescription(status: OrderStatus, shopperId: string | null) {
+  switch (status) {
+    case "confirmado":
+      return shopperId
+        ? "Ya tenés shopper asignado. En breve empieza tu compra."
+        : "Estamos buscando un shopper disponible para tu pedido."
+    case "preparando":
+      return "Tu shopper está recorriendo el abasto."
+    case "en_camino":
+      return "Va en camino a tu dirección."
+    case "entregado":
+      return "Tu pedido fue entregado."
+    default:
+      return ""
+  }
+}
+
 export const STATUS_LABEL: Record<OrderStatus, string> = {
   confirmado: "Confirmado",
   preparando: "Preparando tu compra",
@@ -34,6 +62,8 @@ export type Address = {
   label: string
   detail: string
   is_default: boolean
+  lat: number | null
+  lng: number | null
 }
 
 export type OrderItem = {

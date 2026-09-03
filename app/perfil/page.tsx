@@ -43,7 +43,7 @@ export default async function PerfilPage() {
 
   const { data: addresses } = await supabase
     .from("addresses")
-    .select("id, label, detail, is_default")
+    .select("id, label, detail, is_default, lat, lng")
     .eq("user_id", user.id)
     .order("is_default", { ascending: false })
     .order("created_at", { ascending: true })

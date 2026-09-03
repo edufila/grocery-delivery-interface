@@ -10,7 +10,8 @@ import {
   formatOrderDate,
   PAYMENT_LABEL,
   STATUS_FLOW,
-  STATUS_LABEL,
+  statusDescription,
+  statusLabel,
   SUBSTITUTION_LABEL,
   type Order,
   type OrderItem,
@@ -130,15 +131,12 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
                           done || current ? "text-gray-900" : "text-gray-400"
                         }`}
                       >
-                        {STATUS_LABEL[status]}
+                        {statusLabel(status, order.shopper_id)}
                       </p>
                       {current && (
                         <>
                           <p className="mt-0.5 text-sm text-gray-500">
-                            {status === "confirmado" && "Recibimos tu pedido y ya lo asignamos."}
-                            {status === "preparando" && "Tu shopper está recorriendo el abasto."}
-                            {status === "en_camino" && "Va en camino a tu dirección."}
-                            {status === "entregado" && "Tu pedido fue entregado."}
+                            {statusDescription(status, order.shopper_id)}
                           </p>
                           {status === "preparando" && <ShopperChat />}
                         </>

@@ -7,6 +7,7 @@ import { Check, ChevronDown, Loader2, MapPin, Plus, X } from "lucide-react"
 
 import { CartIndicator } from "@/components/cart-indicator"
 import { ProfileAvatar } from "@/components/profile/profile-avatar"
+import { UseMyLocation, type Coords } from "@/components/profile/use-my-location"
 import type { Address } from "@/lib/orders"
 import { createClient } from "@/lib/supabase/client"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
@@ -23,6 +24,7 @@ export function DeliveryTopBar() {
   const [adding, setAdding] = useState(false)
   const [label, setLabel] = useState("")
   const [detail, setDetail] = useState("")
+  const [coords, setCoords] = useState<Coords>(null)
   const [error, setError] = useState("")
 
   const load = useCallback(async () => {
@@ -45,7 +47,7 @@ export function DeliveryTopBar() {
 
     const { data } = await supabase
       .from("addresses")
-      .select("id, label, detail, is_default")
+      .select("id, label, detail, is_default, lat, lng")
       .eq("user_id", user.id)
       .order("is_default", { ascending: false })
       .order("created_at", { ascending: true })
@@ -107,6 +109,8 @@ export function DeliveryTopBar() {
       user_id: userId,
       label: label.trim(),
       detail: detail.trim(),
+      lat: coords?.lat ?? null,
+      lng: coords?.lng ?? null,
       is_default: true,
     })
 
@@ -118,6 +122,7 @@ export function DeliveryTopBar() {
 
     setLabel("")
     setDetail("")
+    setCoords(null)
     setAdding(false)
     await load()
     setBusy(false)
@@ -284,6 +289,7 @@ export function DeliveryTopBar() {
                         aria-label="Dirección"
                         className="h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500"
                       />
+                      <UseMyLocation coords={coords} onCapture={setCoords} />
                       {error && (
                         <p role="alert" className="text-sm text-rose-600">
                           {error}

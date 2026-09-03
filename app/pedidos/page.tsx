@@ -4,7 +4,7 @@ import { redirect } from "next/navigation"
 import { ChevronRight, ClipboardList } from "lucide-react"
 
 import { BottomNav } from "@/components/bottom-nav"
-import { formatMoney, formatOrderDate, STATUS_LABEL, type Order } from "@/lib/orders"
+import { formatMoney, formatOrderDate, statusLabel, type Order } from "@/lib/orders"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/server"
 
@@ -24,10 +24,15 @@ export default async function PedidosPage() {
 
   const { data: orders } = await supabase
     .from("orders")
-    .select("id, code, status, total, created_at, address_label")
+    .select("id, code, status, total, created_at, address_label, shopper_id")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
-    .returns<Pick<Order, "id" | "code" | "status" | "total" | "created_at" | "address_label">[]>()
+    .returns<
+      Pick<
+        Order,
+        "id" | "code" | "status" | "total" | "created_at" | "address_label" | "shopper_id"
+      >[]
+    >()
 
   const list = orders ?? []
 
@@ -69,8 +74,14 @@ export default async function PedidosPage() {
                       <span className="font-mono text-sm font-semibold text-gray-900">
                         {order.code}
                       </span>
-                      <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-                        {STATUS_LABEL[order.status]}
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                          order.status === "confirmado" && !order.shopper_id
+                            ? "bg-amber-50 text-amber-700"
+                            : "bg-emerald-50 text-emerald-700"
+                        }`}
+                      >
+                        {statusLabel(order.status, order.shopper_id)}
                       </span>
                     </div>
                     <p className="mt-1 truncate text-sm text-gray-500">

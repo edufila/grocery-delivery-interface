@@ -6,6 +6,7 @@ import { Check, Loader2, MapPin, Plus, Trash2 } from "lucide-react"
 
 import { createClient } from "@/lib/supabase/client"
 import type { Address } from "@/lib/orders"
+import { UseMyLocation, type Coords } from "./use-my-location"
 
 export function AddressManager({ userId, addresses }: { userId: string; addresses: Address[] }) {
   const router = useRouter()
@@ -16,6 +17,7 @@ export function AddressManager({ userId, addresses }: { userId: string; addresse
   // explicación porque falta un campo que la persona no miró.
   const [label, setLabel] = useState(addresses.length === 0 ? "Casa" : "")
   const [detail, setDetail] = useState("")
+  const [coords, setCoords] = useState<Coords>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
 
@@ -31,6 +33,8 @@ export function AddressManager({ userId, addresses }: { userId: string; addresse
       user_id: userId,
       label: label.trim(),
       detail: detail.trim(),
+      lat: coords?.lat ?? null,
+      lng: coords?.lng ?? null,
       // La primera que carga queda como la de siempre.
       is_default: addresses.length === 0,
     })
@@ -47,6 +51,7 @@ export function AddressManager({ userId, addresses }: { userId: string; addresse
 
     setLabel("")
     setDetail("")
+    setCoords(null)
     setAdding(false)
     router.refresh()
   }
@@ -155,6 +160,8 @@ export function AddressManager({ userId, addresses }: { userId: string; addresse
               className="mt-1.5 h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-emerald-500"
             />
           </div>
+
+          <UseMyLocation coords={coords} onCapture={setCoords} />
 
           {error && (
             <p role="alert" className="text-sm text-rose-600">

@@ -54,7 +54,7 @@ export function CheckoutView() {
 
       const { data } = await supabase
         .from("addresses")
-        .select("id, label, detail, is_default")
+        .select("id, label, detail, is_default, lat, lng")
         .eq("user_id", user.id)
         .order("is_default", { ascending: false })
         .limit(1)
@@ -99,6 +99,8 @@ export function CheckoutView() {
         user_id: session.userId,
         address_label: session.address.label,
         address_detail: session.address.detail,
+        address_lat: session.address.lat ?? null,
+        address_lng: session.address.lng ?? null,
         substitution_policy: substitution,
         payment_method: payment,
         subtotal,
