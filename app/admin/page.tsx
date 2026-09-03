@@ -7,6 +7,7 @@ import { OrdersCleanup } from "@/components/admin/orders-cleanup"
 import { ProductEditor } from "@/components/admin/product-editor"
 import { SettingsEditor } from "@/components/admin/settings-editor"
 import { StoreEditor } from "@/components/admin/store-editor"
+import { UserManager, type AdminUser } from "@/components/admin/user-manager"
 import type { AdminProduct, Settings, Store } from "@/lib/admin"
 import type { Order, Role } from "@/lib/orders"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
@@ -54,7 +55,7 @@ export default async function AdminPage() {
     )
   }
 
-  const [{ data: stores }, { data: products }, { data: settings }, { data: orders }] =
+  const [{ data: stores }, { data: products }, { data: settings }, { data: orders }, { data: users }] =
     await Promise.all([
       supabase.from("stores").select("*").order("sort_order").returns<Store[]>(),
       supabase.from("products").select("*").order("name").returns<AdminProduct[]>(),
@@ -70,6 +71,11 @@ export default async function AdminPage() {
             "id" | "code" | "status" | "total" | "created_at" | "address_label" | "shopper_id"
           >[]
         >(),
+      supabase
+        .from("profiles")
+        .select("id, email, full_name, handle, role")
+        .order("role")
+        .returns<AdminUser[]>(),
     ])
 
   return (
@@ -91,6 +97,13 @@ export default async function AdminPage() {
       </header>
 
       <div className="mx-auto flex max-w-3xl flex-col gap-8 px-4 pb-16 pt-6">
+        <Section
+          title="Usuarios"
+          hint="Quién puede entrar a dónde. El @ es el nombre con el que el cliente ve a su shopper, y el shopper no lo puede cambiar."
+        >
+          <UserManager users={users ?? []} meId={user.id} />
+        </Section>
+
         <Section
           title="Tiendas"
           hint="Lo que se ve en el inicio, y el punto al que se le traza la ruta al shopper."
