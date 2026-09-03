@@ -84,6 +84,8 @@ export type Order = {
   shopper_located_at: string | null
   address_label: string | null
   address_detail: string | null
+  address_lat: number | null
+  address_lng: number | null
   status: OrderStatus
   substitution_policy: "shopper" | "chat" | "none"
   payment_method: string

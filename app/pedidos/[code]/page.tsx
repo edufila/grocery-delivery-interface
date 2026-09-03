@@ -3,8 +3,8 @@ import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { ArrowLeft, Check, MapPin } from "lucide-react"
 
+import { OrderMap } from "@/components/tracking/order-map"
 import { ShopperChat } from "@/components/tracking/shopper-chat"
-import { TrackingMap } from "@/components/tracking/tracking-map"
 import {
   formatMoney,
   formatOrderDate,
@@ -74,7 +74,22 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
       </header>
 
       <div className="mx-auto max-w-lg space-y-4 px-4 pb-10 pt-4">
-        {!cancelled && <TrackingMap />}
+        {!cancelled && (
+          <OrderMap
+            orderId={order.id}
+            destination={
+              order.address_lat != null && order.address_lng != null
+                ? { lat: order.address_lat, lng: order.address_lng }
+                : null
+            }
+            shopper={
+              order.shopper_lat != null && order.shopper_lng != null
+                ? { lat: order.shopper_lat, lng: order.shopper_lng }
+                : null
+            }
+            live={order.status !== "entregado"}
+          />
+        )}
 
         {order.shopper_located_at && order.status === "en_camino" && (
           <section className="flex items-start gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
