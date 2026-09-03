@@ -1,11 +1,12 @@
 import type { Metadata } from "next"
+import Link from "next/link"
 import { redirect } from "next/navigation"
-import { LogOut, Mail } from "lucide-react"
+import { ChevronRight, LogOut, Mail, PackageSearch } from "lucide-react"
 
 import { BottomNav } from "@/components/bottom-nav"
 import { AddressManager } from "@/components/profile/address-manager"
 import { ProfileForm } from "@/components/profile/profile-form"
-import type { Address } from "@/lib/orders"
+import { SHOPPER_ROLES, type Address, type Role } from "@/lib/orders"
 import { isProfileComplete, type Profile } from "@/lib/profile"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/server"
@@ -36,7 +37,9 @@ export default async function PerfilPage() {
     .from("profiles")
     .select("*")
     .eq("id", user.id)
-    .maybeSingle<Profile>()
+    .maybeSingle<Profile & { role?: Role }>()
+
+  const esShopper = !!profile?.role && SHOPPER_ROLES.includes(profile.role)
 
   const { data: addresses } = await supabase
     .from("addresses")
@@ -96,6 +99,26 @@ export default async function PerfilPage() {
           <h2 className="mb-4 text-base font-semibold text-gray-900">Direcciones de entrega</h2>
           <AddressManager userId={user.id} addresses={addresses ?? []} />
         </section>
+
+        {esShopper && (
+          <Link
+            href="/shopper"
+            className="mt-4 flex items-center gap-3 rounded-3xl border border-emerald-100 bg-emerald-50 p-5 transition active:scale-[0.99]"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white">
+              <PackageSearch className="h-5 w-5 text-emerald-600" aria-hidden="true" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold text-emerald-900">
+                Panel del shopper
+              </span>
+              <span className="block text-sm text-emerald-800">
+                Pedidos para preparar y entregar
+              </span>
+            </span>
+            <ChevronRight className="h-5 w-5 shrink-0 text-emerald-600" aria-hidden="true" />
+          </Link>
+        )}
 
         <form action="/auth/sign-out" method="post" className="mt-6">
           <button
