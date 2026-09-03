@@ -96,8 +96,10 @@ else {
   problemas++
 }
 
-// El código de 6 dígitos no llega si la plantilla solo manda el enlace mágico.
-warn("Revisá que la plantilla Magic Link incluya {{ .Token }}, o llegará un enlace en vez del código.")
+// El enlace del correo y la vuelta de Google mueren si la URL no está permitida.
+warn("En Authentication → URL Configuration tienen que estar permitidas las URLs de callback:")
+console.log("        http://localhost:3000/auth/callback")
+console.log("        https://grocery-delivery-interface.vercel.app/auth/callback")
 
 if (settings.disable_signup === true) {
   warn("Los registros nuevos están deshabilitados: solo van a poder entrar usuarios ya existentes.")
