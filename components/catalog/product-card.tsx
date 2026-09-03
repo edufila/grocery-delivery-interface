@@ -13,6 +13,9 @@ type Props = {
 
 export function ProductCard({ product, quantity, onAdd, onRemove }: Props) {
   const inCart = quantity > 0
+  // Agotado no es lo mismo que quitado: sigue en la grilla, apagado, para que
+  // se sepa que el abasto lo vende y valga la pena volver.
+  const agotado = !product.in_stock
 
   return (
     <article className="relative flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm shadow-gray-100 transition hover:shadow-md">
@@ -20,25 +23,39 @@ export function ProductCard({ product, quantity, onAdd, onRemove }: Props) {
         <img
           src={product.image || "/placeholder.svg"}
           alt={product.name}
-          className="h-full w-full object-contain"
+          className={`h-full w-full object-contain ${agotado ? "opacity-40 grayscale" : ""}`}
         />
-        {product.wholesale && (
-          <span className="absolute left-2 top-2 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
-            Mayorista
+        {agotado ? (
+          <span className="absolute left-2 top-2 rounded-full bg-gray-900/80 px-2 py-0.5 text-[10px] font-semibold text-white">
+            Agotado
           </span>
+        ) : (
+          product.wholesale && (
+            <span className="absolute left-2 top-2 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+              Mayorista
+            </span>
+          )
         )}
       </div>
 
       <div className="flex flex-1 flex-col p-3 pt-2">
-        <h3 className="line-clamp-2 text-sm font-semibold text-gray-900">{product.name}</h3>
+        <h3
+          className={`line-clamp-2 text-sm font-semibold ${agotado ? "text-gray-500" : "text-gray-900"}`}
+        >
+          {product.name}
+        </h3>
         <p className="mt-0.5 text-xs text-gray-500">{product.unit}</p>
 
         <div className="mt-auto flex items-end justify-between pt-3">
-          <p className="text-xl font-bold text-gray-900">
+          <p className={`text-xl font-bold ${agotado ? "text-gray-400" : "text-gray-900"}`}>
             ${product.price.toFixed(2)}
           </p>
 
-          {inCart ? (
+          {agotado ? (
+            <span className="rounded-full bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-500">
+              Sin existencia
+            </span>
+          ) : inCart ? (
             <div className="flex items-center gap-2 rounded-full bg-emerald-600 p-1 text-white shadow-sm">
               <button
                 type="button"

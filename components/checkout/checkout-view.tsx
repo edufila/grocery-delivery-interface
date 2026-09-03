@@ -65,6 +65,7 @@ export function CheckoutView() {
     ready,
     storeIds,
     perdidos,
+    agotados,
     add,
     removeOne,
     removeAll,
@@ -179,7 +180,13 @@ export function CheckoutView() {
    * la base lo rechazaría al final sin decir qué quitar.
    */
   const mezclado = storeIds.length > 1
-  const canPlace = hasItems && !!session.userId && addressPinned && !mezclado && !placing
+  /**
+   * Lo que frena el pedido: agotado o desaparecido del catálogo. Se avisa
+   * junto porque para el cliente el problema es el mismo, aunque la causa no.
+   */
+  const noPedibles = [...agotados.map((l) => l.product.id), ...perdidos]
+  const canPlace =
+    hasItems && !!session.userId && addressPinned && !mezclado && noPedibles.length === 0 && !placing
 
   async function placeOrder() {
     if (!session.userId || !session.address || placing) return
@@ -242,17 +249,26 @@ export function CheckoutView() {
             {/* Se agotaron o los desactivaron mientras el carrito esperaba en
                 el teléfono. Antes se caían solos y el cliente llegaba aquí con
                 menos cosas de las que puso, sin enterarse. */}
-            {perdidos.length > 0 && (
+            {noPedibles.length > 0 && (
               <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
                 <p className="text-sm font-semibold text-amber-900">
-                  {perdidos.length === 1
-                    ? "Un producto de tu carrito ya no está disponible"
-                    : `${perdidos.length} productos de tu carrito ya no están disponibles`}
+                  {noPedibles.length === 1
+                    ? "Un producto de tu carrito no se puede pedir"
+                    : `${noPedibles.length} productos de tu carrito no se pueden pedir`}
                 </p>
-                <p className="mt-1 text-sm leading-relaxed text-amber-800">
-                  {perdidos.map(nombreDesdeId).join(", ")}. El abasto los quitó del catálogo, así
-                  que no entran en este pedido.
-                </p>
+                <ul className="mt-1.5 flex flex-col gap-1">
+                  {agotados.map(({ product }) => (
+                    <li key={product.id} className="text-sm leading-relaxed text-amber-800">
+                      <span className="font-medium">{product.name}</span> — se agotó
+                    </li>
+                  ))}
+                  {perdidos.map((id) => (
+                    <li key={id} className="text-sm leading-relaxed text-amber-800">
+                      <span className="font-medium">{nombreDesdeId(id)}</span> — ya no está en el
+                      catálogo
+                    </li>
+                  ))}
+                </ul>
                 <button
                   type="button"
                   onClick={descartarPerdidos}

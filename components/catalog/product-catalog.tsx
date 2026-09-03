@@ -37,12 +37,16 @@ export function ProductCatalog({
 
   const visibleProducts = useMemo(() => {
     const term = query.trim().toLowerCase()
-    return products.filter((p) => {
-      if (category !== "Todos" && p.category !== category) return false
-      if (wholesaleOnly && !p.wholesale) return false
-      if (term && !p.name.toLowerCase().includes(term)) return false
-      return true
-    })
+    return products
+      .filter((p) => {
+        if (category !== "Todos" && p.category !== category) return false
+        if (wholesaleOnly && !p.wholesale) return false
+        if (term && !p.name.toLowerCase().includes(term)) return false
+        return true
+      })
+      // Lo agotado al final: sigue a la vista, pero no le estorba a lo que sí
+      // se puede comprar hoy.
+      .sort((a, b) => Number(b.in_stock) - Number(a.in_stock))
   }, [products, category, query, wholesaleOnly])
 
   const sinResultados =

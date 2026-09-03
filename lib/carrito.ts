@@ -14,6 +14,11 @@ export type ResumenCarrito = {
    * silencio y el cliente llegaba al final con menos cosas de las que puso.
    */
   perdidos: string[]
+  /**
+   * Lo que el abasto marcó como agotado mientras esperaba en el carrito. Sigue
+   * existiendo, pero hoy no se puede pedir, así que no suma al total.
+   */
+  agotados: CartLine[]
 }
 
 /**
@@ -29,6 +34,7 @@ export function resumirCarrito(
   const lines: CartLine[] = []
   const tiendas = new Set<string>()
   const perdidos: string[] = []
+  const agotados: CartLine[] = []
   let count = 0
   let subtotal = 0
 
@@ -38,6 +44,13 @@ export function resumirCarrito(
     const product = catalogo.get(id)
     if (!product) {
       perdidos.push(id)
+      continue
+    }
+
+    // El agotado se aparta: se puede nombrar, pero no entra en el pedido ni
+    // suma al total, porque la base lo va a rechazar igual.
+    if (!product.in_stock) {
+      agotados.push({ product, qty })
       continue
     }
 
@@ -55,6 +68,7 @@ export function resumirCarrito(
     subtotal: Math.round(subtotal * 100) / 100,
     storeIds: [...tiendas],
     perdidos,
+    agotados,
   }
 }
 

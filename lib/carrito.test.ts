@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { nombreDesdeId, resumirCarrito } from "./carrito"
 import type { Product } from "./products"
 
-function producto(id: string, price: number, store_id = "girasol"): Product {
+function producto(id: string, price: number, store_id = "girasol", in_stock = true): Product {
   return {
     id,
     name: id,
@@ -12,6 +12,7 @@ function producto(id: string, price: number, store_id = "girasol"): Product {
     image: "",
     category: "Granos",
     store_id,
+    in_stock,
   }
 }
 
@@ -19,6 +20,7 @@ const catalogo = new Map<string, Product>([
   ["arroz", producto("arroz", 1.85)],
   ["cafe", producto("cafe", 4.2)],
   ["tomate", producto("tomate", 0.99, "cosecha")],
+  ["harina", producto("harina", 1.2, "girasol", false)],
 ])
 
 describe("resumirCarrito", () => {
@@ -41,6 +43,25 @@ describe("resumirCarrito", () => {
     // Lo que se fue no suma ni al total ni a la cuenta.
     expect(r.count).toBe(1)
     expect(r.subtotal).toBe(1.85)
+  })
+
+  it("aparta lo agotado sin borrarlo", () => {
+    const r = resumirCarrito({ arroz: 1, harina: 2 }, catalogo)
+    expect(r.agotados).toHaveLength(1)
+    expect(r.agotados[0]?.product.id).toBe("harina")
+    expect(r.agotados[0]?.qty).toBe(2)
+    // No suma al total: la base lo rechazaría igual.
+    expect(r.count).toBe(1)
+    expect(r.subtotal).toBe(1.85)
+    // Y no es lo mismo que haber desaparecido del catálogo.
+    expect(r.perdidos).toEqual([])
+  })
+
+  it("un carrito con solo agotados no tiene abasto para pedir", () => {
+    const r = resumirCarrito({ harina: 3 }, catalogo)
+    expect(r.storeIds).toEqual([])
+    expect(r.subtotal).toBe(0)
+    expect(r.agotados).toHaveLength(1)
   })
 
   it("lista los abastos, que es lo que decide si el pedido es válido", () => {

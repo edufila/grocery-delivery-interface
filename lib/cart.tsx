@@ -27,12 +27,14 @@ type CartValue = {
   storeIds: string[]
   /** Lo que estaba guardado y ya no está en el catálogo. */
   perdidos: string[]
+  /** Lo que el abasto marcó como agotado mientras esperaba en el carrito. */
+  agotados: CartLine[]
   add: (id: string) => void
   removeOne: (id: string) => void
   removeAll: (id: string) => void
   /** Deja en el carrito solo lo de ese abasto. */
   keepOnly: (storeId: string) => void
-  /** Saca del carrito lo que ya no existe. */
+  /** Saca del carrito lo que no se puede pedir: lo que ya no existe y lo agotado. */
   descartarPerdidos: () => void
   /** Pisa el carrito entero. Lo usa "volver a pedir". */
   reemplazar: (cantidades: Record<string, number>) => void
@@ -145,7 +147,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setQuantities((prev) => {
       const next: Record<string, number> = {}
       for (const [id, qty] of Object.entries(prev)) {
-        if (byId.has(id)) next[id] = qty
+        // Se van los que ya no están y también los agotados: los dos frenan
+        // el pedido, y para el cliente el problema es el mismo.
+        if (byId.get(id)?.in_stock) next[id] = qty
       }
       return next
     })
@@ -161,6 +165,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
        * los productos ya no existen.
        */
       perdidos: loaded ? resumen.perdidos : [],
+      agotados: loaded ? resumen.agotados : [],
       ready: loaded,
       add,
       removeOne,

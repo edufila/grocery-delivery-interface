@@ -30,7 +30,12 @@ export function ProductEditor({ products }: { products: AdminProduct[] }) {
 
     const { error: saveError } = await createClient()
       .from("products")
-      .update({ price: product.price, active: product.active, image: product.image })
+      .update({
+        price: product.price,
+        active: product.active,
+        in_stock: product.in_stock,
+        image: product.image,
+      })
       .eq("id", product.id)
 
     setBusyId(null)
@@ -78,6 +83,10 @@ export function ProductEditor({ products }: { products: AdminProduct[] }) {
             />
           </label>
 
+          {/* Dos cosas distintas, y conviene no confundirlas: "en el catálogo"
+              es si el abasto lo vende; "hay existencia" es si hoy le queda.
+              Antes solo estaba la primera, así que para marcar un faltante
+              había que sacarlo del catálogo y acordarse de reponerlo. */}
           <label className="flex min-h-11 items-center gap-2 text-sm text-gray-600">
             <input
               type="checkbox"
@@ -85,7 +94,17 @@ export function ProductEditor({ products }: { products: AdminProduct[] }) {
               onChange={(event) => edit(product.id, { active: event.target.checked })}
               className="h-4 w-4 accent-emerald-600"
             />
-            Disponible
+            En el catálogo
+          </label>
+
+          <label className="flex min-h-11 items-center gap-2 text-sm text-gray-600">
+            <input
+              type="checkbox"
+              checked={product.in_stock}
+              onChange={(event) => edit(product.id, { in_stock: event.target.checked })}
+              className="h-4 w-4 accent-emerald-600"
+            />
+            Hay existencia
           </label>
 
           <button

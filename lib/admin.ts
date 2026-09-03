@@ -20,7 +20,10 @@ export type AdminProduct = {
   image: string
   category: string
   wholesale: boolean
+  /** Si el abasto lo vende. En falso desaparece del catálogo. */
   active: boolean
+  /** Si hoy le queda. En falso sigue a la vista, apagado y sin poder pedirse. */
+  in_stock: boolean
 }
 
 export type Settings = {
