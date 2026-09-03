@@ -16,8 +16,8 @@ const items: NavItem[] = [
   { label: "Perfil", Icon: User },
 ]
 
-export function BottomNav() {
-  const [active, setActive] = useState("Home")
+export function BottomNav({ initialActive = "Home" }: { initialActive?: string }) {
+  const [active, setActive] = useState(initialActive)
 
   return (
     <nav

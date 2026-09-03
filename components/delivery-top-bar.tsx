@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { ChevronDown, MapPin } from "lucide-react"
 
 export function DeliveryTopBar() {
@@ -24,13 +25,13 @@ export function DeliveryTopBar() {
             </span>
           </span>
         </button>
-        <button
-          type="button"
+        <Link
+          href="/perfil"
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-700"
           aria-label="Perfil"
         >
           JD
-        </button>
+        </Link>
       </div>
     </header>
   )
