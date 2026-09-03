@@ -3,15 +3,21 @@
 import { useEffect, useRef, useState } from "react"
 import { ImageUp, Loader2, Trash2, X } from "lucide-react"
 
+import { ImageCropper, type CropShape } from "@/components/admin/image-cropper"
 import { createClient } from "@/lib/supabase/client"
 
 const BUCKET = "fotos"
 
-/** Ancho al que se reduce antes de subir, por carpeta. */
-const MAX_WIDTH: Record<string, number> = {
-  tiendas: 900,
-  productos: 500,
-  shoppers: 300,
+/**
+ * Con qué forma se guarda cada tipo de foto. La tarjeta de la tienda es
+ * apaisada, el producto cuadrado y la cara redonda: si no se recorta a la
+ * proporción correcta, el navegador la recorta solo por el centro y suele
+ * dejar afuera lo que importa.
+ */
+const SHAPES: Record<string, CropShape> = {
+  tiendas: { width: 900, height: 506 },
+  productos: { width: 500, height: 500 },
+  shoppers: { width: 300, height: 300, round: true },
 }
 
 type Stored = { name: string; url: string }
@@ -35,7 +41,9 @@ export function ImagePicker({
   const [loading, setLoading] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
+  const [pending, setPending] = useState<File | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const shape = SHAPES[folder]
 
   useEffect(() => {
     if (!open) return
@@ -66,30 +74,12 @@ export function ImagePicker({
     }
   }, [open, folder])
 
-  /** Reduce la foto en un canvas antes de mandarla. */
-  async function shrink(file: File): Promise<Blob> {
-    const max = MAX_WIDTH[folder] ?? 800
-    const bitmap = await createImageBitmap(file)
-    if (bitmap.width <= max) return file
-
-    const scale = max / bitmap.width
-    const canvas = document.createElement("canvas")
-    canvas.width = max
-    canvas.height = Math.round(bitmap.height * scale)
-    canvas.getContext("2d")?.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
-
-    return new Promise((resolve) =>
-      canvas.toBlob((blob) => resolve(blob ?? file), "image/webp", 0.85),
-    )
-  }
-
-  async function upload(file: File) {
+  async function upload(blob: Blob, sourceName: string) {
     setBusy(true)
     setError("")
 
     try {
-      const blob = await shrink(file)
-      const clean = file.name
+      const clean = sourceName
         .toLowerCase()
         .replace(/\.[^.]+$/, "")
         .replace(/[^a-z0-9]+/g, "-")
@@ -114,6 +104,7 @@ export function ImagePicker({
       const url = supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl
       setFiles((prev) => [{ name: path.split("/")[1], url }, ...prev])
       onChange(url)
+      setPending(null)
       setOpen(false)
     } catch {
       setError("No pudimos procesar esa imagen.")
@@ -182,7 +173,22 @@ export function ImagePicker({
             </div>
 
             <div className="flex-1 overflow-y-auto overscroll-contain px-5">
-              {loading ? (
+              {pending ? (
+                <div className="pb-4">
+                  <ImageCropper
+                    file={pending}
+                    shape={shape}
+                    busy={busy}
+                    onCancel={() => setPending(null)}
+                    onDone={(blob) => void upload(blob, pending.name)}
+                  />
+                  {error && (
+                    <p role="alert" className="mt-2 text-sm text-rose-600">
+                      {error}
+                    </p>
+                  )}
+                </div>
+              ) : loading ? (
                 <p className="py-8 text-center text-sm text-gray-400">Cargando...</p>
               ) : files.length === 0 ? (
                 <p className="py-8 text-center text-sm text-gray-500">
@@ -222,14 +228,18 @@ export function ImagePicker({
                 </ul>
               )}
 
-              {error && (
+              {error && !pending && (
                 <p role="alert" className="py-2 text-sm text-rose-600">
                   {error}
                 </p>
               )}
             </div>
 
-            <div className="shrink-0 px-5 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-3">
+            <div
+              className={`shrink-0 px-5 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-3 ${
+                pending ? "hidden" : ""
+              }`}
+            >
               <input
                 ref={inputRef}
                 type="file"
@@ -237,7 +247,10 @@ export function ImagePicker({
                 className="hidden"
                 onChange={(event) => {
                   const file = event.target.files?.[0]
-                  if (file) void upload(file)
+                  if (file) {
+                    setError("")
+                    setPending(file)
+                  }
                   event.target.value = ""
                 }}
               />
@@ -255,7 +268,7 @@ export function ImagePicker({
                 {busy ? "Subiendo..." : "Subir una foto"}
               </button>
               <p className="mt-2 text-center text-xs text-gray-500">
-                Se achica sola a {MAX_WIDTH[folder]} px de ancho antes de subir.
+                Vas a poder encuadrarla antes de subirla.
               </p>
             </div>
           </div>

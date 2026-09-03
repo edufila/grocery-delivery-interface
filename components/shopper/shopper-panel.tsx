@@ -85,13 +85,10 @@ export function ShopperPanel({
         </div>
       )}
 
+      {/* Al entregar o cancelar, este bloque desaparece y el desmontaje de
+          LocationShare corta el seguimiento y suelta la pantalla. */}
       {mine && order.status !== "entregado" && order.status !== "cancelado" && (
-        <LocationShare
-          orderId={order.id}
-          onSharingChange={setSharing}
-          onPosition={setPosition}
-          stopped={order.status === "entregado" || order.status === "cancelado"}
-        />
+        <LocationShare orderId={order.id} onSharingChange={setSharing} onPosition={setPosition} />
       )}
 
       <ShopperActions order={order} userId={userId} sharing={sharing} />

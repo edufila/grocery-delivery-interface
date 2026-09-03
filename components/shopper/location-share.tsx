@@ -25,13 +25,10 @@ export function LocationShare({
   orderId,
   onSharingChange,
   onPosition,
-  /** Con el pedido cerrado no hay nada que seguir: se corta sola. */
-  stopped = false,
 }: {
   orderId: string
   onSharingChange?: (sharing: boolean) => void
   onPosition?: (coords: { lat: number; lng: number }) => void
-  stopped?: boolean
 }) {
   const [estado, setEstado] = useState<Estado>({
     sharing: false,
@@ -43,27 +40,18 @@ export function LocationShare({
   const lastSentAt = useRef(0)
   const wakeLockRef = useRef<WakeLockSentinel | null>(null)
 
-  // Si el componente se desmonta, cortamos el seguimiento y soltamos la pantalla.
+  /**
+   * Al desmontarse se corta el seguimiento y se suelta la pantalla. Es lo que
+   * apaga la ubicación al entregar: el pedido cambia de estado, quien nos
+   * renderiza deja de hacerlo, y esto se ejecuta. Seguir transmitiendo la
+   * posición de alguien cuando ya nadie la mira gasta su batería y sus datos.
+   */
   useEffect(() => {
     return () => {
       if (watchRef.current !== null) navigator.geolocation.clearWatch(watchRef.current)
       void wakeLockRef.current?.release()
     }
   }, [])
-
-  // Entregado el pedido, se apaga sola: seguir transmitiendo la ubicación de
-  // alguien cuando ya no hace falta es gastar batería y datos ajenos.
-  useEffect(() => {
-    if (!stopped || !estado.sharing) return
-    if (watchRef.current !== null) {
-      navigator.geolocation.clearWatch(watchRef.current)
-      watchRef.current = null
-    }
-    void wakeLockRef.current?.release()
-    wakeLockRef.current = null
-    setEstado((e) => ({ ...e, sharing: false }))
-    onSharingChange?.(false)
-  }, [stopped, estado.sharing, onSharingChange])
 
   async function start() {
     if (!("geolocation" in navigator)) {
