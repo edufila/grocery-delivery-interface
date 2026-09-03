@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Check, ChevronDown, Loader2, MapPin, Plus, X } from "lucide-react"
 
+import { CartIndicator } from "@/components/cart-indicator"
 import { ProfileAvatar } from "@/components/profile/profile-avatar"
 import type { Address } from "@/lib/orders"
 import { createClient } from "@/lib/supabase/client"
@@ -155,7 +156,10 @@ export function DeliveryTopBar() {
               </span>
             </span>
           </button>
-          <ProfileAvatar />
+          <div className="flex shrink-0 items-center gap-0.5">
+            <CartIndicator />
+            <ProfileAvatar />
+          </div>
         </div>
       </header>
 
@@ -190,7 +194,7 @@ export function DeliveryTopBar() {
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto overscroll-contain px-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)]">
+            <div className="flex-1 overflow-y-auto overscroll-contain px-5">
               <div className="mx-auto w-full max-w-md">
                 {!userId && !loading ? (
                   <div className="py-4">
@@ -254,63 +258,71 @@ export function DeliveryTopBar() {
                         )
                       })}
                     </ul>
-
-                    {adding ? (
-                      <form onSubmit={addAddress} className="mt-2 flex flex-col gap-3">
-                        <input
-                          value={label}
-                          onChange={(event) => setLabel(event.target.value)}
-                          placeholder="Nombre: Casa, Trabajo..."
-                          aria-label="Nombre de la dirección"
-                          className="h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500"
-                        />
-                        <input
-                          value={detail}
-                          onChange={(event) => setDetail(event.target.value)}
-                          placeholder="Av. Las Delicias, Urb. El Bosque"
-                          aria-label="Dirección"
-                          className="h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500"
-                        />
-                        {error && (
-                          <p role="alert" className="text-sm text-rose-600">
-                            {error}
-                          </p>
-                        )}
-                        <div className="flex gap-2">
-                          <button
-                            type="submit"
-                            disabled={busy || label.trim().length < 2 || detail.trim().length < 5}
-                            className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-semibold text-white disabled:bg-gray-200 disabled:text-gray-400"
-                          >
-                            {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
-                            Guardar y usar
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setAdding(false)
-                              setError("")
-                            }}
-                            className="h-12 rounded-xl border border-gray-200 px-4 text-sm font-semibold text-gray-600"
-                          >
-                            Cancelar
-                          </button>
-                        </div>
-                      </form>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => setAdding(true)}
-                        className="mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-gray-300 text-sm font-semibold text-gray-600 active:bg-gray-50"
-                      >
-                        <Plus className="h-4 w-4" aria-hidden="true" />
-                        Agregar dirección
-                      </button>
-                    )}
                   </>
                 )}
               </div>
             </div>
+
+            {/* Fuera del área que scrollea: con varias direcciones cargadas,
+                este botón quedaba debajo del corte y había que bajar para verlo. */}
+            {userId && (
+              <div className="shrink-0 border-t border-gray-100 px-5 pt-3 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+                <div className="mx-auto w-full max-w-md">
+                  {adding ? (
+                    <form onSubmit={addAddress} className="flex flex-col gap-3">
+                      <input
+                        value={label}
+                        onChange={(event) => setLabel(event.target.value)}
+                        placeholder="Nombre: Casa, Trabajo..."
+                        aria-label="Nombre de la dirección"
+                        className="h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500"
+                      />
+                      <input
+                        value={detail}
+                        onChange={(event) => setDetail(event.target.value)}
+                        placeholder="Av. Las Delicias, Urb. El Bosque"
+                        aria-label="Dirección"
+                        className="h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500"
+                      />
+                      {error && (
+                        <p role="alert" className="text-sm text-rose-600">
+                          {error}
+                        </p>
+                      )}
+                      <div className="flex gap-2">
+                        <button
+                          type="submit"
+                          disabled={busy || label.trim().length < 2 || detail.trim().length < 5}
+                          className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-semibold text-white disabled:bg-gray-200 disabled:text-gray-400"
+                        >
+                          {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+                          Guardar y usar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAdding(false)
+                            setError("")
+                          }}
+                          className="h-12 rounded-xl border border-gray-200 px-4 text-sm font-semibold text-gray-600"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setAdding(true)}
+                      className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-gray-300 text-sm font-semibold text-gray-600 active:bg-gray-50"
+                    >
+                      <Plus className="h-4 w-4" aria-hidden="true" />
+                      Agregar dirección
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
