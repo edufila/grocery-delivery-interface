@@ -216,19 +216,15 @@ export function AddressManager({ userId, addresses }: { userId: string; addresse
 
           <div>
             <label htmlFor="addr_detail" className="block text-sm font-medium text-gray-700">
-              Cómo reconocer la casa
+              Dirección
             </label>
             <input
               id="addr_detail"
               value={draft.detail}
               onChange={(event) => setDraft({ ...draft, detail: event.target.value })}
-              placeholder="Casa verde de rejas negras, al lado de la panadería"
+              placeholder="Urb. La Zaragoza, casa 3"
               className="mt-1.5 h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-emerald-500"
             />
-            <p className="mt-1.5 text-xs leading-relaxed text-gray-500">
-              Lo que le sirva al repartidor para dar con la puerta. El lugar exacto lo marca el pin
-              del mapa.
-            </p>
           </div>
 
           {/* key: al pasar de agregar a editar el mapa se rearma en el punto

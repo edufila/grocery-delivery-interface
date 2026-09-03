@@ -282,8 +282,8 @@ export function DeliveryTopBar() {
                         <input
                           value={detail}
                           onChange={(event) => setDetail(event.target.value)}
-                          placeholder="Casa verde de rejas negras, al lado de la panadería"
-                          aria-label="Cómo reconocer la casa"
+                          placeholder="Urb. La Zaragoza, casa 3"
+                          aria-label="Dirección"
                           className="h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500"
                         />
                         <UseMyLocation coords={coords} onCapture={setCoords} />
