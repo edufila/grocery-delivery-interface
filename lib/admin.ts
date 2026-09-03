@@ -15,6 +15,7 @@ export type Store = {
 
 export type AdminProduct = {
   id: string
+  store_id: string
   name: string
   unit: string
   price: number

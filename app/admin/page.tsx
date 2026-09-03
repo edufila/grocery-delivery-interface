@@ -118,11 +118,35 @@ export default async function AdminPage() {
 
         <Section
           title="Productos"
-          hint="Precio, disponibilidad y foto. Para cargar muchos de una sigue conviniendo el SQL."
+          hint="Cada local tiene su propio catálogo y sus propios precios. Para cargar muchos de una sigue conviniendo el SQL."
         >
-          <div className="flex flex-col gap-3">
-            <NewProduct stores={(stores ?? []).map((s) => ({ id: s.id, name: s.name }))} />
-            <ProductEditor products={products ?? []} />
+          <div className="flex flex-col gap-6">
+            {(stores ?? []).map((store) => {
+              const suyos = (products ?? []).filter((p) => p.store_id === store.id)
+              return (
+                <div key={store.id} className="flex flex-col gap-3">
+                  <div className="flex items-baseline justify-between gap-3 border-b border-gray-200 pb-2">
+                    <h3 className="text-sm font-semibold text-gray-900">{store.name}</h3>
+                    <span className="shrink-0 text-xs text-gray-500">
+                      {suyos.length} {suyos.length === 1 ? "producto" : "productos"}
+                    </span>
+                  </div>
+
+                  {suyos.length === 0 ? (
+                    <p className="text-sm leading-relaxed text-gray-500">
+                      Sin productos. Su catálogo le sale vacío al cliente.
+                    </p>
+                  ) : (
+                    <ProductEditor products={suyos} />
+                  )}
+
+                  <NewProduct
+                    stores={[{ id: store.id, name: store.name }]}
+                    label={`Agregar producto a ${store.name}`}
+                  />
+                </div>
+              )
+            })}
           </div>
         </Section>
 

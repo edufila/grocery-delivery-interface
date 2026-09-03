@@ -9,7 +9,13 @@ import { categories } from "@/lib/categories"
 import { slugify } from "@/lib/slug"
 import { createClient } from "@/lib/supabase/client"
 
-export function NewProduct({ stores }: { stores: { id: string; name: string }[] }) {
+export function NewProduct({
+  stores,
+  label = "Agregar producto",
+}: {
+  stores: { id: string; name: string }[]
+  label?: string
+}) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [storeId, setStoreId] = useState(stores[0]?.id ?? "girasol")
@@ -22,7 +28,9 @@ export function NewProduct({ stores }: { stores: { id: string; name: string }[] 
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
 
-  const id = slugify(name)
+  // El id lleva la tienda adelante: el mismo producto puede existir en dos
+  // locales con precios distintos, y sin el prefijo el segundo chocaría.
+  const id = name.trim() ? `${storeId}-${slugify(name)}` : ""
   const canSave =
     name.trim().length >= 3 && unit.trim().length >= 2 && Number(price) > 0 && !!image && !busy
 
@@ -73,7 +81,7 @@ export function NewProduct({ stores }: { stores: { id: string; name: string }[] 
         className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-gray-300 text-sm font-semibold text-gray-600 active:bg-gray-50"
       >
         <Plus className="h-4 w-4" aria-hidden="true" />
-        Agregar producto
+        {label}
       </button>
     )
   }
@@ -83,20 +91,24 @@ export function NewProduct({ stores }: { stores: { id: string; name: string }[] 
       <h3 className="text-sm font-semibold text-gray-900">Producto nuevo</h3>
 
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
-        <label className="block sm:col-span-2">
-          <span className="block text-sm font-medium text-gray-700">Tienda</span>
-          <select
-            value={storeId}
-            onChange={(event) => setStoreId(event.target.value)}
-            className="mt-1 h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none focus:border-emerald-500"
-          >
-            {stores.map((store) => (
-              <option key={store.id} value={store.id}>
-                {store.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        {/* Con una sola tienda el selector sobra: ya está decidida por dónde
+            se está agregando. */}
+        {stores.length > 1 && (
+          <label className="block sm:col-span-2">
+            <span className="block text-sm font-medium text-gray-700">Tienda</span>
+            <select
+              value={storeId}
+              onChange={(event) => setStoreId(event.target.value)}
+              className="mt-1 h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none focus:border-emerald-500"
+            >
+              {stores.map((store) => (
+                <option key={store.id} value={store.id}>
+                  {store.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
 
         <label className="block sm:col-span-2">
           <span className="block text-sm font-medium text-gray-700">Nombre</span>
