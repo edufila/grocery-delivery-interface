@@ -13,7 +13,7 @@ import { isSupabaseConfigured, supabaseAnonKey, supabaseUrl } from "@/lib/supaba
  * inusable porque el login todavía no se puede completar. Volver a agregarlos
  * cuando la autenticación funcione de punta a punta.
  */
-const PROTECTED_ROUTES = ["/perfil", "/pedidos"]
+const PROTECTED_ROUTES = ["/perfil", "/pedidos", "/shopper"]
 
 function requiresAuth(pathname: string) {
   return PROTECTED_ROUTES.some(

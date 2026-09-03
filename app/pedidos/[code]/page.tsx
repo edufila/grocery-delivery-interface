@@ -75,6 +75,30 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
       <div className="mx-auto max-w-lg space-y-4 px-4 pb-10 pt-4">
         {!cancelled && <TrackingMap />}
 
+        {order.shopper_located_at && order.status === "en_camino" && (
+          <section className="flex items-start gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
+            <span className="relative mt-1 flex h-2.5 w-2.5 shrink-0" aria-hidden="true">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-600" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-emerald-900">Tu shopper va en camino</p>
+              <p className="mt-0.5 text-sm text-emerald-800">
+                Última señal a las{" "}
+                {new Date(order.shopper_located_at).toLocaleTimeString("es-VE", {
+                  hour: "numeric",
+                  minute: "2-digit",
+                })}
+                {order.shopper_lat != null && order.shopper_lng != null && (
+                  <span className="block font-mono text-xs text-emerald-700">
+                    {order.shopper_lat.toFixed(5)}, {order.shopper_lng.toFixed(5)}
+                  </span>
+                )}
+              </p>
+            </div>
+          </section>
+        )}
+
         <section className="rounded-2xl border border-gray-100 bg-white p-5">
           <h2 className="mb-4 text-base font-semibold text-gray-900">Estado</h2>
           {cancelled ? (

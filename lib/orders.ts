@@ -11,6 +11,24 @@ export const STATUS_LABEL: Record<OrderStatus, string> = {
 /** Orden real del recorrido, para dibujar la línea de tiempo. */
 export const STATUS_FLOW: OrderStatus[] = ["confirmado", "preparando", "en_camino", "entregado"]
 
+export type Role = "cliente" | "shopper" | "admin" | "dev"
+
+/** Quiénes pueden entrar a /shopper. dev existe para probar sin ser repartidor. */
+export const SHOPPER_ROLES: Role[] = ["shopper", "admin", "dev"]
+
+/** El siguiente estado al que puede pasar un pedido, o null si ya terminó. */
+export function nextStatus(status: OrderStatus): OrderStatus | null {
+  const index = STATUS_FLOW.indexOf(status)
+  if (index === -1 || index >= STATUS_FLOW.length - 1) return null
+  return STATUS_FLOW[index + 1]
+}
+
+export const NEXT_STATUS_ACTION: Record<string, string> = {
+  preparando: "Empezar a preparar",
+  en_camino: "Salir a entregar",
+  entregado: "Marcar como entregado",
+}
+
 export type Address = {
   id: string
   label: string
@@ -30,6 +48,10 @@ export type OrderItem = {
 export type Order = {
   id: string
   code: string
+  shopper_id: string | null
+  shopper_lat: number | null
+  shopper_lng: number | null
+  shopper_located_at: string | null
   address_label: string | null
   address_detail: string | null
   status: OrderStatus
