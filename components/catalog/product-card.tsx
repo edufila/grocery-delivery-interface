@@ -2,14 +2,7 @@
 
 import { Plus, Minus } from "lucide-react"
 
-export type Product = {
-  id: string
-  name: string
-  unit: string
-  price: number
-  image: string
-  wholesale?: boolean
-}
+import type { Product } from "@/lib/products"
 
 type Props = {
   product: Product
