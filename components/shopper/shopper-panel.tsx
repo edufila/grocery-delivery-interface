@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Store } from "lucide-react"
 
+import { OrderChat } from "@/components/tracking/order-chat"
 import { OrderMap } from "@/components/tracking/order-map"
 import { LocationShare } from "./location-share"
 import { ShopperActions } from "./shopper-actions"
@@ -68,6 +69,21 @@ export function ShopperPanel({
           shopper: "Vos",
         }}
       />
+
+      {mine && order.status !== "entregado" && (
+        <div className="rounded-2xl border border-gray-100 bg-white p-4">
+          <p className="text-sm font-semibold text-gray-900">Coordinar con el cliente</p>
+          <p className="mt-0.5 text-sm leading-relaxed text-gray-500">
+            Para avisar de un faltante o preguntar por la entrega.
+          </p>
+          <OrderChat
+            orderId={order.id}
+            userId={userId}
+            title="Chat con el cliente"
+            subtitle={`Pedido ${order.code}`}
+          />
+        </div>
+      )}
 
       {mine && (
         <LocationShare orderId={order.id} onSharingChange={setSharing} onPosition={setPosition} />

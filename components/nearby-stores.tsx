@@ -5,32 +5,85 @@ import { useEffect, useState } from "react"
 import { Star, Clock, Bike, BadgePercent, Heart } from "lucide-react"
 
 import type { Store } from "@/lib/admin"
+import { createClient } from "@/lib/supabase/client"
+import { isSupabaseConfigured } from "@/lib/supabase/config"
 
 const FAVORITES_KEY = "abastos-favoritos"
 
 export function NearbyStores({ stores }: { stores: Store[] }) {
   const [favorites, setFavorites] = useState<string[]>([])
+  const [userId, setUserId] = useState<string | null>(null)
 
-  // Los favoritos viven en el navegador: no hay backend todavía.
+  /**
+   * Con sesión los favoritos van a la cuenta, así siguen al cambiar de
+   * teléfono. Sin sesión quedan en el navegador, para no perder el gesto de
+   * alguien que todavía no se registró.
+   */
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(FAVORITES_KEY)
-      if (stored) setFavorites(JSON.parse(stored) as string[])
-    } catch {
-      // Modo privado o storage bloqueado: seguimos sin favoritos guardados.
+    let cancelled = false
+
+    void (async () => {
+      if (!isSupabaseConfigured) return
+
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (cancelled) return
+
+      if (!user) {
+        try {
+          const stored = localStorage.getItem(FAVORITES_KEY)
+          if (stored) setFavorites(JSON.parse(stored) as string[])
+        } catch {
+          // Modo privado o storage bloqueado.
+        }
+        return
+      }
+
+      setUserId(user.id)
+
+      const { data } = await supabase
+        .from("favorites")
+        .select("store_id")
+        .eq("user_id", user.id)
+        .returns<{ store_id: string }[]>()
+
+      if (!cancelled) setFavorites((data ?? []).map((row) => row.store_id))
+    })()
+
+    return () => {
+      cancelled = true
     }
   }, [])
 
   const toggleFavorite = (id: string) => {
-    setFavorites((prev) => {
-      const next = prev.includes(id) ? prev.filter((n) => n !== id) : [...prev, id]
+    const wasFavorite = favorites.includes(id)
+    const next = wasFavorite ? favorites.filter((n) => n !== id) : [...favorites, id]
+
+    // Se pinta primero y se guarda después: tocar un corazón tiene que
+    // responder al instante.
+    setFavorites(next)
+
+    if (!userId) {
       try {
         localStorage.setItem(FAVORITES_KEY, JSON.stringify(next))
       } catch {
-        // Si no se puede guardar, al menos queda marcado en esta sesión.
+        // Queda marcado solo en esta sesión.
       }
-      return next
-    })
+      return
+    }
+
+    const supabase = createClient()
+    void (async () => {
+      const { error } = wasFavorite
+        ? await supabase.from("favorites").delete().eq("user_id", userId).eq("store_id", id)
+        : await supabase.from("favorites").insert({ user_id: userId, store_id: id })
+
+      // Si falló, volvemos a como estaba en vez de mentir.
+      if (error) setFavorites(favorites)
+    })()
   }
 
   if (stores.length === 0) return null

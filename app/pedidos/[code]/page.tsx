@@ -6,8 +6,9 @@ import { ArrowLeft, Check, MapPin } from "lucide-react"
 import { OrderLiveRefresh } from "@/components/live-refresh"
 import { DeliveryCodeCard } from "@/components/tracking/delivery-code-card"
 import { OrderMap } from "@/components/tracking/order-map"
+import { CancelOrder } from "@/components/tracking/cancel-order"
+import { OrderChat } from "@/components/tracking/order-chat"
 import { ShopperCard, type OrderShopper } from "@/components/tracking/shopper-card"
-import { ShopperChat } from "@/components/tracking/shopper-chat"
 import {
   formatMoney,
   formatOrderDate,
@@ -180,7 +181,14 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
                           <p className="mt-0.5 text-sm text-gray-500">
                             {statusDescription(status, order.shopper_id)}
                           </p>
-                          {status === "preparando" && <ShopperChat />}
+                          {order.shopper_id && status !== "entregado" && (
+                            <OrderChat
+                              orderId={order.id}
+                              userId={user.id}
+                              title="Chat con tu shopper"
+                              subtitle={shopper?.full_name ?? "Sobre este pedido"}
+                            />
+                          )}
                         </>
                       )}
                     </div>
@@ -233,6 +241,10 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
             </div>
           </dl>
         </section>
+
+        {order.status === "confirmado" && !order.shopper_id && (
+          <CancelOrder orderId={order.id} />
+        )}
 
         <section className="rounded-2xl border border-gray-100 bg-white p-5">
           <h2 className="mb-3 text-base font-semibold text-gray-900">Detalles</h2>
