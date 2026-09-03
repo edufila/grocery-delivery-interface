@@ -85,7 +85,9 @@ export function CheckoutView() {
 
   const hasItems = items.length > 0
   const total = subtotal + (hasItems ? SERVICE_FEE + DELIVERY_FEE : 0)
-  const canPlace = hasItems && !!session.userId && !!session.address && !placing
+  // Sin punto en el mapa el repartidor no tiene a dónde ir: no se puede pedir.
+  const addressPinned = session.address?.lat != null && session.address?.lng != null
+  const canPlace = hasItems && !!session.userId && addressPinned && !placing
 
   async function placeOrder() {
     if (!session.userId || !session.address || placing) return
@@ -225,6 +227,24 @@ function DeliveryCard({ session }: { session: Session }) {
           className="mt-3 flex h-12 w-full items-center justify-center rounded-xl bg-amber-900 text-sm font-semibold text-white"
         >
           Agregar dirección
+        </Link>
+      </section>
+    )
+  }
+
+  if (session.address.lat == null || session.address.lng == null) {
+    return (
+      <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+        <h2 className="text-sm font-semibold text-amber-900">Falta marcar el punto</h2>
+        <p className="mt-1 text-sm leading-relaxed text-amber-800">
+          <span className="font-semibold">{session.address.label}</span> no tiene el punto exacto en
+          el mapa, así que el repartidor no tendría a dónde ir. Editala y marcalo.
+        </p>
+        <Link
+          href="/perfil"
+          className="mt-3 flex h-12 w-full items-center justify-center rounded-xl bg-amber-900 text-sm font-semibold text-white"
+        >
+          Marcar el punto
         </Link>
       </section>
     )

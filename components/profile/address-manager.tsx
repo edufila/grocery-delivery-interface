@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Check, Loader2, MapPin, MapPinOff, Pencil, Plus, Trash2 } from "lucide-react"
 
@@ -19,10 +19,23 @@ export function AddressManager({ userId, addresses }: { userId: string; addresse
   const [draft, setDraft] = useState<Draft | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
+  const formRef = useRef<HTMLFormElement>(null)
+
+  // El formulario aparece debajo de la lista: con varias direcciones cargadas
+  // queda fuera de pantalla y parece que el botón no hizo nada.
+  useEffect(() => {
+    if (draft) formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
+  }, [draft?.id, draft === null])
 
   const editing = draft?.id != null
+  // El pin es obligatorio: acá la gente no maneja nombres de calles, y sin el
+  // punto en el mapa el repartidor no tiene a dónde ir.
   const canSave =
-    !!draft && draft.label.trim().length >= 2 && draft.detail.trim().length >= 5 && !busy
+    !!draft &&
+    draft.label.trim().length >= 2 &&
+    draft.detail.trim().length >= 5 &&
+    !!draft.coords &&
+    !busy
 
   function startAdd() {
     setDraft({ ...EMPTY, label: addresses.length === 0 ? "Casa" : "" })
@@ -179,7 +192,11 @@ export function AddressManager({ userId, addresses }: { userId: string; addresse
       )}
 
       {draft ? (
-        <form onSubmit={save} className="flex flex-col gap-3 rounded-2xl border border-gray-200 p-3">
+        <form
+          ref={formRef}
+          onSubmit={save}
+          className="flex flex-col gap-3 rounded-2xl border border-gray-200 p-3"
+        >
           <h3 className="text-sm font-semibold text-gray-900">
             {editing ? "Editar dirección" : "Nueva dirección"}
           </h3>
@@ -199,21 +216,34 @@ export function AddressManager({ userId, addresses }: { userId: string; addresse
 
           <div>
             <label htmlFor="addr_detail" className="block text-sm font-medium text-gray-700">
-              Dirección
+              Cómo reconocer la casa
             </label>
             <input
               id="addr_detail"
               value={draft.detail}
               onChange={(event) => setDraft({ ...draft, detail: event.target.value })}
-              placeholder="Av. Las Delicias, Urb. El Bosque"
+              placeholder="Casa verde de rejas negras, al lado de la panadería"
               className="mt-1.5 h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-emerald-500"
             />
+            <p className="mt-1.5 text-xs leading-relaxed text-gray-500">
+              Lo que le sirva al repartidor para dar con la puerta. El lugar exacto lo marca el pin
+              del mapa.
+            </p>
           </div>
 
+          {/* key: al pasar de agregar a editar el mapa se rearma en el punto
+              correcto en vez de quedarse donde estaba. */}
           <UseMyLocation
+            key={draft.id ?? "nueva"}
             coords={draft.coords}
             onCapture={(coords) => setDraft((d) => (d ? { ...d, coords } : d))}
           />
+
+          {!draft.coords && (
+            <p className="rounded-xl bg-amber-50 px-3 py-2.5 text-sm leading-relaxed text-amber-800">
+              Marcá el punto en el mapa para poder guardar. Sin eso no hay forma de llegar.
+            </p>
+          )}
 
           {error && (
             <p role="alert" className="text-sm text-rose-600">

@@ -95,9 +95,13 @@ export function DeliveryTopBar() {
     router.refresh()
   }
 
+  // El pin es obligatorio: sin punto en el mapa no hay a dónde entregar.
+  const puedeGuardar =
+    !!userId && label.trim().length >= 2 && detail.trim().length >= 5 && !!coords && !busy
+
   async function addAddress(event: React.FormEvent) {
     event.preventDefault()
-    if (!userId || label.trim().length < 2 || detail.trim().length < 5 || busy) return
+    if (!puedeGuardar) return
 
     setBusy(true)
     setError("")
@@ -278,11 +282,16 @@ export function DeliveryTopBar() {
                         <input
                           value={detail}
                           onChange={(event) => setDetail(event.target.value)}
-                          placeholder="Av. Las Delicias, Urb. El Bosque"
-                          aria-label="Dirección"
+                          placeholder="Casa verde de rejas negras, al lado de la panadería"
+                          aria-label="Cómo reconocer la casa"
                           className="h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500"
                         />
                         <UseMyLocation coords={coords} onCapture={setCoords} />
+                        {!coords && (
+                          <p className="rounded-xl bg-amber-50 px-3 py-2.5 text-sm leading-relaxed text-amber-800">
+                            Marcá el punto en el mapa para poder guardar.
+                          </p>
+                        )}
                         {error && (
                           <p role="alert" className="text-sm text-rose-600">
                             {error}
@@ -305,7 +314,7 @@ export function DeliveryTopBar() {
                       <button
                         type="button"
                         onClick={(event) => void addAddress(event)}
-                        disabled={busy || label.trim().length < 2 || detail.trim().length < 5}
+                        disabled={!puedeGuardar}
                         className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-semibold text-white disabled:bg-gray-200 disabled:text-gray-400"
                       >
                         {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
