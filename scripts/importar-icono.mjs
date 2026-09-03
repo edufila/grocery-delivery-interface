@@ -313,6 +313,22 @@ mkdirSync(carpeta, { recursive: true })
 const origen = leerPng(readFileSync(archivo))
 console.log(`entra: ${origen.ancho}x${origen.alto}`)
 
+/**
+ * Por defecto la imagen se usa tal cual: solo se cambia de tamaño. Todo lo
+ * demás (recortar el margen, aplanar el fondo, dejar aire contra el recorte
+ * del sistema) es opinión, y va detrás de --limpiar.
+ */
+if (!args.includes("--limpiar")) {
+  for (const [nombre, size] of SALIDAS) {
+    const chico = redimensionar(origen.pixels, origen.ancho, origen.alto, size)
+    // Sin alfa: con transparencia iOS pinta el hueco de negro.
+    for (let i = 3; i < chico.length; i += 4) chico[i] = 255
+    writeFileSync(join(carpeta, nombre), png(size, chico))
+    console.log(`${nombre} (${size}px)`)
+  }
+  process.exit(0)
+}
+
 const { pixels, lado } = recortarCuadrado(origen.pixels, origen.ancho, origen.alto)
 const fondoOriginal = colorDeFondo(pixels, lado)
 console.log(`recortado a ${lado}x${lado}, fondo rgb(${fondoOriginal})`)
