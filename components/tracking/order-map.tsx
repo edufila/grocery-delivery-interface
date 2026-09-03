@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
-import { MapPin } from "lucide-react"
+import { MapPin, Maximize2 } from "lucide-react"
 // Solo tipos: se borran al compilar, así que no arrastran la librería al servidor.
 import type { Map as MapLibreMap, Marker as MapLibreMarker } from "maplibre-gl"
 import "maplibre-gl/dist/maplibre-gl.css"
@@ -23,6 +23,12 @@ type Props = {
   route?: boolean
   /** Distancia y tiempo del trayecto, para mostrarlos fuera del mapa. */
   onTrip?: (trip: { km: number; min: number }) => void
+  /**
+   * A quién sigue la cámara. El shopper quiere verse a sí mismo con la calle
+   * de adelante; el cliente, su propia casa esperando. Encuadrar los dos puntos
+   * dejaba a cada uno mirando un punto medio que no le sirve a ninguno.
+   */
+  focus?: "shopper" | "destination"
 }
 
 /**
@@ -79,9 +85,18 @@ export function OrderMap({
   labels = { destination: "Tu dirección", shopper: "Tu shopper" },
   route = false,
   onTrip,
+  focus = "destination",
 }: Props) {
   const routedFrom = useRef<Point | null>(null)
   const fittedFor = useRef<string | null>(null)
+
+  /**
+   * Quien nos usa arma `destination` inline, así que llega un objeto nuevo en
+   * cada render. Si los efectos dependieran de él, el mapa se destruiría y se
+   * recrearía sin parar: la ruta se dibujaba sobre un mapa que moría enseguida.
+   */
+  const destLat = destination?.lat ?? null
+  const destLng = destination?.lng ?? null
   const [trip, setTrip] = useState<{ km: number; min: number } | null>(null)
   const container = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
@@ -135,10 +150,13 @@ export function OrderMap({
         const maplibregl = await import("maplibre-gl")
         if (cancelled || !container.current) return
 
+        // Arranca sobre quien mira, si ya sabemos dónde está.
+        const inicio = (focus === "shopper" ? shopper : null) ?? destination
+
         const map = new maplibregl.Map({
           container: container.current,
           style: OSM_STYLE,
-          center: [destination.lng, destination.lat],
+          center: [inicio.lng, inicio.lat],
           zoom: 14,
           attributionControl: { compact: true },
         })
@@ -149,7 +167,11 @@ export function OrderMap({
           .addTo(map)
 
         mapRef.current = map
-        setMapReady(true)
+        // Recién con el estilo cargado se pueden agregar capas: antes de eso,
+        // addSource falla y la ruta no se dibujaría nunca.
+        map.on("load", () => {
+          if (!cancelled) setMapReady(true)
+        })
       } catch {
         if (!cancelled) setFailed(true)
       }
@@ -160,9 +182,12 @@ export function OrderMap({
       mapRef.current?.remove()
       mapRef.current = null
       shopperMarker.current = null
+      // Al cambiar de destino hay que volver a rutear aunque no se haya movido.
+      routedFrom.current = null
       setMapReady(false)
     }
-  }, [destination])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [destLat, destLng])
 
   // Mueve el punto del shopper y encuadra para que se vean los dos.
   useEffect(() => {
@@ -182,22 +207,18 @@ export function OrderMap({
         shopperMarker.current.setLngLat([position.lng, position.lat])
       }
 
-      // Encuadrar una sola vez por destino. Hacerlo en cada lectura del GPS
+      // Centrar una sola vez por destino. Hacerlo en cada lectura del GPS
       // dejaba el mapa acercándose y alejándose sin parar mientras el shopper
       // estaba quieto y la señal oscilaba unos metros.
       const clave = `${destination.lat},${destination.lng}`
       if (fittedFor.current !== clave) {
         fittedFor.current = clave
-        map.fitBounds(
-          [
-            [Math.min(position.lng, destination.lng), Math.min(position.lat, destination.lat)],
-            [Math.max(position.lng, destination.lng), Math.max(position.lat, destination.lat)],
-          ],
-          { padding: 60, maxZoom: 15, duration: 800 },
-        )
+        const propio = focus === "shopper" ? position : destination
+        map.easeTo({ center: [propio.lng, propio.lat], zoom: 15, duration: 800 })
       }
     })()
-  }, [position, destination, mapReady])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [position, destLat, destLng, mapReady])
 
   // Camino por calle entre el shopper y su destino. Se recalcula solo cuando
   // se movió lo suficiente: el servidor de rutas es una demo compartida.
@@ -263,7 +284,8 @@ export function OrderMap({
     return () => {
       cancelled = true
     }
-  }, [route, mapReady, position, destination])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [route, mapReady, position, destLat, destLng])
 
   if (!destination) {
     return (
@@ -293,9 +315,37 @@ export function OrderMap({
     )
   }
 
+  // El mapa queda centrado en quien mira. Este botón es la salida para cuando
+  // se quiere ver el trayecto entero de una sola vez.
+  function verTodo() {
+    const map = mapRef.current
+    if (!map || !destination) return
+    if (!position) {
+      map.easeTo({ center: [destination.lng, destination.lat], zoom: 15, duration: 600 })
+      return
+    }
+    map.fitBounds(
+      [
+        [Math.min(position.lng, destination.lng), Math.min(position.lat, destination.lat)],
+        [Math.max(position.lng, destination.lng), Math.max(position.lat, destination.lat)],
+      ],
+      { padding: 50, maxZoom: 15, duration: 600 },
+    )
+  }
+
   return (
     <section className="overflow-hidden rounded-2xl border border-gray-100 bg-white">
-      <div ref={container} className="h-56 w-full" role="img" aria-label="Mapa del pedido" />
+      <div className="relative">
+        <div ref={container} className="h-56 w-full" role="img" aria-label="Mapa del pedido" />
+        <button
+          type="button"
+          onClick={verTodo}
+          className="absolute bottom-3 left-3 flex min-h-11 items-center gap-1.5 rounded-full bg-white/95 px-3.5 text-xs font-semibold text-gray-700 shadow-md backdrop-blur active:bg-gray-100"
+        >
+          <Maximize2 className="h-3.5 w-3.5" aria-hidden="true" />
+          Ver todo el recorrido
+        </button>
+      </div>
       <div className="flex items-center gap-4 px-4 py-3 text-xs text-gray-500">
         <span className="flex items-center gap-1.5">
           <span className="h-2.5 w-2.5 rounded-full bg-gray-900" aria-hidden="true" />

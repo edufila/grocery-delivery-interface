@@ -135,7 +135,7 @@ export function ProfileForm({ userId, profile, nameLocked = false }: Props) {
         />
         {nameLocked && (
           <p className="mt-1.5 text-xs leading-relaxed text-gray-500">
-            Tu nombre y tu foto los asigna el abasto: son los que ve el cliente cuando le llevás el
+            Tu nombre y tu foto los asigna el abasto: son los que ve el cliente cuando le llevas el
             pedido.
           </p>
         )}

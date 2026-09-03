@@ -100,6 +100,7 @@ export function ShopperPanel({
         live={false}
         route
         onTrip={setTrip}
+        focus="shopper"
         labels={{
           destination: yendoAlAbasto ? (store?.name ?? "El abasto") : "Entregar aquí",
           shopper: "Tú",

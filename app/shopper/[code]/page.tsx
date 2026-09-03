@@ -16,6 +16,7 @@ import {
   type OrderItem,
   type Role,
 } from "@/lib/orders"
+import { firstName } from "@/lib/profile"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/server"
 
@@ -124,10 +125,10 @@ export default async function ShopperOrderPage({
               </span>
               <div className="min-w-0 flex-1">
                 <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
-                  Le entregás a
+                  Le entregas a
                 </p>
                 <p className="truncate text-sm font-semibold text-gray-900">
-                  {customer.full_name || "Sin nombre cargado"}
+                  {firstName(customer.full_name) || "Sin nombre cargado"}
                 </p>
               </div>
               {customer.phone && (

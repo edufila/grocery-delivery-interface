@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { toCategory } from "./categories"
 import { formatMoney, nextStatus, statusLabel, type OrderStatus } from "./orders"
-import { formatBirthDate, isProfileComplete } from "./profile"
+import { firstName, formatBirthDate, isProfileComplete } from "./profile"
 import { safeNextPath } from "./safe-path"
 import { slugify } from "./slug"
 
@@ -67,6 +67,13 @@ describe("formatos", () => {
 })
 
 describe("perfil completo", () => {
+  it("al shopper solo le mostramos el primer nombre", () => {
+    expect(firstName("María González Pérez")).toBe("María")
+    expect(firstName("  Ana  ")).toBe("Ana")
+    expect(firstName("")).toBe(null)
+    expect(firstName(null)).toBe(null)
+  })
+
   it("exige nombre y teléfono", () => {
     const base = { id: "1", birth_date: null, created_at: "", updated_at: "" }
     expect(isProfileComplete({ ...base, full_name: "Ana", phone: "04141234567" })).toBe(true)

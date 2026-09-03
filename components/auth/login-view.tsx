@@ -317,7 +317,7 @@ export function LoginView({ next, initialError }: { next: string; initialError?:
 
       <footer className="mx-auto w-full max-w-md px-5 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] pt-8">
         <p className="text-center text-xs leading-relaxed text-gray-400">
-          Al continuar aceptás los Términos y la Política de Privacidad.
+          Al continuar aceptas los Términos y la Política de Privacidad.
         </p>
       </footer>
     </main>

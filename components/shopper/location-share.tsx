@@ -153,8 +153,8 @@ export function LocationShare({
           </h2>
           <p className="mt-0.5 text-sm leading-relaxed text-gray-500">
             {estado.sharing
-              ? "El cliente ve por dónde vas. Deja esta pantalla abierta: si bloqueás el teléfono, se corta."
-              : "Encendela cuando salgas, para que el cliente sepa que estás en camino."}
+              ? "El cliente ve por dónde vas. Deja esta pantalla abierta: si bloqueas el teléfono, se corta."
+              : "Enciéndela cuando salgas, para que el cliente sepa que estás en camino."}
           </p>
           {estado.buscandoSenal && (
             <p className="mt-1 text-sm text-amber-700">
