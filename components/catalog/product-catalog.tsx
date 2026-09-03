@@ -46,8 +46,10 @@ export function ProductCatalog({
     query.trim().length > 0
       ? `No encontramos productos con "${query.trim()}".`
       : wholesaleOnly
-        ? "No hay productos al mayor en esta categoría."
-        : `Todavía no hay productos en ${category}.`
+        ? "No hay productos al mayor acá."
+        : category === "Todos"
+          ? `${storeName} todavía no cargó productos.`
+          : `Todavía no hay productos en ${category}.`
 
   return (
     <div className="min-h-dvh bg-gray-50 pb-28">

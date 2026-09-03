@@ -24,6 +24,12 @@ export const metadata: Metadata = {
     ],
     apple: '/apple-icon.png',
   },
+  // iOS no lee el manifest: para abrirla sin barra del navegador hace falta esto.
+  appleWebApp: {
+    capable: true,
+    title: 'Girasol',
+    statusBarStyle: 'default',
+  },
 }
 
 export const viewport: Viewport = {
