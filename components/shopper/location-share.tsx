@@ -8,10 +8,17 @@ import { createClient } from "@/lib/supabase/client"
 /** Cada cuánto se manda la posición. Más seguido no aporta y gasta batería. */
 const SEND_EVERY_MS = 15_000
 
+/**
+ * Máxima imprecisión aceptable, en metros. Un GPS de celular anda en 5 a 50;
+ * la ubicación por IP se va a miles, y con VPN además cae en otro país.
+ */
+const MAX_ACCURACY_M = 500
+
 type Estado = {
   sharing: boolean
   lastSent: Date | null
   error: string
+  buscandoSenal: boolean
 }
 
 export function LocationShare({
@@ -23,7 +30,12 @@ export function LocationShare({
   onSharingChange?: (sharing: boolean) => void
   onPosition?: (coords: { lat: number; lng: number }) => void
 }) {
-  const [estado, setEstado] = useState<Estado>({ sharing: false, lastSent: null, error: "" })
+  const [estado, setEstado] = useState<Estado>({
+    sharing: false,
+    lastSent: null,
+    error: "",
+    buscandoSenal: false,
+  })
   const watchRef = useRef<number | null>(null)
   const lastSentAt = useRef(0)
   const wakeLockRef = useRef<WakeLockSentinel | null>(null)
@@ -46,6 +58,15 @@ export function LocationShare({
 
     watchRef.current = navigator.geolocation.watchPosition(
       async (position) => {
+        // Antes de que el GPS resuelva, el navegador contesta con la ubicación
+        // de red, que con VPN cae en otro país. Esas lecturas vienen con
+        // precisión de kilómetros: se descartan y se espera la buena.
+        if (position.coords.accuracy > MAX_ACCURACY_M) {
+          setEstado((e) => ({ ...e, buscandoSenal: true }))
+          return
+        }
+        setEstado((e) => (e.buscandoSenal ? { ...e, buscandoSenal: false } : e))
+
         // El mapa de al lado se mueve con cada lectura, aunque a la base solo
         // le mandemos una cada tanto.
         onPosition?.({ lat: position.coords.latitude, lng: position.coords.longitude })
@@ -80,7 +101,8 @@ export function LocationShare({
               : "No pudimos leer tu ubicación.",
         }))
       },
-      { enableHighAccuracy: true, maximumAge: 10_000, timeout: 20_000 },
+      // maximumAge 0: nada de lecturas guardadas, que suelen ser las de red.
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 20_000 },
     )
 
     setEstado((e) => ({ ...e, sharing: true, error: "" }))
@@ -129,6 +151,11 @@ export function LocationShare({
               ? "El cliente ve por dónde vas. Dejá esta pantalla abierta: si bloqueás el teléfono, se corta."
               : "Encendela cuando salgas, para que el cliente sepa que estás en camino."}
           </p>
+          {estado.buscandoSenal && (
+            <p className="mt-1 text-sm text-amber-700">
+              Buscando señal de GPS. La primera lectura viene de la red y no sirve.
+            </p>
+          )}
           {estado.lastSent && (
             <p className="mt-1 text-xs text-gray-400">
               Última posición enviada a las{" "}
