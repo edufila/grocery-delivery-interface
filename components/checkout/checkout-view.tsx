@@ -31,6 +31,7 @@ export function CheckoutView() {
 
   const [substitution, setSubstitution] = useState("shopper")
   const [payment, setPayment] = useState("pago-movil")
+  const [note, setNote] = useState("")
   const [session, setSession] = useState<Session>({ loading: true, userId: null, address: null })
   const [placing, setPlacing] = useState(false)
   const [error, setError] = useState("")
@@ -104,6 +105,7 @@ export function CheckoutView() {
       p_address_id: session.address.id,
       p_payment_method: payment,
       p_substitution: substitution,
+      p_note: note.trim() || null,
     })
 
     if (rpcError || !code) {
@@ -152,6 +154,23 @@ export function CheckoutView() {
           <>
             <DeliveryCard session={session} />
             <CartItemList items={items} onInc={add} onDec={removeOne} onRemove={removeAll} />
+            <section className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+              <label htmlFor="nota" className="block text-base font-semibold text-gray-900">
+                Indicaciones para la entrega
+              </label>
+              <p className="mt-0.5 text-xs leading-relaxed text-gray-500">
+                Opcional. Lo lee el shopper cuando llega.
+              </p>
+              <input
+                id="nota"
+                value={note}
+                onChange={(event) => setNote(event.target.value)}
+                maxLength={200}
+                placeholder="Tocar el timbre dos veces, preguntar por Ana"
+                className="mt-3 h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-emerald-500"
+              />
+            </section>
+
             <SubstitutionOptions value={substitution} onChange={setSubstitution} />
             <PaymentMethods value={payment} onChange={setPayment} />
             <OrderSummary subtotal={subtotal} serviceFee={SERVICE_FEE} deliveryFee={DELIVERY_FEE} />

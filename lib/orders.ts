@@ -96,6 +96,8 @@ export type Order = {
   address_detail: string | null
   address_lat: number | null
   address_lng: number | null
+  customer_note: string | null
+  cancel_reason: string | null
   status: OrderStatus
   substitution_policy: "shopper" | "chat" | "none"
   payment_method: string

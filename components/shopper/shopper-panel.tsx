@@ -6,6 +6,7 @@ import { Store } from "lucide-react"
 import { OrderChat } from "@/components/tracking/order-chat"
 import { OrderMap } from "@/components/tracking/order-map"
 import { LocationShare } from "./location-share"
+import { OrderProblem } from "./order-problem"
 import { ShopperActions } from "./shopper-actions"
 import type { Order } from "@/lib/orders"
 
@@ -92,6 +93,10 @@ export function ShopperPanel({
       )}
 
       <ShopperActions order={order} userId={userId} sharing={sharing} />
+
+      {mine && order.status !== "entregado" && order.status !== "cancelado" && (
+        <OrderProblem orderId={order.id} />
+      )}
     </>
   )
 }

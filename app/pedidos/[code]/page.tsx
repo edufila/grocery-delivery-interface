@@ -146,9 +146,14 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
         <section className="rounded-2xl border border-gray-100 bg-white p-5">
           <h2 className="mb-4 text-base font-semibold text-gray-900">Estado</h2>
           {cancelled ? (
-            <p className="rounded-xl bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
-              Este pedido fue cancelado.
-            </p>
+            <div className="rounded-xl bg-rose-50 px-4 py-3">
+              <p className="text-sm font-medium text-rose-700">Este pedido fue cancelado.</p>
+              {order.cancel_reason && (
+                <p className="mt-1 text-sm leading-relaxed text-rose-800">
+                  Motivo: {order.cancel_reason}
+                </p>
+              )}
+            </div>
           ) : (
             <ol className="flex flex-col gap-4">
               {STATUS_FLOW.map((status, index) => {
