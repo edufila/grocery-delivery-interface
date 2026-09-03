@@ -7,8 +7,12 @@ import "maplibre-gl/dist/maplibre-gl.css"
 
 export type Coords = { lat: number; lng: number } | null
 
-/** Caracas, para abrir el mapa en algún lado si todavía no hay posición. */
-const FALLBACK = { lat: 10.4806, lng: -66.9036 }
+/**
+ * Entre Acarigua y Araure: es donde opera el abasto, así que el mapa abre
+ * cerca de donde va a estar la dirección aunque el GPS todavía no responda.
+ */
+const FALLBACK = { lat: 9.5628, lng: -69.2149 }
+const FALLBACK_ZOOM = 13
 
 const OSM_STYLE = {
   version: 8 as const,
@@ -55,7 +59,7 @@ export function UseMyLocation({
         container: container.current,
         style: OSM_STYLE,
         center: [center.lng, center.lat],
-        zoom: coords ? 17 : 12,
+        zoom: coords ? 17 : FALLBACK_ZOOM,
         attributionControl: { compact: true },
       })
 
