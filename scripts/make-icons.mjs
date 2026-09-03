@@ -2,16 +2,16 @@
  * Genera los íconos de la app. Los que venían eran el logo negro de la
  * plantilla de v0, que es lo que quedaba en la pantalla de inicio del teléfono.
  *
- * Dibuja y codifica el PNG a mano con los módulos de Node: instalar un
- * rasterizador (sharp) fallaba en esta máquina, y para un girasol de círculos
- * no hace falta.
- *
  *   node scripts/make-icons.mjs
+ *
+ * Para probar otros diseños antes de cambiar este, está
+ * `scripts/muestras-icono.mjs`, que escribe variantes en una carpeta aparte.
  */
-import { deflateSync } from "node:zlib"
 import { writeFileSync } from "node:fs"
 import { fileURLToPath } from "node:url"
 import { dirname, join } from "node:path"
+
+import { BASE, enElipse, enCirculo, enRectRedondo, pintar, png } from "./png.mjs"
 
 const PUBLIC = join(dirname(fileURLToPath(import.meta.url)), "..", "public")
 
@@ -23,36 +23,13 @@ const ROJO = [239, 68, 68] // red-500
 const AMARILLO = [251, 191, 36] // amber-400
 
 /**
- * Todo se mide sobre un lienzo de 512 y se escala. El dibujo entero cabe a
- * menos de 190 del centro: entra en el círculo seguro del 80% que recortan los
- * lanzadores de Android, así que no se le corta nada.
+ * El dibujo entero cabe a menos de 190 del centro: entra en el círculo seguro
+ * del 80% que recortan los lanzadores de Android, así que no se le corta nada.
  *
- * Una cesta y no el girasol del abasto: la app ya reparte de varias tiendas,
- * y el ícono es de la plataforma, no de una de ellas.
+ * Una cesta y no el girasol del abasto: la app ya reparte de varias tiendas, y
+ * el ícono es de la plataforma, no de una de ellas.
  */
-const BASE = 512
-
-/** Sube el dibujo para que quede centrado en el cuadrado. */
 const SUBIR = 28
-
-function enCirculo(x, y, cx, cy, r) {
-  const dx = x - cx
-  const dy = y - cy
-  return dx * dx + dy * dy <= r * r
-}
-
-function enElipse(x, y, cx, cy, rx, ry) {
-  const dx = (x - cx) / rx
-  const dy = (y - cy) / ry
-  return dx * dx + dy * dy <= 1
-}
-
-/** Rectángulo de esquinas redondeadas: el punto se acerca al rectángulo interno. */
-function enRectRedondo(x, y, x0, y0, x1, y1, r) {
-  const cx = Math.min(Math.max(x, x0 + r), x1 - r)
-  const cy = Math.min(Math.max(y, y0 + r), y1 - r)
-  return enCirculo(x, y, cx, cy, r)
-}
 
 /** Color de un punto del dibujo, en coordenadas de 0 a 512. */
 function colorEn(x, yBruto) {
@@ -77,96 +54,6 @@ function colorEn(x, yBruto) {
   return FONDO
 }
 
-/** Píxeles RGBA del ícono a un tamaño dado, con 4x4 muestras por píxel. */
-function pintar(size) {
-  const muestras = 4
-  const pixels = Buffer.alloc(size * size * 4)
-  const escala = BASE / size
-
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      let r = 0
-      let g = 0
-      let b = 0
-
-      for (let sy = 0; sy < muestras; sy++) {
-        for (let sx = 0; sx < muestras; sx++) {
-          const c = colorEn(
-            (x + (sx + 0.5) / muestras) * escala,
-            (y + (sy + 0.5) / muestras) * escala,
-          )
-          r += c[0]
-          g += c[1]
-          b += c[2]
-        }
-      }
-
-      const total = muestras * muestras
-      const i = (y * size + x) * 4
-      pixels[i] = Math.round(r / total)
-      pixels[i + 1] = Math.round(g / total)
-      pixels[i + 2] = Math.round(b / total)
-      // El fondo cubre el cuadrado entero: iOS y Android le ponen su recorte.
-      pixels[i + 3] = 255
-    }
-  }
-
-  return pixels
-}
-
-// ------------------------------------------------------------ codificar PNG
-
-const TABLA_CRC = (() => {
-  const tabla = new Int32Array(256)
-  for (let n = 0; n < 256; n++) {
-    let c = n
-    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1
-    tabla[n] = c
-  }
-  return tabla
-})()
-
-function crc32(buf) {
-  let c = 0xffffffff
-  for (const byte of buf) c = TABLA_CRC[(c ^ byte) & 0xff] ^ (c >>> 8)
-  return (c ^ 0xffffffff) >>> 0
-}
-
-function chunk(tipo, datos) {
-  const largo = Buffer.alloc(4)
-  largo.writeUInt32BE(datos.length)
-  const cuerpo = Buffer.concat([Buffer.from(tipo, "ascii"), datos])
-  const crc = Buffer.alloc(4)
-  crc.writeUInt32BE(crc32(cuerpo))
-  return Buffer.concat([largo, cuerpo, crc])
-}
-
-function png(size, pixels) {
-  const ihdr = Buffer.alloc(13)
-  ihdr.writeUInt32BE(size, 0)
-  ihdr.writeUInt32BE(size, 4)
-  ihdr[8] = 8 // bits por canal
-  ihdr[9] = 6 // RGBA
-  ihdr[10] = 0
-  ihdr[11] = 0
-  ihdr[12] = 0
-
-  // Cada fila lleva adelante su byte de filtro; 0 es "sin filtrar".
-  const filas = Buffer.alloc(size * (size * 4 + 1))
-  for (let y = 0; y < size; y++) {
-    const desde = y * size * 4
-    filas[y * (size * 4 + 1)] = 0
-    pixels.copy(filas, y * (size * 4 + 1) + 1, desde, desde + size * 4)
-  }
-
-  return Buffer.concat([
-    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
-    chunk("IHDR", ihdr),
-    chunk("IDAT", deflateSync(filas, { level: 9 })),
-    chunk("IEND", Buffer.alloc(0)),
-  ])
-}
-
 // ------------------------------------------------------------------ generar
 
 const salidas = [
@@ -178,7 +65,7 @@ const salidas = [
 ]
 
 for (const [nombre, size] of salidas) {
-  writeFileSync(join(PUBLIC, nombre), png(size, pintar(size)))
+  writeFileSync(join(PUBLIC, nombre), png(size, pintar(size, colorEn)))
   console.log(`${nombre} (${size}px)`)
 }
 
