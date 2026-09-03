@@ -53,6 +53,13 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
   const currentStep = STATUS_FLOW.indexOf(order.status)
   const cancelled = order.status === "cancelado"
 
+  // Solo el dueño del pedido puede leerlo: el shopper no tiene política acá.
+  const { data: deliveryCode } = await supabase
+    .from("order_delivery_codes")
+    .select("code")
+    .eq("order_id", order.id)
+    .maybeSingle<{ code: string }>()
+
   return (
     <main className="min-h-dvh bg-gray-50">
       {/* El interior se alinea con el contenido: si no, en pantalla ancha la
@@ -89,6 +96,21 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
             }
             live={order.status !== "entregado"}
           />
+        )}
+
+        {deliveryCode && order.status !== "entregado" && !cancelled && (
+          <section className="rounded-2xl border border-gray-900 bg-gray-900 p-5 text-center">
+            <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+              Código de entrega
+            </p>
+            <p className="mt-2 font-mono text-4xl font-bold tracking-[0.3em] text-white">
+              {deliveryCode.code}
+            </p>
+            <p className="mt-3 text-sm leading-relaxed text-gray-400">
+              Dáselo al shopper cuando te entregue el pedido. Solo vos lo ves: sirve para confirmar
+              que la entrega fue a la persona correcta.
+            </p>
+          </section>
         )}
 
         {order.shopper_located_at && order.status === "en_camino" && (
