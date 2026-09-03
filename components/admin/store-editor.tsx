@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Check, ChevronDown, Loader2, MapPin } from "lucide-react"
 
+import { ImagePicker } from "@/components/admin/image-picker"
 import { UseMyLocation, type Coords } from "@/components/profile/use-my-location"
 import { STORE_TEXT_FIELDS, type Store } from "@/lib/admin"
 import { createClient } from "@/lib/supabase/client"
@@ -93,8 +94,19 @@ export function StoreEditor({ store }: { store: Store }) {
         Visible en el inicio
       </label>
 
+      <div className="mt-3">
+        <span className="block text-sm font-medium text-gray-700">Foto</span>
+        <div className="mt-1">
+          <ImagePicker
+            folder="tiendas"
+            value={draft.image ?? ""}
+            onChange={(image) => setDraft({ ...draft, image })}
+          />
+        </div>
+      </div>
+
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
-        {STORE_TEXT_FIELDS.map((field) => (
+        {STORE_TEXT_FIELDS.filter((field) => field.key !== "image").map((field) => (
           <label key={field.key} className="block">
             <span className="block text-sm font-medium text-gray-700">{field.label}</span>
             <input

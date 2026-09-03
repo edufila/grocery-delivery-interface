@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Check, Loader2 } from "lucide-react"
 
+import { ImagePicker } from "@/components/admin/image-picker"
 import type { AdminProduct } from "@/lib/admin"
 import { createClient } from "@/lib/supabase/client"
 
@@ -29,7 +30,7 @@ export function ProductEditor({ products }: { products: AdminProduct[] }) {
 
     const { error: saveError } = await createClient()
       .from("products")
-      .update({ price: product.price, active: product.active })
+      .update({ price: product.price, active: product.active, image: product.image })
       .eq("id", product.id)
 
     setBusyId(null)
@@ -52,16 +53,11 @@ export function ProductEditor({ products }: { products: AdminProduct[] }) {
       {rows.map((product) => (
         <article
           key={product.id}
-          className={`flex flex-wrap items-center gap-3 rounded-2xl border p-3 ${
+          className={`rounded-2xl border p-3 ${
             product.active ? "border-gray-200 bg-white" : "border-gray-200 bg-gray-50"
           }`}
         >
-          <img
-            src={product.image}
-            alt=""
-            className="h-11 w-11 shrink-0 rounded-lg bg-gray-50 object-contain"
-          />
-
+          <div className="flex flex-wrap items-center gap-3">
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-gray-900">{product.name}</p>
             <p className="truncate text-xs text-gray-500">{product.unit}</p>
@@ -105,6 +101,15 @@ export function ProductEditor({ products }: { products: AdminProduct[] }) {
             ) : null}
             {savedId === product.id ? "Listo" : "Guardar"}
           </button>
+          </div>
+
+          <div className="mt-2">
+            <ImagePicker
+              folder="productos"
+              value={product.image}
+              onChange={(image) => edit(product.id, { image })}
+            />
+          </div>
         </article>
       ))}
     </div>

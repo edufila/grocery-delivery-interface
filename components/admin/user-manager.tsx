@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { AtSign, Check, ChevronDown, Loader2, Search } from "lucide-react"
 
+import { ImagePicker } from "@/components/admin/image-picker"
 import type { Role } from "@/lib/orders"
 import { createClient } from "@/lib/supabase/client"
 
@@ -210,34 +211,21 @@ export function UserManager({ users, meId }: { users: AdminUser[]; meId: string 
                     Como lo ve el cliente
                   </p>
 
-                  <div className="mt-2 flex items-center gap-3">
-                    {avatars[user.id] ? (
-                      <img
-                        src={avatars[user.id]}
-                        alt=""
-                        className="h-11 w-11 shrink-0 rounded-full bg-gray-200 object-cover"
-                      />
-                    ) : (
-                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-200 text-xs text-gray-500">
-                        sin foto
-                      </span>
-                    )}
-                    <input
-                      value={names[user.id] ?? ""}
-                      onChange={(event) => setNames({ ...names, [user.id]: event.target.value })}
-                      placeholder="Nombre visible"
-                      aria-label="Nombre visible del shopper"
-                      className="h-11 min-w-0 flex-1 rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500"
-                    />
-                  </div>
-
                   <input
-                    value={avatars[user.id] ?? ""}
-                    onChange={(event) => setAvatars({ ...avatars, [user.id]: event.target.value })}
-                    placeholder="URL de la foto: /images/shoppers/andres.jpg"
-                    aria-label="Foto del shopper"
+                    value={names[user.id] ?? ""}
+                    onChange={(event) => setNames({ ...names, [user.id]: event.target.value })}
+                    placeholder="Nombre visible"
+                    aria-label="Nombre visible del shopper"
                     className="mt-2 h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500"
                   />
+
+                  <div className="mt-2">
+                    <ImagePicker
+                      folder="shoppers"
+                      value={avatars[user.id] ?? ""}
+                      onChange={(url) => setAvatars({ ...avatars, [user.id]: url })}
+                    />
+                  </div>
 
                   <button
                     type="button"
