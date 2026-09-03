@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { redirect } from "next/navigation"
-import { ChevronRight, PackageSearch } from "lucide-react"
+import { ArrowLeft, ChevronRight, PackageSearch } from "lucide-react"
 
 import { OrdersLiveRefresh } from "@/components/live-refresh"
 import {
@@ -59,9 +59,18 @@ export default async function ShopperPage() {
   return (
     <main className="min-h-dvh bg-gray-50">
       <header className="border-b border-gray-100 bg-white">
-        <div className="mx-auto max-w-md px-4 py-4">
-          <h1 className="text-lg font-semibold text-gray-900">Panel del shopper</h1>
-          <p className="text-sm text-gray-500">Entrás como {profile.role}</p>
+        <div className="mx-auto flex max-w-md items-center gap-2 px-4 py-4">
+          <Link
+            href="/perfil"
+            aria-label="Volver al perfil"
+            className="-ml-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-gray-600 transition active:bg-gray-100"
+          >
+            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+          </Link>
+          <div>
+            <h1 className="text-lg font-semibold text-gray-900">Panel del shopper</h1>
+            <p className="text-sm text-gray-500">Entrás como {profile.role}</p>
+          </div>
         </div>
       </header>
 
