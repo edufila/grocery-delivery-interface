@@ -1,6 +1,12 @@
-# Gran Abasto Girasol
+# Abasto
 
-Delivery de víveres para Acarigua. Next.js 16 y Supabase, desplegado en Vercel.
+Delivery de víveres para Acarigua y Araure. Varios abastos en una sola app:
+el cliente elige el local, arma el pedido y un shopper se lo lleva.
+
+Next.js 16 y Supabase, desplegado en Vercel.
+
+El nombre de la plataforma vive en `lib/brand.ts` y en ningún otro lado.
+"Gran Abasto Girasol" es uno de los locales, no la app.
 
 Tres roles sobre la misma app: el **cliente** compra, el **shopper** arma el pedido
 y lo entrega, y **admin/dev** administran el catálogo y las cuentas.

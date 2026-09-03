@@ -15,37 +15,64 @@ import { dirname, join } from "node:path"
 
 const PUBLIC = join(dirname(fileURLToPath(import.meta.url)), "..", "public")
 
-// Los mismos verdes y ámbares que usa la app.
+// Los verdes de la app, y frutas en cálidos para que resalten sobre el verde.
 const FONDO = [5, 150, 105] // emerald-600
-const PETALO = [251, 191, 36] // amber-400
-const CENTRO = [120, 53, 15] // amber-900
+const CESTA = [255, 255, 255]
+const NARANJA = [249, 115, 22] // orange-500
+const ROJO = [239, 68, 68] // red-500
+const AMARILLO = [251, 191, 36] // amber-400
 
 /**
- * Todo se mide sobre un lienzo de 512 y se escala. Los pétalos llegan hasta
- * 194 de 256: entran en el círculo seguro del 80% que recortan los lanzadores
- * de Android, así que no se le corta nada al ícono.
+ * Todo se mide sobre un lienzo de 512 y se escala. El dibujo entero cabe a
+ * menos de 190 del centro: entra en el círculo seguro del 80% que recortan los
+ * lanzadores de Android, así que no se le corta nada.
+ *
+ * Una cesta y no el girasol del abasto: la app ya reparte de varias tiendas,
+ * y el ícono es de la plataforma, no de una de ellas.
  */
 const BASE = 512
-const PETALOS = 8
-const DIST_PETALO = 118
-const RADIO_PETALO = 76
-const RADIO_CENTRO = 86
+
+/** Sube el dibujo para que quede centrado en el cuadrado. */
+const SUBIR = 28
+
+function enCirculo(x, y, cx, cy, r) {
+  const dx = x - cx
+  const dy = y - cy
+  return dx * dx + dy * dy <= r * r
+}
+
+function enElipse(x, y, cx, cy, rx, ry) {
+  const dx = (x - cx) / rx
+  const dy = (y - cy) / ry
+  return dx * dx + dy * dy <= 1
+}
+
+/** Rectángulo de esquinas redondeadas: el punto se acerca al rectángulo interno. */
+function enRectRedondo(x, y, x0, y0, x1, y1, r) {
+  const cx = Math.min(Math.max(x, x0 + r), x1 - r)
+  const cy = Math.min(Math.max(y, y0 + r), y1 - r)
+  return enCirculo(x, y, cx, cy, r)
+}
 
 /** Color de un punto del dibujo, en coordenadas de 0 a 512. */
-function colorEn(x, y) {
-  const dx = x - BASE / 2
-  const dy = y - BASE / 2
+function colorEn(x, yBruto) {
+  const y = yBruto + SUBIR
 
-  if (dx * dx + dy * dy <= RADIO_CENTRO * RADIO_CENTRO) return CENTRO
+  // El borde de la cesta y su cuerpo tapan lo que haya detrás.
+  if (enRectRedondo(x, y, 118, 268, 394, 314, 23)) return CESTA
 
-  for (let i = 0; i < PETALOS; i++) {
-    const angulo = (i * 2 * Math.PI) / PETALOS
-    const px = Math.cos(angulo) * DIST_PETALO
-    const py = Math.sin(angulo) * DIST_PETALO
-    const ex = dx - px
-    const ey = dy - py
-    if (ex * ex + ey * ey <= RADIO_PETALO * RADIO_PETALO) return PETALO
+  if (y > 310 && enElipse(x, y, 256, 300, 118, 106)) {
+    // Tres ranuras al frente para que se lea como cesta y no como un tazón.
+    for (const cx of [200, 256, 312]) {
+      if (enRectRedondo(x, y, cx - 9, 330, cx + 9, 388, 9)) return FONDO
+    }
+    return CESTA
   }
+
+  // Las frutas asoman por encima del borde.
+  if (enCirculo(x, y, 198, 234, 46)) return NARANJA
+  if (enCirculo(x, y, 264, 210, 43)) return ROJO
+  if (enCirculo(x, y, 322, 238, 44)) return AMARILLO
 
   return FONDO
 }
@@ -155,20 +182,32 @@ for (const [nombre, size] of salidas) {
   console.log(`${nombre} (${size}px)`)
 }
 
-// La versión vectorial, para las pestañas del navegador.
-const petalos = Array.from({ length: PETALOS }, (_, i) => {
-  const angulo = (i * 2 * Math.PI) / PETALOS
-  const cx = (BASE / 2 + Math.cos(angulo) * DIST_PETALO).toFixed(1)
-  const cy = (BASE / 2 + Math.sin(angulo) * DIST_PETALO).toFixed(1)
-  return `  <circle cx="${cx}" cy="${cy}" r="${RADIO_PETALO}" fill="rgb(${PETALO})" />`
-}).join("\n")
+/**
+ * La versión vectorial, para las pestañas del navegador. Es el mismo dibujo
+ * que `colorEn`, con la resta de SUBIR ya aplicada a cada coordenada.
+ */
+const ranuras = [200, 256, 312]
+  .map(
+    (cx) =>
+      `  <rect x="${cx - 9}" y="${330 - SUBIR}" width="18" height="58" rx="9" fill="rgb(${FONDO})" />`,
+  )
+  .join("\n")
 
 writeFileSync(
   join(PUBLIC, "icon.svg"),
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${BASE} ${BASE}" width="${BASE}" height="${BASE}" role="img" aria-label="Gran Abasto Girasol">
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${BASE} ${BASE}" width="${BASE}" height="${BASE}" role="img" aria-label="Cesta de compras">
+  <defs>
+    <clipPath id="bajoElBorde">
+      <rect x="0" y="${310 - SUBIR}" width="${BASE}" height="${BASE}" />
+    </clipPath>
+  </defs>
   <rect width="${BASE}" height="${BASE}" fill="rgb(${FONDO})" />
-${petalos}
-  <circle cx="${BASE / 2}" cy="${BASE / 2}" r="${RADIO_CENTRO}" fill="rgb(${CENTRO})" />
+  <circle cx="198" cy="${234 - SUBIR}" r="46" fill="rgb(${NARANJA})" />
+  <circle cx="264" cy="${210 - SUBIR}" r="43" fill="rgb(${ROJO})" />
+  <circle cx="322" cy="${238 - SUBIR}" r="44" fill="rgb(${AMARILLO})" />
+  <ellipse cx="256" cy="${300 - SUBIR}" rx="118" ry="106" fill="rgb(${CESTA})" clip-path="url(#bajoElBorde)" />
+${ranuras}
+  <rect x="118" y="${268 - SUBIR}" width="276" height="46" rx="23" fill="rgb(${CESTA})" />
 </svg>
 `,
 )

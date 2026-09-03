@@ -29,7 +29,7 @@ export function SearchBar() {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             enterKeyHint="search"
-            placeholder="Buscar en Gran Abasto Girasol..."
+            placeholder="Buscar productos..."
             className="w-full rounded-2xl border border-gray-200 bg-gray-50 py-3 pl-11 pr-4 text-base text-gray-900 placeholder:text-gray-400 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-100"
           />
         </label>

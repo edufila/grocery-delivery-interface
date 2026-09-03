@@ -6,13 +6,14 @@ import { ChevronRight, LogOut, Mail, PackageSearch, SlidersHorizontal } from "lu
 import { BottomNav } from "@/components/bottom-nav"
 import { AddressManager } from "@/components/profile/address-manager"
 import { ProfileForm } from "@/components/profile/profile-form"
+import { pageTitle } from "@/lib/brand"
 import { SHOPPER_ROLES, type Address, type Role } from "@/lib/orders"
 import { isProfileComplete, type Profile } from "@/lib/profile"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/server"
 
 export const metadata: Metadata = {
-  title: "Perfil · Gran Abasto Girasol",
+  title: pageTitle("Perfil"),
 }
 
 function initialsFrom(name: string) {

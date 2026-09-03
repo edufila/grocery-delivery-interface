@@ -5,12 +5,13 @@ import { ChevronRight, ClipboardList } from "lucide-react"
 
 import { BottomNav } from "@/components/bottom-nav"
 import { OrdersLiveRefresh } from "@/components/live-refresh"
+import { pageTitle } from "@/lib/brand"
 import { formatMoney, formatOrderDate, statusLabel, type Order } from "@/lib/orders"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/server"
 
 export const metadata: Metadata = {
-  title: "Pedidos · Gran Abasto Girasol",
+  title: pageTitle("Pedidos"),
 }
 
 export default async function PedidosPage() {

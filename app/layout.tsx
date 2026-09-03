@@ -1,10 +1,11 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import { APP_NAME, APP_SHORT_NAME } from '@/lib/brand'
 import { CartProvider } from '@/lib/cart'
 
 export const metadata: Metadata = {
-  title: 'Gran Abasto Girasol · Delivery de supermercado',
+  title: `${APP_NAME} · Delivery de supermercado`,
   description: 'Pide tus víveres y productos del hogar con entrega rápida a domicilio.',
   generator: 'v0.app',
   icons: {
@@ -27,7 +28,7 @@ export const metadata: Metadata = {
   // iOS no lee el manifest: para abrirla sin barra del navegador hace falta esto.
   appleWebApp: {
     capable: true,
-    title: 'Girasol',
+    title: APP_SHORT_NAME,
     statusBarStyle: 'default',
   },
 }

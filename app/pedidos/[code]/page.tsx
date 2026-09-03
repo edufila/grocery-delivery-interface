@@ -20,11 +20,12 @@ import {
   type Order,
   type OrderItem,
 } from "@/lib/orders"
+import { pageTitle } from "@/lib/brand"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/server"
 
 export const metadata: Metadata = {
-  title: "Seguimiento del pedido · Gran Abasto Girasol",
+  title: pageTitle("Seguimiento del pedido"),
 }
 
 export default async function PedidoPage({ params }: { params: Promise<{ code: string }> }) {

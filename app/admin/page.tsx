@@ -8,13 +8,14 @@ import { SettingsEditor } from "@/components/admin/settings-editor"
 import { StoreEditor } from "@/components/admin/store-editor"
 import { StoreProducts } from "@/components/admin/store-products"
 import { UserManager, type AdminUser } from "@/components/admin/user-manager"
+import { pageTitle } from "@/lib/brand"
 import type { AdminProduct, Settings, Store } from "@/lib/admin"
 import type { Order, Role } from "@/lib/orders"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/server"
 
 export const metadata: Metadata = {
-  title: "Administración · Gran Abasto Girasol",
+  title: pageTitle("Administración"),
 }
 
 const ADMIN_ROLES: Role[] = ["admin", "dev"]

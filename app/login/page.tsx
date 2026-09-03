@@ -1,10 +1,11 @@
 import type { Metadata } from "next"
 
 import { LoginView } from "@/components/auth/login-view"
+import { pageTitle } from "@/lib/brand"
 import { safeNextPath } from "@/lib/safe-path"
 
 export const metadata: Metadata = {
-  title: "Ingresar · Gran Abasto Girasol",
+  title: pageTitle("Ingresar"),
 }
 
 export default async function LoginPage({

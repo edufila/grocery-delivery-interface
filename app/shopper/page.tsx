@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 import { ArrowLeft, ChevronRight, PackageSearch } from "lucide-react"
 
 import { OrdersLiveRefresh } from "@/components/live-refresh"
+import { pageTitle } from "@/lib/brand"
 import {
   formatMoney,
   formatOrderDate,
@@ -16,7 +17,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/server"
 
 export const metadata: Metadata = {
-  title: "Panel del shopper · Gran Abasto Girasol",
+  title: pageTitle("Panel del shopper"),
 }
 
 type ShopperOrder = Pick<

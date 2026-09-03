@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 
 import { ProductCatalog } from "@/components/catalog/product-catalog"
 import type { Store } from "@/lib/admin"
+import { APP_NAME } from "@/lib/brand"
 import { toCategory } from "@/lib/categories"
 import { fetchProducts } from "@/lib/products"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
@@ -18,7 +19,7 @@ export default async function CatalogoPage({
     return (
       <ProductCatalog
         products={[]}
-        storeName="Gran Abasto Girasol"
+        storeName={APP_NAME}
         initialQuery=""
         initialCategory="Todos"
       />

@@ -1,5 +1,7 @@
 import type { MetadataRoute } from "next"
 
+import { APP_NAME, APP_SHORT_NAME } from "@/lib/brand"
+
 /**
  * Hace la app instalable en la pantalla de inicio. Para un delivery importa
  * más de lo que parece: el shopper la abre decenas de veces por turno, y en
@@ -7,8 +9,8 @@ import type { MetadataRoute } from "next"
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Gran Abasto Girasol",
-    short_name: "Girasol",
+    name: APP_NAME,
+    short_name: APP_SHORT_NAME,
     description: "Pide tus víveres y recíbelos en casa.",
     start_url: "/",
     display: "standalone",

@@ -16,12 +16,13 @@ import {
   type OrderItem,
   type Role,
 } from "@/lib/orders"
+import { pageTitle } from "@/lib/brand"
 import { firstName } from "@/lib/profile"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/server"
 
 export const metadata: Metadata = {
-  title: "Preparar pedido · Gran Abasto Girasol",
+  title: pageTitle("Preparar pedido"),
 }
 
 export default async function ShopperOrderPage({
