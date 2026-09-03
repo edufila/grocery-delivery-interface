@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { Store } from "lucide-react"
+import { useEffect, useState } from "react"
+import { Navigation, Store } from "lucide-react"
 
 import { OrderChat } from "@/components/tracking/order-chat"
 import { OrderMap } from "@/components/tracking/order-map"
@@ -27,11 +27,34 @@ export function ShopperPanel({
   store: { name: string; lat: number | null; lng: number | null } | null
 }) {
   const [sharing, setSharing] = useState(false)
+  const [trip, setTrip] = useState<{ km: number; min: number } | null>(null)
   const [position, setPosition] = useState<Point | null>(
     order.shopper_lat != null && order.shopper_lng != null
       ? { lat: order.shopper_lat, lng: order.shopper_lng }
       : null,
   )
+
+  /**
+   * Una lectura al abrir, aunque no esté compartiendo: sin un punto de partida
+   * no hay ruta que trazar, y el shopper que acaba de tomar el pedido quiere
+   * ver cómo llegar al abasto antes de encender nada.
+   */
+  useEffect(() => {
+    if (position || !("geolocation" in navigator)) return
+    navigator.geolocation.getCurrentPosition(
+      (p) => {
+        if (p.coords.accuracy <= 500) {
+          setPosition({ lat: p.coords.latitude, lng: p.coords.longitude })
+        }
+      },
+      () => {
+        // Sin permiso no hay ruta, pero el mapa con el destino sigue sirviendo.
+      },
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 15_000 },
+    )
+    // Solo al montar: después la posición llega por el compartir.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const mine = order.shopper_id === userId
 
@@ -59,12 +82,24 @@ export function ShopperPanel({
         </p>
       )}
 
+      {trip && destino && (
+        <p className="flex items-center gap-2 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          <Navigation className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />
+          <span>
+            {yendoAlAbasto ? "Hasta el abasto" : "Hasta el cliente"}:{" "}
+            <span className="font-semibold tabular-nums">{trip.km.toFixed(1)} km</span> ·{" "}
+            <span className="font-semibold tabular-nums">{trip.min} min</span> en vía
+          </span>
+        </p>
+      )}
+
       <OrderMap
         orderId={order.id}
         destination={destino}
         shopper={position}
         live={false}
         route
+        onTrip={setTrip}
         labels={{
           destination: yendoAlAbasto ? (store?.name ?? "El abasto") : "Entregar aquí",
           shopper: "Tú",

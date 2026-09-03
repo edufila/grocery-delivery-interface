@@ -21,6 +21,8 @@ type Props = {
   labels?: { destination: string; shopper: string }
   /** Traza el camino por calle entre los dos puntos. */
   route?: boolean
+  /** Distancia y tiempo del trayecto, para mostrarlos fuera del mapa. */
+  onTrip?: (trip: { km: number; min: number }) => void
 }
 
 /**
@@ -76,8 +78,10 @@ export function OrderMap({
   live = true,
   labels = { destination: "Tu dirección", shopper: "Tu shopper" },
   route = false,
+  onTrip,
 }: Props) {
   const routedFrom = useRef<Point | null>(null)
+  const fittedFor = useRef<string | null>(null)
   const [trip, setTrip] = useState<{ km: number; min: number } | null>(null)
   const container = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
@@ -178,13 +182,20 @@ export function OrderMap({
         shopperMarker.current.setLngLat([position.lng, position.lat])
       }
 
-      map.fitBounds(
-        [
-          [Math.min(position.lng, destination.lng), Math.min(position.lat, destination.lat)],
-          [Math.max(position.lng, destination.lng), Math.max(position.lat, destination.lat)],
-        ],
-        { padding: 60, maxZoom: 15, duration: 800 },
-      )
+      // Encuadrar una sola vez por destino. Hacerlo en cada lectura del GPS
+      // dejaba el mapa acercándose y alejándose sin parar mientras el shopper
+      // estaba quieto y la señal oscilaba unos metros.
+      const clave = `${destination.lat},${destination.lng}`
+      if (fittedFor.current !== clave) {
+        fittedFor.current = clave
+        map.fitBounds(
+          [
+            [Math.min(position.lng, destination.lng), Math.min(position.lat, destination.lat)],
+            [Math.max(position.lng, destination.lng), Math.max(position.lat, destination.lat)],
+          ],
+          { padding: 60, maxZoom: 15, duration: 800 },
+        )
+      }
     })()
   }, [position, destination, mapReady])
 
@@ -241,7 +252,9 @@ export function OrderMap({
           )
         }
 
-        setTrip({ km: first.distance / 1000, min: Math.round(first.duration / 60) })
+        const viaje = { km: first.distance / 1000, min: Math.round(first.duration / 60) }
+        setTrip(viaje)
+        onTrip?.(viaje)
       } catch {
         // Sin ruta el mapa sigue sirviendo: quedan los dos puntos.
       }
