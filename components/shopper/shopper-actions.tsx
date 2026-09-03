@@ -19,15 +19,25 @@ export function ShopperActions({ order, userId }: { order: Order; userId: string
     setBusy(true)
     setError("")
     const supabase = createClient()
-    const { error: updateError } = await supabase
+    // El .is() evita pisar un pedido que otro ya tomó. Pero entonces no
+    // actualiza ninguna fila y Supabase no lo considera un error: hay que
+    // mirar cuántas volvieron, o diríamos que salió bien sin haber hecho nada.
+    const { data, error: updateError } = await supabase
       .from("orders")
       .update({ shopper_id: userId })
       .eq("id", order.id)
-      .is("shopper_id", null) // si otro lo tomó primero, no pisa nada
+      .is("shopper_id", null)
+      .select("id")
 
     setBusy(false)
+
     if (updateError) {
-      setError("No pudimos tomarlo. Puede que otro shopper se haya adelantado.")
+      setError("No pudimos tomarlo. Probá de nuevo.")
+      return
+    }
+    if (!data || data.length === 0) {
+      setError("Otro shopper se adelantó y ya lo tomó.")
+      router.refresh()
       return
     }
     router.refresh()

@@ -133,8 +133,11 @@ export function CheckoutView() {
     )
 
     if (itemsError) {
+      // Un pedido sin renglones no le sirve a nadie y confunde al shopper:
+      // lo dejamos cancelado en vez de abandonarlo a medio armar.
+      await supabase.from("orders").update({ status: "cancelado" }).eq("id", order.id)
       setPlacing(false)
-      setError("El pedido se creó pero no pudimos guardar los productos. Escribinos.")
+      setError("No pudimos guardar los productos. Intentá de nuevo.")
       return
     }
 
