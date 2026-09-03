@@ -292,7 +292,7 @@ export function LoginView({ next, initialError }: { next: string; initialError?:
             )}
 
             <p className="mt-6 rounded-2xl bg-gray-50 px-4 py-3 text-sm leading-relaxed text-gray-600">
-              ¿El correo trae un enlace en vez de un código? Abrilo, pero{" "}
+              ¿El correo trae un enlace en vez de un código? Ábrelo, pero{" "}
               <span className="font-semibold">desde este mismo navegador</span>: si lo abres en otro
               dispositivo, el acceso no se completa.
             </p>

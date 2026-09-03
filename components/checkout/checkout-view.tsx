@@ -257,7 +257,7 @@ function DeliveryCard({ session }: { session: Session }) {
         <h2 className="text-sm font-semibold text-amber-900">Falta marcar el punto</h2>
         <p className="mt-1 text-sm leading-relaxed text-amber-800">
           <span className="font-semibold">{session.address.label}</span> no tiene el punto exacto en
-          el mapa, así que el repartidor no tendría a dónde ir. Editala y marcalo.
+          el mapa, así que el repartidor no tendría a dónde ir. Edítala y márcalo.
         </p>
         <Link
           href="/perfil"

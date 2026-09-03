@@ -188,7 +188,7 @@ export function ProfileForm({ userId, profile, nameLocked = false }: Props) {
         </div>
         {!dateOk && (
           <p className="mt-2 text-sm text-rose-600">
-            {dateFilled ? "Esa fecha no existe." : "Completa los tres campos o dejalos vacíos."}
+            {dateFilled ? "Esa fecha no existe." : "Completa los tres campos o déjalos vacíos."}
           </p>
         )}
       </fieldset>
