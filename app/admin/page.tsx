@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
 
 import { OrdersCleanup } from "@/components/admin/orders-cleanup"
+import { NewProduct } from "@/components/admin/new-product"
 import { ProductEditor } from "@/components/admin/product-editor"
 import { SettingsEditor } from "@/components/admin/settings-editor"
 import { StoreEditor } from "@/components/admin/store-editor"
@@ -117,9 +118,12 @@ export default async function AdminPage() {
 
         <Section
           title="Productos"
-          hint="Precio y disponibilidad. Dar de alta productos nuevos sigue siendo por SQL: van veinte de una."
+          hint="Precio, disponibilidad y foto. Para cargar muchos de una sigue conviniendo el SQL."
         >
-          <ProductEditor products={products ?? []} />
+          <div className="flex flex-col gap-3">
+            <NewProduct stores={(stores ?? []).map((s) => ({ id: s.id, name: s.name }))} />
+            <ProductEditor products={products ?? []} />
+          </div>
         </Section>
 
         <Section title="Tarifas" hint="Se aplican a los pedidos nuevos.">

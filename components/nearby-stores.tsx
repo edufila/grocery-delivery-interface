@@ -104,9 +104,8 @@ export function NearbyStores({ stores }: { stores: Store[] }) {
 
       <div className="mx-auto max-w-md space-y-4 px-4 py-4">
         {stores.map((store) => {
-          // Solo Girasol tiene catálogo: mandar a otra tienda al de Girasol
-          // sería mentir sobre lo que se está comprando.
-          const href = store.id === "girasol" ? "/catalogo" : null
+          // Cada tienda va a su propio catálogo.
+          const href = `/catalogo?tienda=${store.id}`
           const isFavorite = favorites.includes(store.id)
 
           return (
@@ -149,13 +148,9 @@ export function NearbyStores({ stores }: { stores: Store[] }) {
                   {/* Enlace estirado: cubre toda la tarjeta sin anidar botones
                       dentro de un <a>, así el corazón sigue siendo clicable. */}
                   <h3 className="text-base font-semibold text-gray-900">
-                    {href ? (
-                      <Link href={href} className="after:absolute after:inset-0 after:content-['']">
-                        {store.name}
-                      </Link>
-                    ) : (
-                      store.name
-                    )}
+                    <Link href={href} className="after:absolute after:inset-0 after:content-['']">
+                      {store.name}
+                    </Link>
                   </h3>
                   {store.rating && (
                     <span className="flex shrink-0 items-center gap-1 rounded-lg bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700">
@@ -187,18 +182,12 @@ export function NearbyStores({ stores }: { stores: Store[] }) {
                   </span>
                 </div>
 
-                {href ? (
-                  <Link
-                    href={href}
-                    className="relative z-20 mt-4 flex h-12 w-full items-center justify-center rounded-2xl bg-emerald-600 text-sm font-semibold text-white transition active:scale-[0.99]"
-                  >
-                    Comprar ahora
-                  </Link>
-                ) : (
-                  <p className="mt-4 flex h-12 w-full items-center justify-center rounded-2xl bg-gray-100 text-sm font-semibold text-gray-500">
-                    Próximamente
-                  </p>
-                )}
+                <Link
+                  href={href}
+                  className="relative z-20 mt-4 flex h-12 w-full items-center justify-center rounded-2xl bg-emerald-600 text-sm font-semibold text-white transition active:scale-[0.99]"
+                >
+                  Comprar ahora
+                </Link>
               </div>
             </article>
           )

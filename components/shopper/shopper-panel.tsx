@@ -85,8 +85,13 @@ export function ShopperPanel({
         </div>
       )}
 
-      {mine && (
-        <LocationShare orderId={order.id} onSharingChange={setSharing} onPosition={setPosition} />
+      {mine && order.status !== "entregado" && order.status !== "cancelado" && (
+        <LocationShare
+          orderId={order.id}
+          onSharingChange={setSharing}
+          onPosition={setPosition}
+          stopped={order.status === "entregado" || order.status === "cancelado"}
+        />
       )}
 
       <ShopperActions order={order} userId={userId} sharing={sharing} />

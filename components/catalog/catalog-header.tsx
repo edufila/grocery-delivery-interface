@@ -7,6 +7,8 @@ import { ArrowLeft, Search, Leaf, Sparkles, X } from "lucide-react"
 import { categories, type Category } from "@/lib/categories"
 
 type Props = {
+  storeName: string
+  storeTag?: string
   active: Category
   onCategoryChange: (category: Category) => void
   query: string
@@ -16,6 +18,8 @@ type Props = {
 }
 
 export function CatalogHeader({
+  storeName,
+  storeTag,
   active,
   onCategoryChange,
   query,
@@ -79,9 +83,11 @@ export function CatalogHeader({
               <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
                 <Leaf className="h-5 w-5" aria-hidden="true" />
               </span>
-              <div className="leading-tight">
-                <p className="text-base font-bold text-gray-900">Gran Abasto Girasol</p>
-                <p className="text-xs font-medium text-emerald-600">Ahorro Mayorista</p>
+              <div className="min-w-0 leading-tight">
+                <p className="truncate text-base font-bold text-gray-900">{storeName}</p>
+                {storeTag && (
+                  <p className="truncate text-xs font-medium text-emerald-600">{storeTag}</p>
+                )}
               </div>
             </div>
 

@@ -10,6 +10,8 @@ import type { Product } from "@/lib/products"
 
 type Props = {
   products: Product[]
+  storeName: string
+  storeTag?: string
   initialQuery?: string
   initialCategory?: Category
   initialWholesaleOnly?: boolean
@@ -17,6 +19,8 @@ type Props = {
 
 export function ProductCatalog({
   products,
+  storeName,
+  storeTag,
   initialQuery = "",
   initialCategory = "Todos",
   initialWholesaleOnly = false,
@@ -48,6 +52,8 @@ export function ProductCatalog({
   return (
     <div className="min-h-dvh bg-gray-50 pb-28">
       <CatalogHeader
+        storeName={storeName}
+        storeTag={storeTag}
         active={category}
         onCategoryChange={setCategory}
         query={query}
