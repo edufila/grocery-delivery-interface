@@ -1,12 +1,15 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import { ArrowLeft, Loader2, MailCheck, ShoppingBasket } from "lucide-react"
 
+import { cn } from "@/lib/utils"
 import { createClient } from "@/lib/supabase/client"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 
 const RESEND_SECONDS = 60
+const CODE_LENGTH = 6
 
 type Step = "email" | "sent"
 
@@ -17,6 +20,8 @@ function isValidEmail(value: string) {
 /** Traduce los errores de Supabase a algo que se entienda. */
 function friendlyError(message: string) {
   const m = message.toLowerCase()
+  if (m.includes("invalid") && m.includes("token")) return "El código no es correcto. Revisalo e intentá de nuevo."
+  if (m.includes("expired")) return "El código venció. Pedí uno nuevo."
   if (m.includes("rate limit") || m.includes("too many") || m.includes("seconds"))
     return "Demasiados intentos. Esperá un momento antes de reintentar."
   if (m.includes("invalid") && m.includes("email")) return "Ese correo no parece válido."
@@ -25,16 +30,22 @@ function friendlyError(message: string) {
 }
 
 export function LoginView({ next, initialError }: { next: string; initialError?: string }) {
+  const router = useRouter()
   const supabase = useMemo(() => (isSupabaseConfigured ? createClient() : null), [])
 
   const [step, setStep] = useState<Step>("email")
   const [email, setEmail] = useState("")
+  const [code, setCode] = useState("")
+  const [codeFocused, setCodeFocused] = useState(false)
   const [pending, setPending] = useState(false)
   const [googlePending, setGooglePending] = useState(false)
   const [error, setError] = useState(
     initialError === "oauth" ? "No se pudo completar el ingreso. Probá otra vez." : "",
   )
   const [secondsLeft, setSecondsLeft] = useState(0)
+
+  const codeInputRef = useRef<HTMLInputElement>(null)
+  const submittedCodeRef = useRef("")
 
   const cleanEmail = email.trim().toLowerCase()
 
@@ -43,6 +54,44 @@ export function LoginView({ next, initialError }: { next: string; initialError?:
     const id = setInterval(() => setSecondsLeft((s) => (s <= 1 ? 0 : s - 1)), 1000)
     return () => clearInterval(id)
   }, [secondsLeft])
+
+  useEffect(() => {
+    if (step === "sent") codeInputRef.current?.focus()
+  }, [step])
+
+  async function verifyCode(value: string) {
+    if (!supabase || pending || value.length !== CODE_LENGTH) return
+    submittedCodeRef.current = value
+    setPending(true)
+    setError("")
+
+    const { error: verifyError } = await supabase.auth.verifyOtp({
+      email: cleanEmail,
+      token: value,
+      type: "email",
+    })
+
+    if (verifyError) {
+      setPending(false)
+      setError(friendlyError(verifyError.message))
+      setCode("")
+      submittedCodeRef.current = ""
+      codeInputRef.current?.focus()
+      return
+    }
+
+    router.replace(next)
+    router.refresh()
+  }
+
+  function onCodeChange(raw: string) {
+    const digits = raw.replace(/\D/g, "").slice(0, CODE_LENGTH)
+    setCode(digits)
+    if (error) setError("")
+    if (digits.length === CODE_LENGTH && digits !== submittedCodeRef.current) {
+      void verifyCode(digits)
+    }
+  }
 
   async function sendLink() {
     if (!supabase || pending || !isValidEmail(email)) return
@@ -62,6 +111,8 @@ export function LoginView({ next, initialError }: { next: string; initialError?:
       return
     }
 
+    setCode("")
+    submittedCodeRef.current = ""
     setSecondsLeft(RESEND_SECONDS)
     setStep("sent")
   }
@@ -116,7 +167,7 @@ export function LoginView({ next, initialError }: { next: string; initialError?:
                 Ingresá a tu cuenta
               </h1>
               <p className="mt-2 text-sm leading-relaxed text-gray-500">
-                Te mandamos un enlace por correo. Lo abrís y ya estás adentro, sin contraseña.
+                Te mandamos un código a tu correo. Sin contraseñas.
               </p>
             </header>
 
@@ -156,7 +207,7 @@ export function LoginView({ next, initialError }: { next: string; initialError?:
                 className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 text-base font-semibold text-white transition active:scale-[0.99] disabled:bg-gray-200 disabled:text-gray-400"
               >
                 {pending && <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />}
-                {pending ? "Enviando enlace..." : "Enviarme el enlace"}
+                {pending ? "Enviando..." : "Continuar"}
               </button>
 
               <div className="flex items-center gap-4 py-7">
@@ -190,17 +241,61 @@ export function LoginView({ next, initialError }: { next: string; initialError?:
               Revisá tu correo
             </h1>
             <p className="mt-2 text-sm leading-relaxed text-gray-500">
-              Le mandamos un enlace de acceso a{" "}
-              <span className="font-medium text-gray-900">{cleanEmail}</span>. Abrilo y entrás
-              directo.
+              Lo enviamos a <span className="font-medium text-gray-900">{cleanEmail}</span>. Si trae
+              un código, escribilo acá.
             </p>
 
-            <p className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-800">
-              Abrí el enlace <span className="font-semibold">desde este mismo navegador</span>. Si lo
-              abrís en otro, el acceso no se completa.
-            </p>
+            <div
+              className="relative mt-6"
+              onClick={() => codeInputRef.current?.focus()}
+              role="presentation"
+            >
+              <div className="flex justify-between gap-2">
+                {Array.from({ length: CODE_LENGTH }).map((_, index) => {
+                  const isActive = codeFocused && index === Math.min(code.length, CODE_LENGTH - 1)
+                  return (
+                    <div
+                      key={index}
+                      className={cn(
+                        "flex h-14 flex-1 items-center justify-center rounded-2xl border bg-white text-xl font-semibold text-gray-900 transition",
+                        isActive ? "border-emerald-500 ring-4 ring-emerald-500/10" : "border-gray-200",
+                        error && "border-rose-300",
+                      )}
+                    >
+                      {code[index] ?? ""}
+                    </div>
+                  )
+                })}
+              </div>
+              <input
+                ref={codeInputRef}
+                value={code}
+                onChange={(event) => onCodeChange(event.target.value)}
+                onFocus={() => setCodeFocused(true)}
+                onBlur={() => setCodeFocused(false)}
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={CODE_LENGTH}
+                aria-label={`Código de ${CODE_LENGTH} dígitos`}
+                className="absolute inset-0 h-full w-full rounded-2xl bg-transparent text-transparent caret-transparent outline-none"
+              />
+            </div>
 
             {error && <ErrorText>{error}</ErrorText>}
+
+            {pending && (
+              <p className="mt-6 flex items-center justify-center gap-2 text-sm text-gray-500">
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                Verificando...
+              </p>
+            )}
+
+            <p className="mt-6 rounded-2xl bg-gray-50 px-4 py-3 text-sm leading-relaxed text-gray-600">
+              ¿El correo trae un enlace en vez de un código? Abrilo, pero{" "}
+              <span className="font-semibold">desde este mismo navegador</span>: si lo abrís en otro
+              dispositivo, el acceso no se completa.
+            </p>
 
             <div className="mt-8 text-center">
               {secondsLeft > 0 ? (
