@@ -1,8 +1,9 @@
 "use client"
 
-import Link from "next/link"
 import { useEffect, useState } from "react"
 import { Check, ChevronDown, MapPin, X } from "lucide-react"
+
+import { ProfileAvatar } from "@/components/profile/profile-avatar"
 
 const ADDRESS_KEY = "direccion-entrega"
 
@@ -81,13 +82,7 @@ export function DeliveryTopBar() {
               </span>
             </span>
           </button>
-          <Link
-            href="/perfil"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-700"
-            aria-label="Perfil"
-          >
-            JD
-          </Link>
+          <ProfileAvatar />
         </div>
       </header>
 

@@ -12,18 +12,47 @@ type Props = {
   profile: Profile | null
 }
 
-/** El más viejo razonable y el más joven admitido, para acotar el date picker. */
-const MIN_BIRTH_DATE = "1920-01-01"
-const MAX_BIRTH_DATE = new Date(Date.now() - 1000 * 60 * 60 * 24 * 365 * 13)
-  .toISOString()
-  .slice(0, 10)
+const MESES = [
+  "Enero",
+  "Febrero",
+  "Marzo",
+  "Abril",
+  "Mayo",
+  "Junio",
+  "Julio",
+  "Agosto",
+  "Septiembre",
+  "Octubre",
+  "Noviembre",
+  "Diciembre",
+]
+
+const AÑO_MAXIMO = new Date().getFullYear() - 13
+const AÑOS = Array.from({ length: AÑO_MAXIMO - 1920 + 1 }, (_, i) => AÑO_MAXIMO - i)
+const DIAS = Array.from({ length: 31 }, (_, i) => i + 1)
+
+const pad = (value: string) => value.padStart(2, "0")
+
+/** Descarta combinaciones como 31 de febrero, que el calendario corre a marzo. */
+function isRealDate(year: string, month: string, day: string) {
+  const d = new Date(`${year}-${pad(month)}-${pad(day)}T00:00:00`)
+  return (
+    d.getFullYear() === Number(year) &&
+    d.getMonth() + 1 === Number(month) &&
+    d.getDate() === Number(day)
+  )
+}
 
 export function ProfileForm({ userId, profile }: Props) {
   const router = useRouter()
   const supabase = createClient()
 
+  const [year0, month0, day0] = (profile?.birth_date ?? "").split("-")
+
   const [fullName, setFullName] = useState(profile?.full_name ?? "")
-  const [birthDate, setBirthDate] = useState(profile?.birth_date ?? "")
+  const [day, setDay] = useState(day0 ? String(Number(day0)) : "")
+  const [month, setMonth] = useState(month0 ? String(Number(month0)) : "")
+  const [year, setYear] = useState(year0 ?? "")
   const [phone, setPhone] = useState(profile?.phone ?? "")
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -32,7 +61,22 @@ export function ProfileForm({ userId, profile }: Props) {
   const nameOk = fullName.trim().length >= 2
   const phoneDigits = phone.replace(/\D/g, "")
   const phoneOk = phoneDigits.length === 0 || phoneDigits.length >= 10
-  const canSave = nameOk && phoneOk && !saving
+
+  const dateParts = [day, month, year]
+  const dateEmpty = dateParts.every((p) => !p)
+  const dateFilled = dateParts.every(Boolean)
+  const dateOk = dateEmpty || (dateFilled && isRealDate(year, month, day))
+  const birthDate = dateFilled && dateOk ? `${year}-${pad(month)}-${pad(day)}` : ""
+
+  const canSave = nameOk && phoneOk && dateOk && !saving
+
+  const onDateChange = (setter: (v: string) => void) => (value: string) => {
+    setter(value)
+    setSaved(false)
+  }
+
+  const selectClass =
+    "h-14 w-full rounded-2xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
 
   async function save(event: React.FormEvent) {
     event.preventDefault()
@@ -84,24 +128,57 @@ export function ProfileForm({ userId, profile }: Props) {
         />
       </div>
 
-      <div>
-        <label htmlFor="birth_date" className="block text-sm font-medium text-gray-700">
-          Fecha de nacimiento
-        </label>
-        <input
-          id="birth_date"
-          type="date"
-          value={birthDate}
-          min={MIN_BIRTH_DATE}
-          max={MAX_BIRTH_DATE}
-          onChange={(event) => {
-            setBirthDate(event.target.value)
-            setSaved(false)
-          }}
-          autoComplete="bday"
-          className="mt-2 h-14 w-full rounded-2xl border border-gray-200 bg-white px-4 text-base text-gray-900 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
-        />
-      </div>
+      <fieldset>
+        <legend className="block text-sm font-medium text-gray-700">Fecha de nacimiento</legend>
+        <div className="mt-2 grid grid-cols-[1fr_1.4fr_1fr] gap-2">
+          <select
+            value={day}
+            onChange={(event) => onDateChange(setDay)(event.target.value)}
+            aria-label="Día"
+            className={selectClass}
+          >
+            <option value="">Día</option>
+            {DIAS.map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={month}
+            onChange={(event) => onDateChange(setMonth)(event.target.value)}
+            aria-label="Mes"
+            className={selectClass}
+          >
+            <option value="">Mes</option>
+            {MESES.map((name, index) => (
+              <option key={name} value={index + 1}>
+                {name}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={year}
+            onChange={(event) => onDateChange(setYear)(event.target.value)}
+            aria-label="Año"
+            className={selectClass}
+          >
+            <option value="">Año</option>
+            {AÑOS.map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
+            ))}
+          </select>
+        </div>
+        {!dateOk && (
+          <p className="mt-2 text-sm text-rose-600">
+            {dateFilled ? "Esa fecha no existe." : "Completá los tres campos o dejalos vacíos."}
+          </p>
+        )}
+      </fieldset>
 
       <div>
         <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
