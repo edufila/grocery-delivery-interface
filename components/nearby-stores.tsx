@@ -34,13 +34,7 @@ const stores: Store[] = [
   },
 ]
 
-// Temporal: ocultamos los abastos mientras armamos el login.
-// Para volver a mostrarlos, poner esto en true.
-const SHOW_NEARBY_STORES = false
-
 export function NearbyStores() {
-  if (!SHOW_NEARBY_STORES) return null
-
   return (
     <section className="pt-2" aria-labelledby="stores-heading">
       <div className="mx-auto flex max-w-md items-center justify-between px-4">
