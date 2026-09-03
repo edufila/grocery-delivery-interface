@@ -2,13 +2,45 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { RegistrarSW } from '@/components/pwa/registrar-sw'
-import { APP_NAME, APP_SHORT_NAME } from '@/lib/brand'
+import { APP_NAME, APP_SHORT_NAME, SITE_URL } from '@/lib/brand'
 import { CartProvider } from '@/lib/cart'
 
+const DESCRIPCION = 'Pide tus víveres y productos del hogar con entrega rápida a domicilio.'
+
 export const metadata: Metadata = {
+  /**
+   * Las tarjetas de WhatsApp y compañía necesitan direcciones absolutas: una
+   * ruta suelta como /og.png no les sirve. Con esto Next las completa solo.
+   */
+  metadataBase: new URL(SITE_URL),
   title: `${APP_NAME} · Delivery de supermercado`,
-  description: 'Pide tus víveres y productos del hogar con entrega rápida a domicilio.',
+  description: DESCRIPCION,
   generator: 'v0.app',
+  /**
+   * Sin esto, al pasar el link por WhatsApp agarraba el ícono de 180 píxeles y
+   * lo estiraba: por eso se veía borroso. Estas plataformas quieren 1200x630.
+   */
+  openGraph: {
+    type: 'website',
+    siteName: APP_NAME,
+    title: `${APP_NAME} · Delivery de supermercado`,
+    description: DESCRIPCION,
+    locale: 'es_VE',
+    images: [
+      {
+        url: '/og.png',
+        width: 1200,
+        height: 630,
+        alt: 'Una cesta con frutas y verduras',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: `${APP_NAME} · Delivery de supermercado`,
+    description: DESCRIPCION,
+    images: ['/og.png'],
+  },
   // Un solo ícono para claro y oscuro: el fondo verde se ve igual de bien en
   // los dos, así que no hace falta la pareja con `media` que traía la plantilla.
   icons: {

@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { Star, Clock, Bike, BadgePercent, Heart } from "lucide-react"
+import { Clock, Bike, BadgePercent, Heart } from "lucide-react"
 
 import type { Store } from "@/lib/admin"
 import { createClient } from "@/lib/supabase/client"
@@ -144,27 +144,13 @@ export function NearbyStores({ stores }: { stores: Store[] }) {
               </div>
 
               <div className="p-4">
-                <div className="flex items-start justify-between gap-2">
-                  {/* Enlace estirado: cubre toda la tarjeta sin anidar botones
-                      dentro de un <a>, así el corazón sigue siendo clicable. */}
-                  <h3 className="text-base font-semibold text-gray-900">
-                    <Link href={href} className="after:absolute after:inset-0 after:content-['']">
-                      {store.name}
-                    </Link>
-                  </h3>
-                  {store.rating && (
-                    <span className="flex shrink-0 items-center gap-1 rounded-lg bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700">
-                      <Star
-                        className="h-3.5 w-3.5 fill-amber-500 text-amber-500"
-                        aria-hidden="true"
-                      />
-                      {store.rating}
-                      {store.reviews && (
-                        <span className="font-normal text-amber-600/70">({store.reviews})</span>
-                      )}
-                    </span>
-                  )}
-                </div>
+                {/* Enlace estirado: cubre toda la tarjeta sin anidar botones
+                    dentro de un <a>, así el corazón sigue siendo clicable. */}
+                <h3 className="text-base font-semibold text-gray-900">
+                  <Link href={href} className="after:absolute after:inset-0 after:content-['']">
+                    {store.name}
+                  </Link>
+                </h3>
 
                 <div className="mt-3 flex items-center gap-4 text-sm text-gray-600">
                   {store.eta && (

@@ -314,22 +314,47 @@ export function redimensionar(origen, anchoOrigen, altoOrigen, destino) {
   return salida
 }
 
-export function png(size, pixels) {
+/**
+ * Codifica RGBA como PNG. `alto` por defecto es igual al ancho: los íconos son
+ * cuadrados, la imagen para compartir el link no.
+ *
+ * Si ningún píxel es translúcido -- que es siempre nuestro caso, porque un
+ * ícono con transparencia lo pinta de negro iOS -- se guarda sin el canal alfa.
+ * Es una cuarta parte menos de datos, y en la imagen de vista previa eso
+ * decide si WhatsApp la muestra o la descarta por pesada.
+ */
+export function png(ancho, pixels, alto = ancho) {
+  let opaca = true
+  for (let i = 3; i < pixels.length; i += 4) {
+    if (pixels[i] !== 255) {
+      opaca = false
+      break
+    }
+  }
+
+  const canales = opaca ? 3 : 4
   const ihdr = Buffer.alloc(13)
-  ihdr.writeUInt32BE(size, 0)
-  ihdr.writeUInt32BE(size, 4)
+  ihdr.writeUInt32BE(ancho, 0)
+  ihdr.writeUInt32BE(alto, 4)
   ihdr[8] = 8 // bits por canal
-  ihdr[9] = 6 // RGBA
+  ihdr[9] = opaca ? 2 : 6 // RGB o RGBA
   ihdr[10] = 0
   ihdr[11] = 0
   ihdr[12] = 0
 
   // Cada fila lleva adelante su byte de filtro; 0 es "sin filtrar".
-  const filas = Buffer.alloc(size * (size * 4 + 1))
-  for (let y = 0; y < size; y++) {
-    const desde = y * size * 4
-    filas[y * (size * 4 + 1)] = 0
-    pixels.copy(filas, y * (size * 4 + 1) + 1, desde, desde + size * 4)
+  const bytesPorFila = ancho * canales
+  const filas = Buffer.alloc(alto * (bytesPorFila + 1))
+  for (let y = 0; y < alto; y++) {
+    filas[y * (bytesPorFila + 1)] = 0
+    for (let x = 0; x < ancho; x++) {
+      const entra = (y * ancho + x) * 4
+      const sale = y * (bytesPorFila + 1) + 1 + x * canales
+      filas[sale] = pixels[entra]
+      filas[sale + 1] = pixels[entra + 1]
+      filas[sale + 2] = pixels[entra + 2]
+      if (!opaca) filas[sale + 3] = pixels[entra + 3]
+    }
   }
 
   return Buffer.concat([

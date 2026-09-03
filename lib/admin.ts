@@ -6,8 +6,6 @@ export type Store = {
   image: string | null
   tag: string | null
   eta: string | null
-  rating: string | null
-  reviews: string | null
   delivery_fee: number
   active: boolean
   sort_order: number
@@ -36,6 +34,4 @@ export const STORE_TEXT_FIELDS = [
   { key: "tag", label: "Etiqueta", hint: "Ahorro Mayorista" },
   { key: "eta", label: "Tiempo de entrega", hint: "35-45 min" },
   { key: "image", label: "Foto", hint: "/images/store-girasol.png" },
-  { key: "rating", label: "Calificación", hint: "4.8" },
-  { key: "reviews", label: "Reseñas", hint: "2.4k" },
 ] as const
