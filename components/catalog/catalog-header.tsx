@@ -1,27 +1,34 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, Search, Leaf, Sparkles } from "lucide-react"
+import { useEffect, useRef } from "react"
+import { ArrowLeft, Search, Leaf, Sparkles, X } from "lucide-react"
 
-export const categories = [
-  "Todos",
-  "Granos",
-  "Aceites",
-  "Harinas",
-  "Bebidas",
-  "Lácteos",
-  "Limpieza",
-  "Enlatados",
-] as const
-
-export type Category = (typeof categories)[number]
+import { categories, type Category } from "@/lib/categories"
 
 type Props = {
   active: Category
   onCategoryChange: (category: Category) => void
+  query: string
+  onQueryChange: (query: string) => void
+  searchOpen: boolean
+  onSearchOpenChange: (open: boolean) => void
 }
 
-export function CatalogHeader({ active, onCategoryChange }: Props) {
+export function CatalogHeader({
+  active,
+  onCategoryChange,
+  query,
+  onQueryChange,
+  searchOpen,
+  onSearchOpenChange,
+}: Props) {
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (searchOpen) inputRef.current?.focus()
+  }, [searchOpen])
+
   return (
     <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md">
       {/* Offer banner */}
@@ -42,23 +49,52 @@ export function CatalogHeader({ active, onCategoryChange }: Props) {
           <ArrowLeft className="h-5 w-5" aria-hidden="true" />
         </Link>
 
-        <div className="flex flex-1 items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
-            <Leaf className="h-5 w-5" aria-hidden="true" />
-          </span>
-          <div className="leading-tight">
-            <p className="text-base font-bold text-gray-900">Gran Abasto Girasol</p>
-            <p className="text-xs font-medium text-emerald-600">Ahorro Mayorista</p>
+        {searchOpen ? (
+          <div className="flex flex-1 items-center gap-2">
+            <input
+              ref={inputRef}
+              type="search"
+              value={query}
+              onChange={(event) => onQueryChange(event.target.value)}
+              placeholder="Buscar productos..."
+              aria-label="Buscar productos"
+              enterKeyHint="search"
+              className="h-11 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-emerald-500 focus:bg-white"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                onQueryChange("")
+                onSearchOpenChange(false)
+              }}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-gray-600 transition active:bg-gray-100"
+              aria-label="Cerrar búsqueda"
+            >
+              <X className="h-5 w-5" aria-hidden="true" />
+            </button>
           </div>
-        </div>
+        ) : (
+          <>
+            <div className="flex flex-1 items-center gap-2.5">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+                <Leaf className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <div className="leading-tight">
+                <p className="text-base font-bold text-gray-900">Gran Abasto Girasol</p>
+                <p className="text-xs font-medium text-emerald-600">Ahorro Mayorista</p>
+              </div>
+            </div>
 
-        <button
-          type="button"
-          className="flex h-9 w-9 items-center justify-center rounded-full text-gray-600 transition hover:bg-gray-100"
-          aria-label="Buscar productos"
-        >
-          <Search className="h-5 w-5" aria-hidden="true" />
-        </button>
+            <button
+              type="button"
+              onClick={() => onSearchOpenChange(true)}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-gray-600 transition active:bg-gray-100"
+              aria-label="Buscar productos"
+            >
+              <Search className="h-5 w-5" aria-hidden="true" />
+            </button>
+          </>
+        )}
       </div>
 
       {/* Category tabs */}

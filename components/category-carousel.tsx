@@ -1,5 +1,4 @@
-"use client"
-
+import Link from "next/link"
 import { Droplet, Wheat, SprayCan, Beef, CupSoda, Milk } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
@@ -26,15 +25,21 @@ export function CategoryCarousel() {
         <h2 id="categories-heading" className="text-base font-semibold text-gray-900">
           Categorías
         </h2>
-        <button type="button" className="text-sm font-medium text-emerald-600">
+        <Link
+          href="/catalogo"
+          className="-mr-2 flex min-h-11 items-center px-2 text-sm font-medium text-emerald-600"
+        >
           Ver todas
-        </button>
+        </Link>
       </div>
       <div className="mx-auto max-w-md">
         <ul className="flex snap-x gap-4 overflow-x-auto px-4 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {categories.map(({ label, Icon, color, bg }) => (
             <li key={label} className="snap-start">
-              <button type="button" className="flex w-16 flex-col items-center gap-2">
+              <Link
+                href={`/catalogo?categoria=${encodeURIComponent(label)}`}
+                className="flex w-16 flex-col items-center gap-2"
+              >
                 <span
                   className={`flex h-16 w-16 items-center justify-center rounded-full ${bg} ring-1 ring-black/[0.03] transition active:scale-95`}
                 >
@@ -43,7 +48,7 @@ export function CategoryCarousel() {
                 <span className="text-center text-xs font-medium leading-tight text-gray-700">
                   {label}
                 </span>
-              </button>
+              </Link>
             </li>
           ))}
         </ul>

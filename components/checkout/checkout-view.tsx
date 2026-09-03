@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react"
 import { ArrowLeft, ShoppingBag } from "lucide-react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { CartItemList, type CartLine } from "./cart-item-list"
 import { SubstitutionOptions } from "./substitution-options"
 import { PaymentMethods } from "./payment-methods"

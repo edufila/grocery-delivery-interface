@@ -1,5 +1,6 @@
-import { Check, MessageCircle, PackageCheck, ShoppingCart, Truck, Home } from "lucide-react"
+import { Check, PackageCheck, ShoppingCart, Truck, Home } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { ShopperChat } from "./shopper-chat"
 
 type StepState = "done" | "current" | "upcoming"
 
@@ -97,15 +98,7 @@ export function StatusTimeline() {
                   {step.description}
                 </p>
 
-                {step.showChat && (
-                  <button
-                    type="button"
-                    className="mt-3 inline-flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2"
-                  >
-                    <MessageCircle className="h-4 w-4" />
-                    Abrir chat con tu Shopper
-                  </button>
-                )}
+                {step.showChat && <ShopperChat />}
               </div>
             </li>
           )

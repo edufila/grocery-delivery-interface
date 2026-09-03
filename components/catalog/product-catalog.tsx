@@ -1,7 +1,8 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { CatalogHeader, type Category } from "./catalog-header"
+import { CatalogHeader } from "./catalog-header"
+import type { Category } from "@/lib/categories"
 import { ProductCard, type Product } from "./product-card"
 import { CartBar } from "./cart-bar"
 
@@ -18,9 +19,22 @@ const products: CatalogProduct[] = [
   { id: "leche", name: "Leche en Polvo Completa", unit: "Unidad · 900 g", price: 8.9, image: "/products/leche.png", category: "Lácteos" },
 ]
 
-export function ProductCatalog() {
+type Props = {
+  initialQuery?: string
+  initialCategory?: Category
+  initialWholesaleOnly?: boolean
+}
+
+export function ProductCatalog({
+  initialQuery = "",
+  initialCategory = "Todos",
+  initialWholesaleOnly = false,
+}: Props) {
   const [cart, setCart] = useState<Record<string, number>>({})
-  const [category, setCategory] = useState<Category>("Todos")
+  const [category, setCategory] = useState<Category>(initialCategory)
+  const [query, setQuery] = useState(initialQuery)
+  const [searchOpen, setSearchOpen] = useState(initialQuery.length > 0)
+  const [wholesaleOnly, setWholesaleOnly] = useState(initialWholesaleOnly)
 
   const addToCart = (id: string) =>
     setCart((prev) => ({ ...prev, [id]: (prev[id] ?? 0) + 1 }))
@@ -45,28 +59,60 @@ export function ProductCatalog() {
     return { count, total }
   }, [cart])
 
-  const visibleProducts = useMemo(
-    () => (category === "Todos" ? products : products.filter((p) => p.category === category)),
-    [category],
-  )
+  const visibleProducts = useMemo(() => {
+    const term = query.trim().toLowerCase()
+    return products.filter((p) => {
+      if (category !== "Todos" && p.category !== category) return false
+      if (wholesaleOnly && !p.wholesale) return false
+      if (term && !p.name.toLowerCase().includes(term)) return false
+      return true
+    })
+  }, [category, query, wholesaleOnly])
+
+  const sinResultados =
+    query.trim().length > 0
+      ? `No encontramos productos con "${query.trim()}".`
+      : wholesaleOnly
+        ? "No hay productos al mayor en esta categoría."
+        : `Todavía no hay productos en ${category}.`
 
   return (
     <div className="min-h-dvh bg-gray-50 pb-28">
-      <CatalogHeader active={category} onCategoryChange={setCategory} />
+      <CatalogHeader
+        active={category}
+        onCategoryChange={setCategory}
+        query={query}
+        onQueryChange={setQuery}
+        searchOpen={searchOpen}
+        onSearchOpenChange={setSearchOpen}
+      />
 
       <main className="mx-auto max-w-3xl px-4 py-4">
-        <div className="mb-3 flex items-baseline justify-between">
+        <div className="mb-3 flex items-baseline justify-between gap-3">
           <h1 className="text-lg font-bold text-gray-900">
             {category === "Todos" ? "Catálogo" : category}
           </h1>
-          <p className="text-sm text-gray-500">
+          <p className="shrink-0 text-sm text-gray-500">
             {visibleProducts.length} {visibleProducts.length === 1 ? "producto" : "productos"}
           </p>
         </div>
 
+        <button
+          type="button"
+          onClick={() => setWholesaleOnly((v) => !v)}
+          aria-pressed={wholesaleOnly}
+          className={`mb-4 min-h-9 rounded-full px-4 py-1.5 text-sm font-medium transition ${
+            wholesaleOnly
+              ? "bg-emerald-600 text-white"
+              : "border border-gray-200 bg-white text-gray-600 active:bg-gray-100"
+          }`}
+        >
+          Solo al mayor
+        </button>
+
         {visibleProducts.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-gray-200 bg-white px-4 py-10 text-center text-sm text-gray-500">
-            Todavía no hay productos en {category}.
+            {sinResultados}
           </p>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
