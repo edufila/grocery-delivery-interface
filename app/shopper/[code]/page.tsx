@@ -3,6 +3,7 @@ import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { ArrowLeft, MapPin } from "lucide-react"
 
+import { OrderLiveRefresh } from "@/components/live-refresh"
 import { LocationShare } from "@/components/shopper/location-share"
 import { ShopperActions } from "@/components/shopper/shopper-actions"
 import {
@@ -81,6 +82,8 @@ export default async function ShopperOrderPage({
           </div>
         </div>
       </header>
+
+      <OrderLiveRefresh orderId={order.id} status={order.status} shopperId={order.shopper_id} />
 
       <div className="mx-auto flex max-w-lg flex-col gap-4 px-4 pb-10 pt-4">
         <section className="flex items-start gap-3 rounded-2xl border border-gray-100 bg-white p-4">

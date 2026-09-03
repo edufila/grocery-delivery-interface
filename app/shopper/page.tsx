@@ -3,6 +3,7 @@ import Link from "next/link"
 import { redirect } from "next/navigation"
 import { ChevronRight, PackageSearch } from "lucide-react"
 
+import { OrdersLiveRefresh } from "@/components/live-refresh"
 import {
   formatMoney,
   formatOrderDate,
@@ -63,6 +64,8 @@ export default async function ShopperPage() {
           <p className="text-sm text-gray-500">Entrás como {profile.role}</p>
         </div>
       </header>
+
+      <OrdersLiveRefresh />
 
       <div className="mx-auto flex max-w-md flex-col gap-6 px-4 pb-16 pt-5">
         <Grupo titulo="En curso" vacio="No tenés pedidos tomados." pedidos={mios} />

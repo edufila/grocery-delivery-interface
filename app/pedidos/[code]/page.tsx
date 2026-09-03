@@ -3,6 +3,7 @@ import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { ArrowLeft, Check, MapPin } from "lucide-react"
 
+import { OrderLiveRefresh } from "@/components/live-refresh"
 import { OrderMap } from "@/components/tracking/order-map"
 import { ShopperChat } from "@/components/tracking/shopper-chat"
 import {
@@ -79,6 +80,8 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
           </div>
         </div>
       </header>
+
+      <OrderLiveRefresh orderId={order.id} status={order.status} shopperId={order.shopper_id} />
 
       <div className="mx-auto max-w-lg space-y-4 px-4 pb-10 pt-4">
         {!cancelled && (

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 import { ChevronRight, ClipboardList } from "lucide-react"
 
 import { BottomNav } from "@/components/bottom-nav"
+import { OrdersLiveRefresh } from "@/components/live-refresh"
 import { formatMoney, formatOrderDate, statusLabel, type Order } from "@/lib/orders"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/server"
@@ -43,6 +44,8 @@ export default async function PedidosPage() {
           <h1 className="text-lg font-semibold text-gray-900">Tus pedidos</h1>
         </div>
       </header>
+
+      <OrdersLiveRefresh />
 
       <div className="mx-auto max-w-md px-4 pb-28 pt-4">
         {list.length === 0 ? (
