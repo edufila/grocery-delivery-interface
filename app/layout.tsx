@@ -33,6 +33,14 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
+  /**
+   * Sin esto, `env(safe-area-inset-*)` vale 0 y todos los paddings que la app
+   * ya tiene puestos no hacen nada. Instalada en la pantalla de inicio, la
+   * barra de abajo quedaba debajo de la rayita del iPhone y los textos
+   * cortados. Con cover la página llega a los bordes y cada barra se separa
+   * lo que el equipo diga que hace falta.
+   */
+  viewportFit: 'cover',
   colorScheme: 'light dark',
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: 'white' },

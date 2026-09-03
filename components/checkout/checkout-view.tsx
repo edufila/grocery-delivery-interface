@@ -124,7 +124,7 @@ export function CheckoutView() {
 
   return (
     <div className="min-h-dvh bg-gray-50 pb-28">
-      <header className="sticky top-0 z-20 border-b border-gray-100 bg-white/90 backdrop-blur">
+      <header className="pt-barra-estado sticky top-0 z-20 border-b border-gray-100 bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-lg items-center gap-2 px-4 py-3">
           <BackButton fallback="/catalogo" label="Volver" />
           <h1 className="text-lg font-semibold text-gray-900">Carrito y pago</h1>

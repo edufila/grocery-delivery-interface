@@ -58,7 +58,7 @@ export default async function ShopperPage() {
 
   return (
     <main className="min-h-dvh bg-gray-50">
-      <header className="border-b border-gray-100 bg-white">
+      <header className="pt-barra-estado border-b border-gray-100 bg-white">
         <div className="mx-auto flex max-w-md items-center gap-2 px-4 py-4">
           <Link
             href="/perfil"

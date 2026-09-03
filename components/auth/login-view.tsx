@@ -140,7 +140,7 @@ export function LoginView({ next, initialError }: { next: string; initialError?:
   }
 
   return (
-    <main className="flex min-h-dvh flex-col bg-white">
+    <main className="pt-barra-estado flex min-h-dvh flex-col bg-white">
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-5 pt-4">
         {step === "sent" ? (
           <button

@@ -143,7 +143,7 @@ export function DeliveryTopBar() {
 
   return (
     <>
-      <header className="border-b border-gray-100 bg-white/90 backdrop-blur-md">
+      <header className="pt-barra-estado border-b border-gray-100 bg-white/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3">
           <button
             type="button"

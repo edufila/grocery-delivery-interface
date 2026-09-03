@@ -17,9 +17,17 @@ export default function manifest(): MetadataRoute.Manifest {
     lang: "es",
     orientation: "portrait",
     icons: [
-      // El SVG escala a cualquier tamaño; el png de 180 lo usa iOS.
+      /**
+       * Android pide un png de 192 y otro de 512 para considerar la app
+       * instalable; con solo el SVG no ofrecía instalarla. "maskable" es para
+       * que el lanzador la recorte con la forma del sistema en vez de dejar el
+       * cuadrado pegado sobre un fondo blanco.
+       */
+      { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "maskable" },
+      { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
       { src: "/icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
-      { src: "/apple-icon.png", sizes: "180x180", type: "image/png" },
     ],
   }
 }

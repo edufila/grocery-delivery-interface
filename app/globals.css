@@ -162,6 +162,16 @@
   }
 }
 
+/**
+ * La franja de la barra de estado del teléfono. Con viewport-fit=cover la
+ * página llega hasta el borde de arriba, así que las barras propias tienen que
+ * bajar su contenido para no quedar debajo de la hora y la señal. En un equipo
+ * sin muesca vale 0 y no se nota.
+ */
+.pt-barra-estado {
+  padding-top: env(safe-area-inset-top);
+}
+
 @keyframes cart-pop {
   0% {
     transform: scale(0.6);

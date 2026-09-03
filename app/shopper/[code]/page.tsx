@@ -76,7 +76,7 @@ export default async function ShopperOrderPage({
 
   return (
     <main className="min-h-dvh bg-gray-50">
-      <header className="sticky top-0 z-20 border-b border-gray-100 bg-white/90 backdrop-blur">
+      <header className="pt-barra-estado sticky top-0 z-20 border-b border-gray-100 bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-lg items-center gap-2 px-4 py-3">
           <Link
             href="/shopper"

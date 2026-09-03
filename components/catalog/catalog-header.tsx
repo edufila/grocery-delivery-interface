@@ -34,7 +34,7 @@ export function CatalogHeader({
   }, [searchOpen])
 
   return (
-    <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md">
+    <header className="pt-barra-estado sticky top-0 z-30 bg-white/95 backdrop-blur-md">
       {/* Offer banner */}
       <div className="bg-emerald-600 px-4 py-2 text-center text-sm font-medium text-white">
         <span className="inline-flex items-center gap-1.5">
