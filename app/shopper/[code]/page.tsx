@@ -5,6 +5,7 @@ import { ArrowLeft, MapPin } from "lucide-react"
 
 import { OrderLiveRefresh } from "@/components/live-refresh"
 import { ShopperPanel } from "@/components/shopper/shopper-panel"
+import { ShoppingList } from "@/components/shopper/shopping-list"
 import {
   formatMoney,
   formatOrderDate,
@@ -60,6 +61,7 @@ export default async function ShopperOrderPage({
     .returns<OrderItem[]>()
 
   const lines = items ?? []
+  const mine = order.shopper_id === user.id
 
   const { data: store } = await supabase
     .from("stores")
@@ -103,39 +105,22 @@ export default async function ShopperOrderPage({
           </div>
         </section>
 
+        <ShoppingList
+          items={lines}
+          substitutionPolicy={SUBSTITUTION_LABEL[order.substitution_policy]}
+          editable={mine && (order.status === "confirmado" || order.status === "preparando")}
+        />
+
         <section className="rounded-2xl border border-gray-100 bg-white p-5">
-          <h2 className="mb-1 text-base font-semibold text-gray-900">
-            Qué comprar{" "}
-            <span className="text-sm font-normal text-gray-500">
-              ({lines.reduce((n, i) => n + i.qty, 0)} artículos)
-            </span>
-          </h2>
-          <p className="mb-4 text-xs text-gray-500">
-            Si falta algo: {SUBSTITUTION_LABEL[order.substitution_policy]}
-          </p>
-
-          <ul className="flex flex-col divide-y divide-gray-100">
-            {lines.map((item) => (
-              <li key={item.id} className="flex items-start justify-between gap-3 py-3">
-                <div className="flex min-w-0 gap-3">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-sm font-bold text-emerald-700 tabular-nums">
-                    {item.qty}
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-900">{item.name}</p>
-                    <p className="text-xs text-gray-500">{item.unit}</p>
-                  </div>
-                </div>
-                <span className="shrink-0 text-sm tabular-nums text-gray-500">
-                  {formatMoney(item.unit_price * item.qty)}
-                </span>
-              </li>
-            ))}
-          </ul>
-
-          <p className="mt-4 flex justify-between border-t border-gray-100 pt-4 text-base font-semibold text-gray-900">
-            <span>Total del pedido</span>
+          <p className="flex justify-between text-sm text-gray-500">
+            <span>Estimado al confirmar</span>
             <span className="tabular-nums">{formatMoney(order.total)}</span>
+          </p>
+          <p className="mt-2 flex justify-between border-t border-gray-100 pt-2 text-base font-semibold text-gray-900">
+            <span>A cobrar</span>
+            <span className="tabular-nums">
+              {formatMoney(order.final_total ?? order.total)}
+            </span>
           </p>
         </section>
 

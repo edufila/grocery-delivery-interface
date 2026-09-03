@@ -207,19 +207,43 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
             </span>
           </h2>
           <ul className="flex flex-col gap-3">
-            {lines.map((item) => (
-              <li key={item.id} className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-gray-900">
-                    {item.qty} × {item.name}
-                  </p>
-                  <p className="text-xs text-gray-500">{item.unit}</p>
-                </div>
-                <span className="shrink-0 text-sm font-semibold tabular-nums text-gray-900">
-                  {formatMoney(item.unit_price * item.qty)}
-                </span>
-              </li>
-            ))}
+            {lines.map((item) => {
+              const faltante = item.status === "faltante"
+              const llevadas = item.final_qty ?? item.qty
+              const ajustado = item.status === "ajustado" && llevadas !== item.qty
+
+              return (
+                <li key={item.id} className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p
+                      className={`text-sm font-medium ${
+                        faltante ? "text-gray-400 line-through" : "text-gray-900"
+                      }`}
+                    >
+                      {faltante ? item.qty : llevadas} × {item.name}
+                    </p>
+                    <p className="text-xs text-gray-500">{item.unit}</p>
+                    {faltante && (
+                      <p className="text-xs font-medium text-rose-600">
+                        No había. No se te cobra.
+                      </p>
+                    )}
+                    {ajustado && (
+                      <p className="text-xs font-medium text-amber-700">
+                        Solo había {llevadas} de {item.qty}.
+                      </p>
+                    )}
+                  </div>
+                  <span
+                    className={`shrink-0 text-sm font-semibold tabular-nums ${
+                      faltante ? "text-gray-400 line-through" : "text-gray-900"
+                    }`}
+                  >
+                    {formatMoney(item.unit_price * (faltante ? item.qty : llevadas))}
+                  </span>
+                </li>
+              )
+            })}
           </ul>
 
           <dl className="mt-4 space-y-2 border-t border-gray-100 pt-4 text-sm">
@@ -235,10 +259,27 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
               <dt className="text-gray-500">Envío</dt>
               <dd className="tabular-nums text-gray-700">{formatMoney(order.delivery_fee)}</dd>
             </div>
-            <div className="flex justify-between border-t border-gray-100 pt-2 text-base font-semibold text-gray-900">
-              <dt>Total</dt>
-              <dd className="tabular-nums">{formatMoney(order.total)}</dd>
-            </div>
+            {order.final_total != null && order.final_total !== order.total ? (
+              <>
+                <div className="flex justify-between text-gray-400">
+                  <dt>Estimado al confirmar</dt>
+                  <dd className="tabular-nums line-through">{formatMoney(order.total)}</dd>
+                </div>
+                <div className="flex justify-between border-t border-gray-100 pt-2 text-base font-semibold text-gray-900">
+                  <dt>Total</dt>
+                  <dd className="tabular-nums">{formatMoney(order.final_total)}</dd>
+                </div>
+                <p className="text-xs leading-relaxed text-gray-500">
+                  El monto cambió porque no estaba todo disponible. Solo se cobra lo que el shopper
+                  llevó.
+                </p>
+              </>
+            ) : (
+              <div className="flex justify-between border-t border-gray-100 pt-2 text-base font-semibold text-gray-900">
+                <dt>Total</dt>
+                <dd className="tabular-nums">{formatMoney(order.final_total ?? order.total)}</dd>
+              </div>
+            )}
           </dl>
         </section>
 

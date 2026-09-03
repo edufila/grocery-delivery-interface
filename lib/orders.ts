@@ -73,6 +73,15 @@ export type OrderItem = {
   unit: string
   unit_price: number
   qty: number
+  status: string
+  final_qty: number | null
+}
+
+export const ITEM_STATUS_LABEL: Record<string, string> = {
+  pendiente: "Sin revisar",
+  ok: "Completo",
+  ajustado: "Llevó menos",
+  faltante: "No había",
 }
 
 export type Order = {
@@ -93,7 +102,11 @@ export type Order = {
   subtotal: number
   service_fee: number
   delivery_fee: number
+  /** Lo estimado al confirmar. */
   total: number
+  /** Lo que se paga de verdad, una vez que el shopper revisó la cesta. */
+  final_subtotal: number | null
+  final_total: number | null
   created_at: string
 }
 
