@@ -1,23 +1,25 @@
 "use client"
 
-import { useState } from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { Home, Compass, ClipboardList, User } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
 type NavItem = {
   label: string
+  href: string
   Icon: LucideIcon
 }
 
 const items: NavItem[] = [
-  { label: "Home", Icon: Home },
-  { label: "Explorar", Icon: Compass },
-  { label: "Pedidos", Icon: ClipboardList },
-  { label: "Perfil", Icon: User },
+  { label: "Home", href: "/", Icon: Home },
+  { label: "Explorar", href: "/catalogo", Icon: Compass },
+  { label: "Pedidos", href: "/tracking", Icon: ClipboardList },
+  { label: "Perfil", href: "/perfil", Icon: User },
 ]
 
-export function BottomNav({ initialActive = "Home" }: { initialActive?: string }) {
-  const [active, setActive] = useState(initialActive)
+export function BottomNav() {
+  const pathname = usePathname()
 
   return (
     <nav
@@ -25,15 +27,14 @@ export function BottomNav({ initialActive = "Home" }: { initialActive?: string }
       aria-label="Navegación principal"
     >
       <ul className="mx-auto flex max-w-md items-center justify-around px-2 pb-[env(safe-area-inset-bottom)] pt-2">
-        {items.map(({ label, Icon }) => {
-          const isActive = active === label
+        {items.map(({ label, href, Icon }) => {
+          const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href)
           return (
             <li key={label}>
-              <button
-                type="button"
-                onClick={() => setActive(label)}
+              <Link
+                href={href}
                 aria-current={isActive ? "page" : undefined}
-                className={`flex flex-col items-center gap-1 rounded-xl px-4 py-1.5 text-xs font-medium transition ${
+                className={`flex min-h-11 flex-col items-center gap-1 rounded-xl px-4 py-1.5 text-xs font-medium transition ${
                   isActive ? "text-emerald-600" : "text-gray-400"
                 }`}
               >
@@ -42,7 +43,7 @@ export function BottomNav({ initialActive = "Home" }: { initialActive?: string }
                   aria-hidden="true"
                 />
                 {label}
-              </button>
+              </Link>
             </li>
           )
         })}

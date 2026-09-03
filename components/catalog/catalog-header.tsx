@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import Link from "next/link"
 import { ArrowLeft, Search, Leaf, Sparkles } from "lucide-react"
 
-const categories = [
+export const categories = [
   "Todos",
   "Granos",
   "Aceites",
@@ -12,11 +12,16 @@ const categories = [
   "Lácteos",
   "Limpieza",
   "Enlatados",
-]
+] as const
 
-export function CatalogHeader() {
-  const [active, setActive] = useState("Todos")
+export type Category = (typeof categories)[number]
 
+type Props = {
+  active: Category
+  onCategoryChange: (category: Category) => void
+}
+
+export function CatalogHeader({ active, onCategoryChange }: Props) {
   return (
     <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md">
       {/* Offer banner */}
@@ -29,13 +34,13 @@ export function CatalogHeader() {
 
       {/* Logo row */}
       <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-3">
-        <button
-          type="button"
-          className="flex h-9 w-9 items-center justify-center rounded-full text-gray-600 transition hover:bg-gray-100"
-          aria-label="Volver"
+        <Link
+          href="/"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-gray-600 transition active:bg-gray-100"
+          aria-label="Volver al inicio"
         >
           <ArrowLeft className="h-5 w-5" aria-hidden="true" />
-        </button>
+        </Link>
 
         <div className="flex flex-1 items-center gap-2.5">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
@@ -65,12 +70,12 @@ export function CatalogHeader() {
               <li key={cat}>
                 <button
                   type="button"
-                  onClick={() => setActive(cat)}
+                  onClick={() => onCategoryChange(cat)}
                   aria-current={isActive ? "true" : undefined}
-                  className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition ${
+                  className={`min-h-9 whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition ${
                     isActive
                       ? "bg-emerald-600 text-white"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      : "bg-gray-100 text-gray-600 active:bg-gray-200"
                   }`}
                 >
                   {cat}

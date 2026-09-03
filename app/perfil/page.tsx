@@ -100,7 +100,7 @@ export default async function PerfilPage() {
         </form>
       </div>
 
-      <BottomNav initialActive="Perfil" />
+      <BottomNav />
     </main>
   )
 }
