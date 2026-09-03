@@ -99,6 +99,7 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
                 : null
             }
             live={order.status !== "entregado"}
+            route={order.status === "en_camino"}
           />
         )}
 

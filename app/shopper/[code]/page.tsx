@@ -60,7 +60,12 @@ export default async function ShopperOrderPage({
     .returns<OrderItem[]>()
 
   const lines = items ?? []
-  const mine = order.shopper_id === user.id
+
+  const { data: store } = await supabase
+    .from("stores")
+    .select("name, lat, lng")
+    .eq("id", order.store_id ?? "girasol")
+    .maybeSingle<{ name: string; lat: number | null; lng: number | null }>()
 
   return (
     <main className="min-h-dvh bg-gray-50">
@@ -134,7 +139,7 @@ export default async function ShopperOrderPage({
           </p>
         </section>
 
-        <ShopperPanel order={order} userId={user.id} />
+        <ShopperPanel order={order} userId={user.id} store={store ?? null} />
       </div>
     </main>
   )

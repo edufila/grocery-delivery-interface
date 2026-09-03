@@ -78,6 +78,7 @@ export type OrderItem = {
 export type Order = {
   id: string
   code: string
+  store_id: string | null
   shopper_id: string | null
   shopper_lat: number | null
   shopper_lng: number | null

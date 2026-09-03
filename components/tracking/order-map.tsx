@@ -19,6 +19,29 @@ type Props = {
   live?: boolean
   /** El shopper se ve a sí mismo, así que la leyenda no dice lo mismo. */
   labels?: { destination: string; shopper: string }
+  /** Traza el camino por calle entre los dos puntos. */
+  route?: boolean
+}
+
+/**
+ * Servidor público de OSRM. Es una instancia de demostración: alcanza para
+ * probar, pero no está pensada para tráfico real. Con volumen hay que levantar
+ * uno propio o contratar un proveedor.
+ */
+const OSRM = "https://router.project-osrm.org/route/v1/driving"
+
+/** Metros que hay que moverse para recalcular. Evita pedir ruta a cada paso. */
+const RECALC_AFTER_M = 80
+
+function metersBetween(a: Point, b: Point) {
+  const R = 6371000
+  const dLat = ((b.lat - a.lat) * Math.PI) / 180
+  const dLng = ((b.lng - a.lng) * Math.PI) / 180
+  const lat1 = (a.lat * Math.PI) / 180
+  const lat2 = (b.lat * Math.PI) / 180
+  const h =
+    Math.sin(dLat / 2) ** 2 + Math.sin(dLng / 2) ** 2 * Math.cos(lat1) * Math.cos(lat2)
+  return 2 * R * Math.asin(Math.sqrt(h))
 }
 
 /**
@@ -52,7 +75,10 @@ export function OrderMap({
   shopper,
   live = true,
   labels = { destination: "Tu dirección", shopper: "Tu shopper" },
+  route = false,
 }: Props) {
+  const routedFrom = useRef<Point | null>(null)
+  const [trip, setTrip] = useState<{ km: number; min: number } | null>(null)
   const container = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
   const shopperMarker = useRef<MapLibreMarker | null>(null)
@@ -162,6 +188,70 @@ export function OrderMap({
     })()
   }, [position, destination, mapReady])
 
+  // Camino por calle entre el shopper y su destino. Se recalcula solo cuando
+  // se movió lo suficiente: el servidor de rutas es una demo compartida.
+  useEffect(() => {
+    if (!route || !mapReady || !position || !destination) return
+
+    const previo = routedFrom.current
+    if (previo && metersBetween(previo, position) < RECALC_AFTER_M) return
+    routedFrom.current = position
+
+    let cancelled = false
+
+    void (async () => {
+      try {
+        const url = `${OSRM}/${position.lng},${position.lat};${destination.lng},${destination.lat}?overview=full&geometries=geojson`
+        const res = await fetch(url)
+        if (!res.ok) return
+        const data = (await res.json()) as {
+          routes?: {
+            geometry: { type: "LineString"; coordinates: [number, number][] }
+            distance: number
+            duration: number
+          }[]
+        }
+        const first = data.routes?.[0]
+        const map = mapRef.current
+        if (cancelled || !first || !map) return
+
+        const geojson = {
+          type: "Feature" as const,
+          properties: {},
+          geometry: first.geometry,
+        }
+
+        const source = map.getSource("ruta") as
+          | { setData: (data: typeof geojson) => void }
+          | undefined
+        if (source) {
+          source.setData(geojson)
+        } else {
+          map.addSource("ruta", { type: "geojson", data: geojson })
+          map.addLayer(
+            {
+              id: "ruta",
+              type: "line",
+              source: "ruta",
+              layout: { "line-cap": "round", "line-join": "round" },
+              paint: { "line-color": "#059669", "line-width": 5, "line-opacity": 0.75 },
+            },
+            // Debajo de los marcadores no hace falta: los marcadores son HTML.
+            undefined,
+          )
+        }
+
+        setTrip({ km: first.distance / 1000, min: Math.round(first.duration / 60) })
+      } catch {
+        // Sin ruta el mapa sigue sirviendo: quedan los dos puntos.
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [route, mapReady, position, destination])
+
   if (!destination) {
     return (
       <section className="rounded-2xl border border-dashed border-gray-200 bg-white p-5 text-center">
@@ -202,6 +292,11 @@ export function OrderMap({
           <span className="h-2.5 w-2.5 rounded-full bg-emerald-600" aria-hidden="true" />
           {position ? labels.shopper : "Sin ubicación todavía"}
         </span>
+        {trip && (
+          <span className="ml-auto font-medium tabular-nums text-gray-700">
+            {trip.km.toFixed(1)} km · {trip.min} min
+          </span>
+        )}
       </div>
     </section>
   )
