@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { AtSign, Check, Loader2, Search } from "lucide-react"
+import { AtSign, Check, ChevronDown, Loader2, Search } from "lucide-react"
 
 import type { Role } from "@/lib/orders"
 import { createClient } from "@/lib/supabase/client"
@@ -34,6 +34,7 @@ export function UserManager({ users, meId }: { users: AdminUser[]; meId: string 
   const router = useRouter()
   const [query, setQuery] = useState("")
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [openId, setOpenId] = useState<string | null>(null)
   const [error, setError] = useState("")
   const [handles, setHandles] = useState<Record<string, string>>(
     Object.fromEntries(users.map((u) => [u.id, u.handle ?? ""])),
@@ -123,35 +124,66 @@ export function UserManager({ users, meId }: { users: AdminUser[]; meId: string 
         </p>
       )}
 
-      {shown.length === 0 && (
-        <p className="text-sm text-gray-500">Nadie coincide con esa búsqueda.</p>
-      )}
+      <p className="text-xs text-gray-500">
+        {shown.length} de {users.length} {users.length === 1 ? "usuario" : "usuarios"}
+      </p>
 
-      <ul className="flex flex-col gap-2">
+      {shown.length === 0 ? (
+        <p className="text-sm text-gray-500">Nadie coincide con esa búsqueda.</p>
+      ) : (
+      <ul className="max-h-[70vh] divide-y divide-gray-100 overflow-y-auto overscroll-contain rounded-2xl border border-gray-200 bg-white">
         {shown.map((user) => {
           const esShopper = user.role === "shopper"
           const handleChanged = (handles[user.id] ?? "") !== (user.handle ?? "")
+          const abierto = openId === user.id
 
           return (
-            <li key={user.id} className="rounded-2xl border border-gray-200 bg-white p-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-gray-900">
+            <li key={user.id}>
+              <button
+                type="button"
+                onClick={() => setOpenId(abierto ? null : user.id)}
+                aria-expanded={abierto}
+                className="flex w-full items-center gap-3 p-3 text-left active:bg-gray-50"
+              >
+                {user.avatar_url ? (
+                  <img
+                    src={user.avatar_url}
+                    alt=""
+                    className="h-9 w-9 shrink-0 rounded-full bg-gray-100 object-cover"
+                  />
+                ) : (
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-500">
+                    {(user.full_name || user.email || "?").slice(0, 1).toUpperCase()}
+                  </span>
+                )}
+
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-semibold text-gray-900">
                     {user.full_name || user.email || "Sin nombre"}
                     {user.id === meId && (
                       <span className="ml-2 text-xs font-normal text-gray-400">(vos)</span>
                     )}
-                  </p>
-                  <p className="truncate text-xs text-gray-500">{user.email}</p>
-                </div>
+                  </span>
+                  <span className="block truncate text-xs text-gray-500">
+                    {user.handle ? `@${user.handle} · ` : ""}
+                    {user.email}
+                  </span>
+                </span>
+
                 <span
                   className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${ROLE_STYLE[user.role]}`}
                 >
                   {user.role}
                 </span>
-              </div>
+                <ChevronDown
+                  className={`h-4 w-4 shrink-0 text-gray-400 transition-transform ${abierto ? "rotate-180" : ""}`}
+                  aria-hidden="true"
+                />
+              </button>
 
-              <div className="mt-3 flex flex-wrap gap-1.5">
+              {!abierto ? null : (
+              <div className="border-t border-gray-100 p-3">
+              <div className="flex flex-wrap gap-1.5">
                 {ROLES.map((role) => (
                   <button
                     key={role.value}
@@ -248,10 +280,13 @@ export function UserManager({ users, meId }: { users: AdminUser[]; meId: string 
                   </button>
                 </div>
               )}
+              </div>
+              )}
             </li>
           )
         })}
       </ul>
+      )}
     </div>
   )
 }
