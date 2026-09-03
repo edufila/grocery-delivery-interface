@@ -2,8 +2,9 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Loader2, Trash2 } from "lucide-react"
+import { ChevronRight, Loader2, Trash2 } from "lucide-react"
 
+import { DetallePedido } from "@/components/admin/detalle-pedido"
 import { formatMoney, formatOrderDate, statusLabel, type Order } from "@/lib/orders"
 import { createClient } from "@/lib/supabase/client"
 
@@ -28,6 +29,7 @@ export function OrdersCleanup({ orders }: { orders: Row[] }) {
   const [confirming, setConfirming] = useState(false)
   const [filter, setFilter] = useState<string>("todos")
   const [query, setQuery] = useState("")
+  const [detalle, setDetalle] = useState<string | null>(null)
 
   const term = query.trim().toLowerCase()
   const shown = orders.filter((order) => {
@@ -139,40 +141,53 @@ export function OrdersCleanup({ orders }: { orders: Row[] }) {
         <p className="text-sm text-gray-500">Ningún pedido coincide con ese filtro.</p>
       )}
 
+      {/* La casilla y el detalle son dos gestos distintos: si toda la fila
+          fuera una etiqueta, abrir el pedido lo marcaría para borrar. */}
       <ul className="max-h-[60vh] flex-col gap-2 overflow-y-auto overscroll-contain">
         {shown.map((order) => (
           <li key={order.id} className="mb-2">
-            <label
-              className={`flex cursor-pointer items-center gap-3 rounded-2xl border p-3 ${
+            <div
+              className={`flex items-center gap-3 rounded-2xl border p-3 ${
                 selected.has(order.id)
                   ? "border-rose-300 bg-rose-50"
                   : "border-gray-200 bg-white"
               }`}
             >
-              <input
-                type="checkbox"
-                checked={selected.has(order.id)}
-                onChange={() => toggle(order.id)}
-                className="h-4 w-4 shrink-0 accent-rose-600"
-              />
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-sm font-semibold text-gray-900">
-                    {order.code}
+              <label className="flex h-11 w-6 shrink-0 items-center justify-center">
+                <span className="sr-only">Seleccionar {order.code} para borrar</span>
+                <input
+                  type="checkbox"
+                  checked={selected.has(order.id)}
+                  onChange={() => toggle(order.id)}
+                  className="h-4 w-4 accent-rose-600"
+                />
+              </label>
+
+              <button
+                type="button"
+                onClick={() => setDetalle(order.id)}
+                className="flex min-w-0 flex-1 items-center gap-3 text-left"
+              >
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-2">
+                    <span className="font-mono text-sm font-semibold text-gray-900">
+                      {order.code}
+                    </span>
+                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+                      {statusLabel(order.status, order.shopper_id)}
+                    </span>
                   </span>
-                  <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
-                    {statusLabel(order.status, order.shopper_id)}
+                  <span className="block truncate text-xs text-gray-500">
+                    {formatOrderDate(order.created_at)}
+                    {order.address_label ? ` · ${order.address_label}` : ""}
                   </span>
-                </div>
-                <p className="truncate text-xs text-gray-500">
-                  {formatOrderDate(order.created_at)}
-                  {order.address_label ? ` · ${order.address_label}` : ""}
-                </p>
-              </div>
-              <span className="shrink-0 text-sm font-semibold tabular-nums text-gray-900">
-                {formatMoney(order.total)}
-              </span>
-            </label>
+                </span>
+                <span className="shrink-0 text-sm font-semibold tabular-nums text-gray-900">
+                  {formatMoney(order.total)}
+                </span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-gray-400" aria-hidden="true" />
+              </button>
+            </div>
           </li>
         ))}
       </ul>
@@ -217,6 +232,8 @@ export function OrdersCleanup({ orders }: { orders: Row[] }) {
           )}
         </div>
       )}
+
+      {detalle && <DetallePedido orderId={detalle} onClose={() => setDetalle(null)} />}
     </div>
   )
 }

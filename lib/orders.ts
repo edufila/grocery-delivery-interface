@@ -87,6 +87,8 @@ export const ITEM_STATUS_LABEL: Record<string, string> = {
 export type Order = {
   id: string
   code: string
+  /** Quién lo pidió. Solo el dueño del pedido y un admin pueden verlo. */
+  user_id: string
   store_id: string | null
   shopper_id: string | null
   shopper_lat: number | null
