@@ -1,20 +1,15 @@
 import type { Metadata } from "next"
 import { redirect } from "next/navigation"
-import { LogOut, Mail, Phone } from "lucide-react"
+import { LogOut, Mail } from "lucide-react"
 
 import { BottomNav } from "@/components/bottom-nav"
+import { ProfileForm } from "@/components/profile/profile-form"
+import { isProfileComplete, type Profile } from "@/lib/profile"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/server"
 
 export const metadata: Metadata = {
   title: "Perfil · Gran Abasto Girasol",
-}
-
-/** "584141234567" -> "+58 414 123 4567" */
-function formatPhone(raw: string) {
-  const local = raw.replace(/\D/g, "").replace(/^58/, "")
-  if (local.length !== 10) return `+${raw.replace(/\D/g, "")}`
-  return `+58 ${local.slice(0, 3)} ${local.slice(3, 6)} ${local.slice(6)}`
 }
 
 function initialsFrom(name: string) {
@@ -30,15 +25,19 @@ export default async function PerfilPage() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // El middleware ya redirige, pero no confiamos solo en él para datos de sesión.
+  // El proxy ya redirige, pero no confiamos solo en él para datos de sesión.
   if (!user) redirect("/login?next=/perfil")
 
-  const fullName =
-    (user.user_metadata?.full_name as string | undefined) ??
-    (user.user_metadata?.name as string | undefined) ??
-    ""
+  // Si la migración todavía no corrió, `error` viene con la tabla faltante:
+  // el formulario lo avisa en vez de romper la página.
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .maybeSingle<Profile>()
+
+  const displayName = profile?.full_name || user.email || "Mi cuenta"
   const avatarUrl = user.user_metadata?.avatar_url as string | undefined
-  const displayName = fullName || (user.phone ? formatPhone(user.phone) : user.email) || "Mi cuenta"
 
   return (
     <main className="min-h-dvh bg-gray-50">
@@ -63,30 +62,24 @@ export default async function PerfilPage() {
           )}
           <div className="min-w-0">
             <p className="truncate text-base font-semibold text-gray-900">{displayName}</p>
-            <p className="mt-0.5 text-sm text-gray-500">Sesión iniciada</p>
+            {user.email && (
+              <p className="mt-0.5 flex items-center gap-1.5 text-sm text-gray-500">
+                <Mail className="h-4 w-4 shrink-0 text-gray-400" aria-hidden="true" />
+                <span className="truncate">{user.email}</span>
+              </p>
+            )}
           </div>
         </section>
 
-        <section className="mt-4 overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm shadow-gray-100">
-          <h2 className="sr-only">Datos de contacto</h2>
-          {user.phone && (
-            <div className="flex items-center gap-3 border-b border-gray-50 px-5 py-4 last:border-b-0">
-              <Phone className="h-5 w-5 shrink-0 text-gray-400" aria-hidden="true" />
-              <div className="min-w-0">
-                <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Teléfono</p>
-                <p className="truncate text-sm font-medium text-gray-900">{formatPhone(user.phone)}</p>
-              </div>
-            </div>
-          )}
-          {user.email && (
-            <div className="flex items-center gap-3 px-5 py-4">
-              <Mail className="h-5 w-5 shrink-0 text-gray-400" aria-hidden="true" />
-              <div className="min-w-0">
-                <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Email</p>
-                <p className="truncate text-sm font-medium text-gray-900">{user.email}</p>
-              </div>
-            </div>
-          )}
+        {!isProfileComplete(profile) && (
+          <p className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-800">
+            Completá tu nombre y teléfono para que el shopper pueda ubicarte con tu pedido.
+          </p>
+        )}
+
+        <section className="mt-4 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm shadow-gray-100">
+          <h2 className="mb-4 text-base font-semibold text-gray-900">Tus datos</h2>
+          <ProfileForm userId={user.id} profile={profile} />
         </section>
 
         <form action="/auth/sign-out" method="post" className="mt-6">
