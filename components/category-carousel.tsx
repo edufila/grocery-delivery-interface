@@ -2,21 +2,27 @@ import Link from "next/link"
 import { Droplet, Wheat, SprayCan, Beef, CupSoda, Milk } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
-type Category = {
-  label: string
-  Icon: LucideIcon
-  color: string
-  bg: string
+import { categories, type Category } from "@/lib/categories"
+
+type Look = { Icon: LucideIcon; color: string; bg: string }
+
+/**
+ * El orden sale de lib/categories: acá solo se define cómo se ve cada una.
+ * Las que todavía no tienen ícono no salen en el carrusel, pero sí como
+ * pestaña en el catálogo.
+ */
+const LOOKS: Partial<Record<Category, Look>> = {
+  Proteínas: { Icon: Beef, color: "text-rose-600", bg: "bg-rose-50" },
+  Lácteos: { Icon: Milk, color: "text-indigo-600", bg: "bg-indigo-50" },
+  Granos: { Icon: Wheat, color: "text-yellow-700", bg: "bg-yellow-50" },
+  Bebidas: { Icon: CupSoda, color: "text-emerald-600", bg: "bg-emerald-50" },
+  Aceites: { Icon: Droplet, color: "text-amber-600", bg: "bg-amber-50" },
+  Limpieza: { Icon: SprayCan, color: "text-sky-600", bg: "bg-sky-50" },
 }
 
-const categories: Category[] = [
-  { label: "Aceites", Icon: Droplet, color: "text-amber-600", bg: "bg-amber-50" },
-  { label: "Granos", Icon: Wheat, color: "text-yellow-700", bg: "bg-yellow-50" },
-  { label: "Limpieza", Icon: SprayCan, color: "text-sky-600", bg: "bg-sky-50" },
-  { label: "Proteínas", Icon: Beef, color: "text-rose-600", bg: "bg-rose-50" },
-  { label: "Bebidas", Icon: CupSoda, color: "text-emerald-600", bg: "bg-emerald-50" },
-  { label: "Lácteos", Icon: Milk, color: "text-indigo-600", bg: "bg-indigo-50" },
-]
+const shown = categories
+  .filter((name): name is Exclude<Category, "Todos"> => name !== "Todos" && name in LOOKS)
+  .map((name) => ({ label: name, ...LOOKS[name]! }))
 
 export function CategoryCarousel() {
   return (
@@ -34,7 +40,7 @@ export function CategoryCarousel() {
       </div>
       <div className="mx-auto max-w-md">
         <ul className="flex snap-x gap-4 overflow-x-auto px-4 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {categories.map(({ label, Icon, color, bg }) => (
+          {shown.map(({ label, Icon, color, bg }) => (
             <li key={label} className="snap-start">
               <Link
                 href={`/catalogo?categoria=${encodeURIComponent(label)}`}
