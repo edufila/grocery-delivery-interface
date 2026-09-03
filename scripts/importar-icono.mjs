@@ -1,7 +1,7 @@
 /**
  * Mete una imagen hecha afuera (Canva y parecidos) como ícono de la app.
  *
- *   node scripts/importar-icono.mjs <archivo.png> [--verde-app] [--salida carpeta]
+ *   node scripts/importar-icono.mjs <archivo.png> [--conservar-fondo] [--salida carpeta]
  *
  * Lo que exportan esas herramientas no sirve tal cual: viene con las esquinas
  * ya redondeadas sobre un margen blanco. iOS y Android le ponen SU recorte
@@ -9,7 +9,9 @@
  * script recorta ese margen, deja el fondo a sangre y centra el dibujo con
  * aire suficiente para que ningún lanzador le coma nada.
  *
- * --verde-app pasa el fondo al verde de la interfaz (#059669).
+ * También aplana el fondo al verde de la app: las ilustraciones suelen traer
+ * sombras largas en diagonal, y al recortarlas en cuadrado esas aristas quedan
+ * como costuras. --conservar-fondo lo deja como vino.
  */
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs"
 import { fileURLToPath } from "node:url"
@@ -179,26 +181,92 @@ function rellenarMargen(pixels, lado, fondo) {
 }
 
 /**
- * Cambia el fondo por otro color, arrastrando también los píxeles del borde
- * suavizado: un umbral seco dejaría un halo del color viejo alrededor del
- * dibujo.
+ * Deja el fondo de un solo color plano.
+ *
+ * No alcanza con reemplazar un color: estas ilustraciones traen sombras largas
+ * en diagonal, o sea dos y tres tonos de fondo, y cambiar uno solo deja un
+ * parche. Y al recortar en cuadrado, las aristas de esas sombras quedan como
+ * costuras en el ícono.
+ *
+ * Así que se crece una región desde el borde de la imagen, saltando de píxel a
+ * píxel mientras el color cambie poco. La sombra entra, porque su salto es
+ * suave; el dibujo no, porque contra el fondo hay mucho contraste.
  */
-function recolorearFondo(pixels, lado, desde, hasta) {
-  const tolerancia = 90
+function aplanarFondo(pixels, lado, hasta) {
+  /**
+   * Cuánto puede alejarse un píxel de los tonos del borde y seguir contando
+   * como fondo. Encadenar por diferencia entre vecinos no sirve: los degradados
+   * del dibujo hacen de puente y la mancha se termina comiendo la cesta.
+   */
+  const PARECIDO = 60
+  const marcado = new Uint8Array(lado * lado)
+  const pila = []
 
-  for (let i = 0; i < lado * lado * 4; i += 4) {
-    const d = Math.hypot(
-      pixels[i] - desde[0],
-      pixels[i + 1] - desde[1],
-      pixels[i + 2] - desde[2],
-    )
-    if (d > tolerancia) continue
+  const color = (p) => [pixels[p * 4], pixels[p * 4 + 1], pixels[p * 4 + 2]]
+  const entre = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2])
 
-    const t = 1 - d / tolerancia
-    for (let c = 0; c < 3; c++) {
-      pixels[i + c] = Math.round(pixels[i + c] + (hasta[c] - desde[c]) * t)
+  // Los tonos que se ven en el marco de la imagen: ahí solo hay fondo.
+  const tonos = []
+  for (let i = 0; i < lado; i++) {
+    for (const p of [i, (lado - 1) * lado + i, i * lado, i * lado + lado - 1]) {
+      const c = color(p)
+      if (!tonos.some((t) => entre(c, t) < 16)) tonos.push(c)
+      pila.push(p)
     }
   }
+
+  const esFondo = (p) => tonos.some((t) => entre(color(p), t) < PARECIDO)
+
+  while (pila.length) {
+    const p = pila.pop()
+    if (marcado[p] || !esFondo(p)) continue
+
+    marcado[p] = 1
+    const x = p % lado
+    const y = (p / lado) | 0
+    if (x > 0) pila.push(p - 1)
+    if (x < lado - 1) pila.push(p + 1)
+    if (y > 0) pila.push(p - lado)
+    if (y < lado - 1) pila.push(p + lado)
+  }
+
+  /**
+   * El hueco que encierra el asa de la cesta es fondo, pero no toca el borde,
+   * así que la mancha que crece desde afuera nunca llega. Se marca por color:
+   * el dibujo no tiene nada tan parecido al fondo como para confundirse.
+   */
+  for (let p = 0; p < marcado.length; p++) {
+    if (!marcado[p] && esFondo(p)) marcado[p] = 1
+  }
+
+  // La orla del suavizado ya no es fondo puro pero tampoco es dibujo.
+  for (let pasada = 0; pasada < 2; pasada++) {
+    const suma = []
+    for (let p = 0; p < marcado.length; p++) {
+      if (marcado[p]) continue
+      const x = p % lado
+      const y = (p / lado) | 0
+      const pegado =
+        (x > 0 && marcado[p - 1]) ||
+        (x < lado - 1 && marcado[p + 1]) ||
+        (y > 0 && marcado[p - lado]) ||
+        (y < lado - 1 && marcado[p + lado])
+      if (pegado && tonos.some((t) => entre(color(p), t) < 70)) suma.push(p)
+    }
+    for (const p of suma) marcado[p] = 1
+  }
+
+  let cambiados = 0
+  for (let p = 0; p < marcado.length; p++) {
+    if (!marcado[p]) continue
+    pixels[p * 4] = hasta[0]
+    pixels[p * 4 + 1] = hasta[1]
+    pixels[p * 4 + 2] = hasta[2]
+    pixels[p * 4 + 3] = 255
+    cambiados++
+  }
+
+  return { cambiados, tonos: tonos.length }
 }
 
 /** El dibujo centrado sobre un cuadrado del color de fondo, a sangre. */
@@ -255,37 +323,20 @@ console.log(
 )
 
 /**
- * --verde-app da por sentado que el fondo es un color plano. Si la ilustración
- * trae dos tonos (una sombra larga en diagonal, por ejemplo) recolorearía uno
- * solo y quedaría un parche. Mejor avisar que arruinar el ícono callado.
+ * Por defecto el fondo se aplana al verde de la app. Además de que el ícono
+ * combine con la interfaz, es lo que evita la costura: el dibujo se centra con
+ * aire, y si su fondo no es igual al relleno de alrededor, se ve el recuadro.
  */
-function fondoDesparejo(pixels, lado) {
-  const punta = (x, y) => {
-    const i = (y * lado + x) * 4
-    return [pixels[i], pixels[i + 1], pixels[i + 2]]
-  }
-  const bordes = [
-    punta(2, lado >> 1),
-    punta(lado - 3, lado >> 1),
-    punta(lado >> 1, 2),
-    punta(lado >> 1, lado - 3),
-  ]
-
-  return bordes.some((c) =>
-    bordes.some((d) => Math.hypot(c[0] - d[0], c[1] - d[1], c[2] - d[2]) > 25),
+let fondo = VERDE_APP
+if (args.includes("--conservar-fondo")) {
+  fondo = fondoOriginal
+  console.log(`fondo original rgb(${fondoOriginal}) (puede verse la costura del recuadro)`)
+} else {
+  const { cambiados, tonos } = aplanarFondo(pixels, lado, VERDE_APP)
+  console.log(
+    `fondo aplanado al verde de la app: ${tonos} tono(s), ` +
+      `${((cambiados / (lado * lado)) * 100).toFixed(1)}% de la imagen`,
   )
-}
-
-let fondo = fondoOriginal
-if (args.includes("--verde-app") && fondoDesparejo(pixels, lado)) {
-  console.error(
-    "El fondo tiene más de un tono (¿una sombra en diagonal?). --verde-app\n" +
-      "recolorearía solo uno y quedaría un parche: se deja el color original.",
-  )
-} else if (args.includes("--verde-app")) {
-  recolorearFondo(pixels, lado, fondoOriginal, VERDE_APP)
-  fondo = VERDE_APP
-  console.log(`fondo pasado al verde de la app rgb(${VERDE_APP})`)
 }
 
 for (const [nombre, size] of SALIDAS) {
