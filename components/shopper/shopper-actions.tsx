@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Check, Loader2 } from "lucide-react"
+import { Check, Keyboard, Loader2 } from "lucide-react"
 
 import { NEXT_STATUS_ACTION, nextStatus, type Order } from "@/lib/orders"
 import { createClient } from "@/lib/supabase/client"
@@ -12,6 +12,20 @@ export function ShopperActions({ order, userId }: { order: Order; userId: string
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
   const [code, setCode] = useState("")
+  const [blocked, setBlocked] = useState(false)
+  // Numérico por defecto. Si la pantalla del teléfono está rota justo donde
+  // caen las teclas, con el teclado normal se puede escribir igual.
+  const [numericKeyboard, setNumericKeyboard] = useState(true)
+  const codeRef = useRef<HTMLInputElement>(null)
+
+  function toggleKeyboard() {
+    setNumericKeyboard((v) => !v)
+    // El teclado ya abierto no cambia solo: hay que soltar el foco y volver.
+    const input = codeRef.current
+    if (!input) return
+    input.blur()
+    setTimeout(() => input.focus(), 50)
+  }
 
   const mine = order.shopper_id === userId
   const siguiente = nextStatus(order.status)
@@ -35,12 +49,35 @@ export function ShopperActions({ order, userId }: { order: Order; userId: string
       setError("No pudimos confirmar la entrega. Probá de nuevo.")
       return
     }
-    if (data !== true) {
-      setError("Ese código no coincide. Pedíselo de nuevo al cliente.")
-      setCode("")
+
+    const result = data as { ok: boolean; motivo?: string; restantes?: number } | null
+
+    if (result?.ok) {
+      router.refresh()
       return
     }
-    router.refresh()
+
+    setCode("")
+
+    if (result?.motivo === "bloqueado") {
+      setBlocked(true)
+      setError("Se agotaron los intentos. Pedile al cliente que genere un código nuevo.")
+      return
+    }
+    if (result?.motivo === "no_corresponde") {
+      setError("Este pedido ya no está en camino. Refrescá la pantalla.")
+      return
+    }
+
+    const quedan = result?.restantes ?? 0
+    if (quedan <= 0) {
+      setBlocked(true)
+      setError("Se agotaron los intentos. Pedile al cliente que genere un código nuevo.")
+      return
+    }
+    setError(
+      `Ese código no coincide. Te ${quedan === 1 ? "queda 1 intento" : `quedan ${quedan} intentos`}.`,
+    )
   }
 
   async function take() {
@@ -105,24 +142,35 @@ export function ShopperActions({ order, userId }: { order: Order; userId: string
           </p>
 
           <input
+            ref={codeRef}
             value={code}
             onChange={(event) => {
               setCode(event.target.value.replace(/\D/g, "").slice(0, 4))
               if (error) setError("")
             }}
-            inputMode="numeric"
+            inputMode={numericKeyboard ? "numeric" : "text"}
             autoComplete="off"
             maxLength={4}
+            disabled={blocked}
             placeholder="0000"
             aria-label="Código de entrega"
-            className="mt-4 h-16 w-full rounded-2xl border border-gray-200 bg-white text-center font-mono text-3xl tracking-[0.4em] text-gray-900 outline-none transition placeholder:text-gray-300 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
+            className="mt-4 h-16 w-full rounded-2xl border border-gray-200 bg-white text-center font-mono text-3xl tracking-[0.4em] text-gray-900 outline-none transition placeholder:text-gray-300 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 disabled:bg-gray-50 disabled:text-gray-400"
           />
 
           <button
             type="button"
+            onClick={toggleKeyboard}
+            className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 text-sm font-medium text-emerald-600"
+          >
+            <Keyboard className="h-4 w-4" aria-hidden="true" />
+            {numericKeyboard ? "Usar el teclado normal" : "Usar el teclado numérico"}
+          </button>
+
+          <button
+            type="button"
             onClick={() => void deliver()}
-            disabled={busy || code.length !== 4}
-            className="mt-4 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 text-base font-semibold text-white transition active:scale-[0.99] disabled:bg-gray-200 disabled:text-gray-400"
+            disabled={busy || code.length !== 4 || blocked}
+            className="mt-2 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 text-base font-semibold text-white transition active:scale-[0.99] disabled:bg-gray-200 disabled:text-gray-400"
           >
             {busy && <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />}
             Confirmar entrega

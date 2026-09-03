@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation"
 import { ArrowLeft, Check, MapPin } from "lucide-react"
 
 import { OrderLiveRefresh } from "@/components/live-refresh"
+import { DeliveryCodeCard } from "@/components/tracking/delivery-code-card"
 import { OrderMap } from "@/components/tracking/order-map"
 import { ShopperChat } from "@/components/tracking/shopper-chat"
 import {
@@ -57,9 +58,9 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
   // Solo el dueño del pedido puede leerlo: el shopper no tiene política acá.
   const { data: deliveryCode } = await supabase
     .from("order_delivery_codes")
-    .select("code")
+    .select("code, attempts")
     .eq("order_id", order.id)
-    .maybeSingle<{ code: string }>()
+    .maybeSingle<{ code: string; attempts: number }>()
 
   return (
     <main className="min-h-dvh bg-gray-50">
@@ -102,18 +103,11 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
         )}
 
         {deliveryCode && order.status !== "entregado" && !cancelled && (
-          <section className="rounded-2xl border border-gray-900 bg-gray-900 p-5 text-center">
-            <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-              Código de entrega
-            </p>
-            <p className="mt-2 font-mono text-4xl font-bold tracking-[0.3em] text-white">
-              {deliveryCode.code}
-            </p>
-            <p className="mt-3 text-sm leading-relaxed text-gray-400">
-              Dáselo al shopper cuando te entregue el pedido. Solo vos lo ves: sirve para confirmar
-              que la entrega fue a la persona correcta.
-            </p>
-          </section>
+          <DeliveryCodeCard
+            orderId={order.id}
+            initialCode={deliveryCode.code}
+            initialAttempts={deliveryCode.attempts ?? 0}
+          />
         )}
 
         {order.shopper_located_at && order.status === "en_camino" && (
