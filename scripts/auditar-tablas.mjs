@@ -98,6 +98,35 @@ for (const tabla of TABLAS) {
   }
 }
 
+console.log("\nColumnas reservadas\n")
+
+/**
+ * Hay tablas públicas con una columna que no debe serlo. No alcanza con mirar
+ * si el valor viene vacío: viene vacío también cuando el dato todavía no está
+ * cargado, y así una fuga parece cerrada. Se comprueba que PEDIR la columna
+ * rebote.
+ */
+const COLUMNAS = [
+  {
+    tabla: "payment_methods",
+    columna: "instructions",
+    porque: "es el teléfono, el banco y la cédula de quien cobra",
+  },
+]
+
+for (const { tabla, columna, porque } of COLUMNAS) {
+  const r = await fetch(`${url}/rest/v1/${tabla}?select=${columna}&limit=1`, { headers: cab })
+  const cuerpo = await r.text()
+
+  if (cuerpo.includes("permission denied")) {
+    console.log(`  \x1b[32mok\x1b[0m   ${tabla}.${columna} reservada`)
+  } else {
+    problemas++
+    console.log(`  \x1b[31mFUGA\x1b[0m ${tabla}.${columna} la lee un anónimo, y ${porque}`)
+    console.log(`         (HTTP ${r.status}: ${cuerpo.slice(0, 60)})`)
+  }
+}
+
 console.log("\nEscritura sin sesión\n")
 
 // Insertar en las que guardan cosas de personas tiene que rebotar.
