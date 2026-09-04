@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/client"
 export function SettingsEditor({ settings }: { settings: Settings }) {
   const router = useRouter()
   const [serviceFee, setServiceFee] = useState(settings.service_fee)
+  const [tasa, setTasa] = useState(settings.rate_ves ?? 0)
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState("")
@@ -21,7 +22,7 @@ export function SettingsEditor({ settings }: { settings: Settings }) {
 
     const { error: saveError } = await createClient()
       .from("settings")
-      .update({ service_fee: serviceFee })
+      .update({ service_fee: serviceFee, rate_ves: tasa > 0 ? tasa : null })
       .eq("id", "global")
 
     setBusy(false)
@@ -53,6 +54,43 @@ export function SettingsEditor({ settings }: { settings: Settings }) {
       <p className="mt-2 text-xs leading-relaxed text-gray-500">
         Se aplica a los pedidos nuevos. Los ya hechos guardaron la tarifa que regía en su momento.
       </p>
+
+      {/* Sin esto no se puede cobrar por pago móvil: los precios están en
+          dólares y la transferencia llega en bolívares. Cada pedido congela la
+          tasa con la que se cotizó, así que subirla no le cambia el monto a
+          quien ya pidió. */}
+      <label className="mt-5 block border-t border-gray-100 pt-4">
+        <span className="block text-sm font-medium text-gray-700">
+          Tasa del día (Bs. por dólar)
+        </span>
+        <input
+          type="number"
+          step="0.0001"
+          min="0"
+          value={tasa || ""}
+          onChange={(event) => {
+            setTasa(Number(event.target.value) || 0)
+            setSaved(false)
+          }}
+          placeholder="Sin cargar"
+          className="mt-1 h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base tabular-nums text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500 sm:w-48"
+        />
+      </label>
+
+      <p className="mt-2 text-xs leading-relaxed text-gray-500">
+        De qué fuente la sacas es decisión tuya. Sin tasa cargada, el pago móvil no se le ofrece
+        al cliente: no habría con qué decirle cuántos bolívares pagar.
+      </p>
+
+      {tasa > 0 && (
+        <p className="mt-2 text-xs leading-relaxed text-gray-500">
+          Un pedido de $10 se cotizaría en{" "}
+          <span className="font-semibold tabular-nums text-gray-700">
+            Bs. {(10 * tasa).toLocaleString("es-VE", { minimumFractionDigits: 2 })}
+          </span>
+          .
+        </p>
+      )}
 
       {error && (
         <p role="alert" className="mt-3 text-sm text-rose-600">

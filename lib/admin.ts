@@ -29,6 +29,8 @@ export type AdminProduct = {
 export type Settings = {
   id: string
   service_fee: number
+  /** Bolívares por dólar. Nula mientras no se cargue. */
+  rate_ves: number | null
 }
 
 /** Los campos del catálogo del inicio que se editan como texto libre. */

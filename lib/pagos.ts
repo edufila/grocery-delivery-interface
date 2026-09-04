@@ -10,18 +10,25 @@ export type MetodoPago = {
   needs_reference: boolean
   active: boolean
   sort_order: number
+  /** En qué moneda cobra. 'VES' necesita tasa del día para poder cotizar. */
+  currency: string
 }
 
 /**
- * Un método se puede ofrecer si está encendido y, cuando hace falta pagar por
- * adelantado, si tiene cargado a dónde.
+ * Un método se puede ofrecer si está encendido, si tiene cargado a dónde pagar
+ * cuando hace falta, y si se le puede decir al cliente cuánto.
  *
- * Antes los cuatro métodos estaban escritos en el código y se ofrecían siempre,
- * aunque no hubiera a dónde mandar el dinero: el cliente elegía Pago Móvil y se
+ * Antes los cuatro estaban escritos en el código y se ofrecían siempre, aunque
+ * no hubiera a dónde mandar el dinero: el cliente elegía Pago Móvil y se
  * quedaba esperando una instrucción que no llegaba nunca.
+ *
+ * Lo de la moneda es el mismo problema por otro lado: sin tasa cargada se le
+ * diría "paga $6.35" a alguien que va a transferir bolívares, y cada quien
+ * convertiría con la tasa que se le ocurra.
  */
-export function sePuedeOfrecer(metodo: MetodoPago) {
+export function sePuedeOfrecer(metodo: MetodoPago, tasaVes: number | null) {
   if (!metodo.active) return false
+  if (metodo.currency === "VES" && !(tasaVes && tasaVes > 0)) return false
   if (!metodo.needs_reference) return true
   return (metodo.instructions ?? "").trim().length > 0
 }
@@ -33,7 +40,7 @@ export function sePuedeOfrecer(metodo: MetodoPago) {
 export async function fetchMetodosPago(supabase: SupabaseClient): Promise<MetodoPago[]> {
   const { data, error } = await supabase
     .from("payment_methods")
-    .select("id, label, hint, instructions, needs_reference, active, sort_order")
+    .select("id, label, hint, instructions, needs_reference, active, sort_order, currency")
     .order("sort_order")
     .returns<MetodoPago[]>()
 

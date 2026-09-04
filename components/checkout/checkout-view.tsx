@@ -88,6 +88,7 @@ export function CheckoutView() {
   const [tiendas, setTiendas] = useState<Tienda[]>([])
   const [serviceFee, setServiceFee] = useState(SERVICE_FEE)
   const [metodos, setMetodos] = useState<MetodoPago[]>([])
+  const [tasaVes, setTasaVes] = useState<number | null>(null)
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
@@ -143,14 +144,15 @@ export function CheckoutView() {
           .returns<Tienda[]>(),
         supabase
           .from("settings")
-          .select("service_fee")
+          .select("service_fee, rate_ves")
           .eq("id", "global")
-          .maybeSingle<{ service_fee: number }>(),
+          .maybeSingle<{ service_fee: number; rate_ves: number | null }>(),
       ])
 
       if (cancelled) return
       if (filas) setTiendas(filas.map((t) => ({ ...t, delivery_fee: Number(t.delivery_fee) })))
       if (ajustes?.service_fee != null) setServiceFee(Number(ajustes.service_fee))
+      setTasaVes(ajustes?.rate_ves != null ? Number(ajustes.rate_ves) : null)
     })()
 
     return () => {
@@ -176,7 +178,7 @@ export function CheckoutView() {
       const todos = await fetchMetodosPago(createClient())
       if (cancelado) return
 
-      const ofrecibles = todos.filter(sePuedeOfrecer)
+      const ofrecibles = todos.filter((m) => sePuedeOfrecer(m, tasaVes))
       setMetodos(ofrecibles)
       setPayment((actual) =>
         ofrecibles.some((m) => m.id === actual) ? actual : (ofrecibles[0]?.id ?? ""),
@@ -186,7 +188,9 @@ export function CheckoutView() {
     return () => {
       cancelado = true
     }
-  }, [session.userId])
+    // La tasa llega en el otro efecto: sin ella no se sabe si el pago móvil
+    // se puede ofrecer, así que hay que rehacer la lista cuando aparece.
+  }, [session.userId, tasaVes])
 
   const items = useMemo<CartLine[]>(
     () =>
@@ -369,6 +373,8 @@ export function CheckoutView() {
               onChange={setPayment}
               metodos={metodos}
               sinSesion={!session.loading && !session.userId}
+              tasaVes={tasaVes}
+              total={total}
             />
             <OrderSummary subtotal={subtotal} serviceFee={serviceFee} deliveryFee={deliveryFee} />
             {error && (

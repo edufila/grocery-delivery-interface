@@ -12,7 +12,14 @@ import { createClient } from "@/lib/supabase/client"
  * cambiarlo sin desplegar, y para que un número de cuenta no quede escrito en
  * el repositorio.
  */
-export function PaymentEditor({ metodos }: { metodos: MetodoPago[] }) {
+export function PaymentEditor({
+  metodos,
+  tasaVes,
+}: {
+  metodos: MetodoPago[]
+  /** Sin tasa cargada, los métodos que cobran en bolívares no se pueden ofrecer. */
+  tasaVes: number | null
+}) {
   const router = useRouter()
   const [filas, setFilas] = useState(metodos)
   const [busyId, setBusyId] = useState<string | null>(null)
@@ -66,8 +73,14 @@ export function PaymentEditor({ metodos }: { metodos: MetodoPago[] }) {
       )}
 
       {filas.map((metodo) => {
-        const seOfrece = sePuedeOfrecer(metodo)
-        const faltanDatos = metodo.active && metodo.needs_reference && !seOfrece
+        const seOfrece = sePuedeOfrecer(metodo, tasaVes)
+        const faltaTasa = metodo.active && metodo.currency === "VES" && !(tasaVes && tasaVes > 0)
+        const faltanDatos =
+          metodo.active &&
+          metodo.needs_reference &&
+          !seOfrece &&
+          !faltaTasa &&
+          !(metodo.instructions ?? "").trim()
 
         return (
           <article key={metodo.id} className="rounded-2xl border border-gray-200 bg-white p-3">
@@ -140,6 +153,14 @@ export function PaymentEditor({ metodos }: { metodos: MetodoPago[] }) {
               <p className="mt-2 rounded-xl bg-amber-50 px-3 py-2 text-sm leading-relaxed text-amber-800">
                 Está activo pero sin datos, así que no aparece en el checkout. Carga a dónde pagar
                 para que se ofrezca.
+              </p>
+            )}
+
+            {faltaTasa && (
+              <p className="mt-2 rounded-xl bg-amber-50 px-3 py-2 text-sm leading-relaxed text-amber-800">
+                Cobra en bolívares y no hay tasa del día cargada, así que no aparece en el
+                checkout: no habría con qué decirle al cliente cuántos bolívares pagar. Se carga
+                más abajo, en Tarifas.
               </p>
             )}
           </article>

@@ -15,15 +15,23 @@ import { createClient } from "@/lib/supabase/client"
  * había transferido. El pedido quedaba esperando un dinero que nadie sabía si
  * había llegado.
  */
+/** "1234.56" -> "1.234,56", que es como se lee un monto aquí. */
+function bolivares(monto: number) {
+  return monto.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
 export function PagarPedido({
   orderId,
   total,
+  montoVes,
   instrucciones,
   referencia,
   verificado,
 }: {
   orderId: string
   total: number
+  /** Lo exacto a pagar en bolívares, si el método cobra en esa moneda. */
+  montoVes: number | null
   instrucciones: string
   referencia: string | null
   verificado: boolean
@@ -88,9 +96,27 @@ export function PagarPedido({
 
   return (
     <section className="rounded-2xl border border-gray-100 bg-white p-5">
-      <h2 className="text-base font-semibold text-gray-900">
-        Paga {formatMoney(total)} para que salga tu pedido
-      </h2>
+      <h2 className="text-base font-semibold text-gray-900">Paga para que salga tu pedido</h2>
+
+      {/* El monto exacto, grande y aparte. Los céntimos no son decoración: son
+          lo que permite identificar tu pago entre todos los del día, así que
+          hay que pagarlos tal cual. */}
+      {montoVes != null ? (
+        <div className="mt-3 rounded-xl bg-emerald-50 px-4 py-3">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
+            Monto exacto
+          </p>
+          <p className="text-2xl font-bold tabular-nums text-emerald-900">
+            Bs. {bolivares(montoVes)}
+          </p>
+          <p className="mt-1 text-sm leading-relaxed text-emerald-800">
+            Págalo con los céntimos incluidos: así reconocemos tu pago.{" "}
+            <span className="whitespace-nowrap">({formatMoney(total)})</span>
+          </p>
+        </div>
+      ) : (
+        <p className="mt-1 text-lg font-bold tabular-nums text-gray-900">{formatMoney(total)}</p>
+      )}
 
       <div className="mt-3 rounded-xl bg-gray-50 p-3">
         <div className="flex items-start justify-between gap-2">

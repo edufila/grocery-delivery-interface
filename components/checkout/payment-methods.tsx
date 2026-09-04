@@ -19,9 +19,14 @@ type Props = {
   metodos: MetodoPago[]
   /** Sin cuenta no se cargan: los datos de pago son solo para quien entró. */
   sinSesion: boolean
+  /** Para adelantarle al cliente cuánto va a pagar en bolívares. */
+  tasaVes: number | null
+  total: number
 }
 
-export function PaymentMethods({ value, onChange, metodos, sinSesion }: Props) {
+export function PaymentMethods({ value, onChange, metodos, sinSesion, tasaVes, total }: Props) {
+  const elegido = metodos.find((m) => m.id === value)
+
   return (
     <section
       aria-labelledby="pay-heading"
@@ -71,15 +76,31 @@ export function PaymentMethods({ value, onChange, metodos, sinSesion }: Props) {
         </fieldset>
       )}
 
+      {/* Aproximado a propósito: el monto exacto lleva céntimos únicos que se
+          calculan al confirmar, y son los que permiten reconocer el pago. */}
+      {elegido?.currency === "VES" && tasaVes && total > 0 && (
+        <p className="mt-3 text-sm text-gray-600">
+          Vas a pagar alrededor de{" "}
+          <span className="font-semibold tabular-nums text-gray-900">
+            Bs.{" "}
+            {(total * tasaVes).toLocaleString("es-VE", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </span>
+          . El monto exacto sale al confirmar.
+        </p>
+      )}
+
       {/* Se muestra desde ya: quien va a pagar por transferencia quiere saber a
           dónde antes de confirmar, no después. */}
-      {metodos.find((m) => m.id === value)?.instructions && (
+      {elegido?.instructions && (
         <div className="mt-3 rounded-xl bg-gray-50 px-3 py-2.5">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
             A dónde pagar
           </p>
           <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-gray-700">
-            {metodos.find((m) => m.id === value)?.instructions}
+            {elegido.instructions}
           </p>
         </div>
       )}

@@ -130,6 +130,7 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
           <PagarPedido
             orderId={order.id}
             total={order.final_total ?? order.total}
+            montoVes={order.amount_ves}
             instrucciones={metodo.instructions!.trim()}
             referencia={order.payment_reference}
             verificado={order.payment_verified_at != null}

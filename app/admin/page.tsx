@@ -165,7 +165,7 @@ export default async function AdminPage() {
           title="Cobros"
           hint="A dónde paga el cliente. Lo ve tal cual, con los saltos de línea. Sin datos cargados, el método no se le ofrece aunque esté activo."
         >
-          <PaymentEditor metodos={metodos} />
+          <PaymentEditor metodos={metodos} tasaVes={settings?.rate_ves ?? null} />
         </Section>
 
         <Section
