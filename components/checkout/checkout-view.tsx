@@ -160,9 +160,16 @@ export function CheckoutView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storeIds.join(",")])
 
-  /** Los métodos que hoy se pueden cumplir, y el primero queda elegido. */
+  /**
+   * Los métodos que hoy se pueden cumplir, y el primero queda elegido.
+   *
+   * Solo con sesión: los datos de a dónde pagar están reservados a quien
+   * inició sesión, porque mientras se prueba con una cuenta personal ahí va el
+   * teléfono y la cédula de alguien. Y de todos modos sin cuenta no se puede
+   * pedir, así que no se pierde nada.
+   */
   useEffect(() => {
-    if (!isSupabaseConfigured) return
+    if (!isSupabaseConfigured || !session.userId) return
     let cancelado = false
 
     void (async () => {
@@ -179,7 +186,7 @@ export function CheckoutView() {
     return () => {
       cancelado = true
     }
-  }, [])
+  }, [session.userId])
 
   const items = useMemo<CartLine[]>(
     () =>
@@ -357,7 +364,12 @@ export function CheckoutView() {
             </section>
 
             <SubstitutionOptions value={substitution} onChange={setSubstitution} />
-            <PaymentMethods value={payment} onChange={setPayment} metodos={metodos} />
+            <PaymentMethods
+              value={payment}
+              onChange={setPayment}
+              metodos={metodos}
+              sinSesion={!session.loading && !session.userId}
+            />
             <OrderSummary subtotal={subtotal} serviceFee={serviceFee} deliveryFee={deliveryFee} />
             {error && (
               <p role="alert" className="text-sm text-rose-600">

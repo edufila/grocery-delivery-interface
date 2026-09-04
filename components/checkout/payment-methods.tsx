@@ -17,9 +17,11 @@ type Props = {
   value: string
   onChange: (value: string) => void
   metodos: MetodoPago[]
+  /** Sin cuenta no se cargan: los datos de pago son solo para quien entró. */
+  sinSesion: boolean
 }
 
-export function PaymentMethods({ value, onChange, metodos }: Props) {
+export function PaymentMethods({ value, onChange, metodos, sinSesion }: Props) {
   return (
     <section
       aria-labelledby="pay-heading"
@@ -31,7 +33,9 @@ export function PaymentMethods({ value, onChange, metodos }: Props) {
 
       {metodos.length === 0 ? (
         <p className="rounded-xl bg-amber-50 px-3 py-2.5 text-sm leading-relaxed text-amber-800">
-          No hay métodos de pago habilitados. Se cargan desde el panel de administración.
+          {sinSesion
+            ? "Entra a tu cuenta para ver cómo pagar."
+            : "No hay métodos de pago habilitados. Se cargan desde el panel de administración."}
         </p>
       ) : (
         <fieldset>
