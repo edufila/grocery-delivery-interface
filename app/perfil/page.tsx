@@ -55,6 +55,20 @@ export default async function PerfilPage() {
   const displayName = profile?.full_name || user.email || "Mi cuenta"
   const avatarUrl = user.user_metadata?.avatar_url as string | undefined
 
+  /**
+   * Cuántos pagos esperan revisión, para verlo sin entrar al panel. Solo el
+   * conteo: la fila entera no hace falta aquí, y RLS ya limita a quien puede.
+   */
+  let pagosPendientes = 0
+  if (esAdmin) {
+    const { count } = await supabase
+      .from("orders")
+      .select("id", { count: "exact", head: true })
+      .not("payment_reported_at", "is", null)
+      .is("payment_verified_at", null)
+    pagosPendientes = count ?? 0
+  }
+
   return (
     <main className="min-h-dvh bg-gray-50">
       <header className="pt-barra-estado border-b border-gray-100 bg-white">
@@ -126,9 +140,16 @@ export default async function PerfilPage() {
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-semibold text-white">Administración</span>
               <span className="block text-sm text-indigo-100">
-                Tiendas, precios, tarifas y pedidos
+                {pagosPendientes > 0
+                  ? `${pagosPendientes} ${pagosPendientes === 1 ? "pago espera" : "pagos esperan"} que los revises`
+                  : "Tiendas, precios, tarifas y pedidos"}
               </span>
             </span>
+            {pagosPendientes > 0 && (
+              <span className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full bg-white px-1.5 text-xs font-bold tabular-nums text-indigo-700">
+                {pagosPendientes}
+              </span>
+            )}
             <ChevronRight className="h-5 w-5 shrink-0 text-indigo-200" aria-hidden="true" />
           </Link>
         )}

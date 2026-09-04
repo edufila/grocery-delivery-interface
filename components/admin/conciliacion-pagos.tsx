@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { BadgeCheck, Loader2, Search } from "lucide-react"
 
+import { AvisoPagos } from "@/components/admin/aviso-pagos"
 import { formatMoney, formatOrderDate, type Order } from "@/lib/orders"
 import { createClient } from "@/lib/supabase/client"
 
@@ -92,6 +93,8 @@ export function ConciliacionPagos({ pedidos }: { pedidos: PedidoPorCobrar[] }) {
 
   return (
     <div className="flex flex-col gap-4">
+      <AvisoPagos />
+
       <section className="rounded-2xl border border-gray-200 bg-white p-3">
         <h3 className="text-sm font-semibold text-gray-900">Registrar un pago que viste</h3>
         <p className="mt-0.5 text-xs leading-relaxed text-gray-500">
