@@ -18,12 +18,20 @@ import { resolve } from "node:path"
  * `lee` es qué debería poder leer un anónimo:
  *   "todo"  el catálogo público. Tiene que verse sin cuenta.
  *   "nada"  datos de personas o pedidos.
+ *
+ * `columnas` es para las tablas que son públicas salvo por algún campo: pedir
+ * `*` ahí falla a propósito, así que se piden las que sí deben verse.
  */
 const TABLAS = [
   { nombre: "stores", lee: "todo", porque: "el inicio se ve sin cuenta" },
   { nombre: "products", lee: "todo", porque: "el catálogo se ve sin cuenta" },
   { nombre: "settings", lee: "todo", porque: "el checkout necesita la tarifa" },
-  { nombre: "payment_methods", lee: "todo", porque: "el checkout los lista" },
+  {
+    nombre: "payment_methods",
+    lee: "todo",
+    columnas: "id,label,hint,needs_reference,active",
+    porque: "el checkout los lista",
+  },
   { nombre: "profiles", lee: "nada", porque: "son datos de personas" },
   { nombre: "addresses", lee: "nada", porque: "es dónde vive la gente" },
   { nombre: "orders", lee: "nada", porque: "son las compras de cada quien" },
@@ -61,7 +69,10 @@ let problemas = 0
 console.log("\nLectura sin sesión\n")
 
 for (const tabla of TABLAS) {
-  const r = await fetch(`${url}/rest/v1/${tabla.nombre}?select=*&limit=3`, { headers: cab })
+  const r = await fetch(
+    `${url}/rest/v1/${tabla.nombre}?select=${tabla.columnas ?? "*"}&limit=3`,
+    { headers: cab },
+  )
   const cuerpo = await r.text()
 
   let filas = null
