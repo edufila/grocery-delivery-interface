@@ -15,7 +15,7 @@ y lo entrega, y **admin/dev** administran el catálogo y las cuentas.
 
 ```bash
 pnpm install
-cp .env.local.example .env.local   # y completá los dos valores
+cp .env.local.example .env.local   # y completa los dos valores
 pnpm dev
 ```
 
@@ -27,6 +27,46 @@ pnpm check:supabase   # verifica que la conexión y los proveedores estén bien
 pnpm test             # pruebas de la lógica pura
 pnpm build            # lo mismo que corre Vercel
 ```
+
+Después de cada migración que cree funciones o columnas, conviene medir contra
+la base en vez de confiar en el archivo. Dos veces el SQL decía una cosa y la
+base tenía otra:
+
+```bash
+node scripts/auditar-funciones.mjs   # qué puede invocar alguien sin sesión
+node scripts/auditar-tablas.mjs      # qué puede leer y escribir sin sesión
+```
+
+## Recibir avisos de pago automáticamente
+
+`POST /api/pago-recibido` registra un pago y verifica el pedido que le
+corresponda. Es opcional: sin configurar responde 503 y no hace nada, y todo se
+sigue pudiendo hacer a mano desde el panel.
+
+Hacen falta dos variables **solo en el servidor** de Vercel, nunca con el
+prefijo `NEXT_PUBLIC_`:
+
+| Variable | Qué es |
+| --- | --- |
+| `PAGOS_TOKEN` | Una cadena larga al azar que inventas tú. Es lo que autoriza a quien manda el aviso. |
+| `SUPABASE_SERVICE_ROLE_KEY` | La llave de servicio de Supabase. Es la llave maestra del proyecto: si se filtra, hay que rotarla desde Supabase. |
+
+Quien reenvíe el aviso llama así:
+
+```bash
+curl -X POST https://TU-DOMINIO/api/pago-recibido \
+  -H "Authorization: Bearer EL_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"texto":"Pago Movil recibido Bs. 847,91 Ref. 012345678"}'
+```
+
+Acepta el texto crudo del aviso o el monto y la referencia ya separados
+(`{"monto": 847.91, "referencia": "012345678"}`). Lo separado manda sobre lo
+que se pueda leer del texto.
+
+Funciona porque cada pedido se cotiza con **céntimos únicos**: no hay dos sin
+pagar con el mismo monto, así que con el monto alcanza para saber cuál es. La
+referencia es el respaldo para quien pague un monto distinto al cotizado.
 
 ## La base de datos
 
