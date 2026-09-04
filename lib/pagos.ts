@@ -33,17 +33,36 @@ export function sePuedeOfrecer(metodo: MetodoPago, tasaVes: number | null) {
   return (metodo.instructions ?? "").trim().length > 0
 }
 
+const COLUMNAS = "id, label, hint, instructions, needs_reference, active, sort_order"
+
 /**
  * Los métodos que el cliente puede elegir hoy. Devuelve lista vacía si la tabla
  * todavía no existe, y quien llama decide qué hacer con eso.
+ *
+ * Reintenta sin `currency` si la base todavía no la tiene: el código se
+ * despliega solo y las migraciones se corren a mano, así que entre una cosa y
+ * la otra hay un rato en el que la columna no existe. Sin este cuidado la
+ * consulta falla entera y el checkout se queda sin ningún método de pago, que
+ * es peor que quedarse sin la columna.
  */
 export async function fetchMetodosPago(supabase: SupabaseClient): Promise<MetodoPago[]> {
-  const { data, error } = await supabase
-    .from("payment_methods")
-    .select("id, label, hint, instructions, needs_reference, active, sort_order, currency")
-    .order("sort_order")
-    .returns<MetodoPago[]>()
+  const traer = (columnas: string) =>
+    supabase.from("payment_methods").select(columnas).order("sort_order")
+
+  let { data, error } = await traer(`${COLUMNAS}, currency`)
+  if (error) ({ data, error } = await traer(COLUMNAS))
 
   if (error || !data) return []
-  return data
+
+  return (data as unknown as Record<string, unknown>[]).map((fila) => ({
+    id: fila.id as string,
+    label: fila.label as string,
+    hint: (fila.hint as string) ?? null,
+    instructions: (fila.instructions as string) ?? null,
+    needs_reference: fila.needs_reference !== false,
+    active: fila.active !== false,
+    sort_order: Number(fila.sort_order ?? 0),
+    // Sin la columna todo se trata como dólares, que es como funcionaba antes.
+    currency: (fila.currency as string) ?? "USD",
+  }))
 }

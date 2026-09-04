@@ -136,23 +136,35 @@ export function CheckoutView() {
 
     void (async () => {
       const supabase = createClient()
-      const [{ data: filas }, { data: ajustes }] = await Promise.all([
-        supabase
-          .from("stores")
-          .select("id, name, delivery_fee")
-          .in("id", storeIds)
-          .returns<Tienda[]>(),
-        supabase
-          .from("settings")
-          .select("service_fee, rate_ves")
-          .eq("id", "global")
-          .maybeSingle<{ service_fee: number; rate_ves: number | null }>(),
-      ])
+      // Igual que con los métodos: si la base todavía no tiene la tasa, se pide
+      // sin ella en vez de perder también la tarifa de servicio.
+      const ajustesCon = await supabase
+        .from("settings")
+        .select("service_fee, rate_ves")
+        .eq("id", "global")
+        .maybeSingle<{ service_fee: number; rate_ves: number | null }>()
+
+      const ajustes = ajustesCon.error
+        ? (
+            await supabase
+              .from("settings")
+              .select("service_fee")
+              .eq("id", "global")
+              .maybeSingle<{ service_fee: number }>()
+          ).data
+        : ajustesCon.data
+
+      const { data: filas } = await supabase
+        .from("stores")
+        .select("id, name, delivery_fee")
+        .in("id", storeIds)
+        .returns<Tienda[]>()
 
       if (cancelled) return
       if (filas) setTiendas(filas.map((t) => ({ ...t, delivery_fee: Number(t.delivery_fee) })))
       if (ajustes?.service_fee != null) setServiceFee(Number(ajustes.service_fee))
-      setTasaVes(ajustes?.rate_ves != null ? Number(ajustes.rate_ves) : null)
+      const tasa = (ajustes as { rate_ves?: number | null } | null)?.rate_ves
+      setTasaVes(tasa != null ? Number(tasa) : null)
     })()
 
     return () => {
