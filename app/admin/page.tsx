@@ -8,6 +8,7 @@ import { SettingsEditor } from "@/components/admin/settings-editor"
 import { StoreEditor } from "@/components/admin/store-editor"
 import { StoreProducts } from "@/components/admin/store-products"
 import { UserManager, type AdminUser } from "@/components/admin/user-manager"
+import { ConciliacionPagos } from "@/components/admin/conciliacion-pagos"
 import { PaymentEditor } from "@/components/admin/payment-editor"
 import { pageTitle } from "@/lib/brand"
 import { fetchMetodosPago } from "@/lib/pagos"
@@ -21,6 +22,22 @@ export const metadata: Metadata = {
 }
 
 const ADMIN_ROLES: Role[] = ["admin", "dev"]
+
+type PedidoAdmin = Pick<
+  Order,
+  | "id"
+  | "code"
+  | "status"
+  | "total"
+  | "final_total"
+  | "created_at"
+  | "address_label"
+  | "shopper_id"
+  | "payment_method"
+  | "payment_reference"
+  | "payment_reported_at"
+  | "payment_verified_at"
+>
 
 export default async function AdminPage() {
   if (!isSupabaseConfigured) redirect("/login")
@@ -67,15 +84,12 @@ export default async function AdminPage() {
       supabase.from("settings").select("*").eq("id", "global").maybeSingle<Settings>(),
       supabase
         .from("orders")
-        .select("id, code, status, total, created_at, address_label, shopper_id")
+        .select(
+          "id, code, status, total, final_total, created_at, address_label, shopper_id, payment_method, payment_reference, payment_reported_at, payment_verified_at",
+        )
         .order("created_at", { ascending: false })
         .limit(100)
-        .returns<
-          Pick<
-            Order,
-            "id" | "code" | "status" | "total" | "created_at" | "address_label" | "shopper_id"
-          >[]
-        >(),
+        .returns<PedidoAdmin[]>(),
       supabase
         .from("profiles")
         .select("id, email, full_name, avatar_url, handle, role")
@@ -152,6 +166,17 @@ export default async function AdminPage() {
           hint="A dónde paga el cliente. Lo ve tal cual, con los saltos de línea. Sin datos cargados, el método no se le ofrece aunque esté activo."
         >
           <PaymentEditor metodos={metodos} />
+        </Section>
+
+        <Section
+          title="Pagos por verificar"
+          hint="La app no entra a tu banco: nadie le puso tus claves y nadie se las va a poner. El cruce entre lo que reporta el cliente y lo que registras aquí sí es automático."
+        >
+          <ConciliacionPagos
+            pedidos={(orders ?? []).filter(
+              (o) => o.payment_reported_at != null && o.payment_verified_at == null,
+            )}
+          />
         </Section>
 
         <Section
