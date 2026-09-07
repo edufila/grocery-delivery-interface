@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react"
 import { Crosshair, Loader2 } from "lucide-react"
 import type { Map as MapLibreMap, Marker as MapLibreMarker } from "maplibre-gl"
-import "maplibre-gl/dist/maplibre-gl.css"
+
+import { cargarMapa } from "@/lib/mapa"
 
 export type Coords = { lat: number; lng: number } | null
 
@@ -52,7 +53,7 @@ export function UseMyLocation({
     let cancelled = false
 
     void (async () => {
-      const maplibregl = await import("maplibre-gl")
+      const maplibregl = await cargarMapa()
       if (cancelled || !container.current) return
 
       const map = new maplibregl.Map({

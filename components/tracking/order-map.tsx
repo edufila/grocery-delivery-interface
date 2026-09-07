@@ -5,7 +5,8 @@ import Link from "next/link"
 import { MapPin, Maximize2 } from "lucide-react"
 // Solo tipos: se borran al compilar, así que no arrastran la librería al servidor.
 import type { Map as MapLibreMap, Marker as MapLibreMarker } from "maplibre-gl"
-import "maplibre-gl/dist/maplibre-gl.css"
+
+import { cargarMapa } from "@/lib/mapa"
 
 import { createClient } from "@/lib/supabase/client"
 
@@ -147,7 +148,7 @@ export function OrderMap({
     void (async () => {
       try {
         // Import dinámico: maplibre toca window y no puede correr en el servidor.
-        const maplibregl = await import("maplibre-gl")
+        const maplibregl = await cargarMapa()
         if (cancelled || !container.current) return
 
         // Arranca sobre quien mira, si ya sabemos dónde está.
@@ -195,7 +196,7 @@ export function OrderMap({
     if (!map || !position || !destination) return
 
     void (async () => {
-      const maplibregl = await import("maplibre-gl")
+      const maplibregl = await cargarMapa()
 
       if (!shopperMarker.current) {
         shopperMarker.current = new maplibregl.Marker({
