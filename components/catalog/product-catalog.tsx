@@ -7,6 +7,7 @@ import { ProductCard } from "./product-card"
 import { CartBar } from "./cart-bar"
 import type { Category } from "@/lib/categories"
 import { useCart } from "@/lib/cart"
+import { useFavoritos } from "@/lib/favoritos"
 import type { Product } from "@/lib/products"
 
 type Props = {
@@ -29,6 +30,7 @@ export function ProductCatalog({
   initialWholesaleOnly = false,
 }: Props) {
   const { quantities, count, subtotal, add, removeOne } = useCart()
+  const favoritos = useFavoritos()
 
   const [category, setCategory] = useState<Category>(initialCategory)
   const [query, setQuery] = useState(initialQuery)
@@ -108,6 +110,8 @@ export function ProductCatalog({
                 quantity={quantities[product.id] ?? 0}
                 onAdd={add}
                 onRemove={removeOne}
+                esFavorito={favoritos.ids.has(product.id)}
+                onFavorito={favoritos.haySesion ? favoritos.alternar : undefined}
               />
             ))}
           </div>

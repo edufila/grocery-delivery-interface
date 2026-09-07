@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { Clock, Bike, BadgePercent, Heart } from "lucide-react"
+import { Clock, Bike, BadgePercent, Star } from "lucide-react"
 
 import type { Store } from "@/lib/admin"
 import { createClient } from "@/lib/supabase/client"
@@ -132,8 +132,10 @@ export function NearbyStores({ stores }: { stores: Store[] }) {
                       : `Guardar ${store.name} en favoritos`
                   }
                 >
-                  <Heart
-                    className={`h-5 w-5 transition ${isFavorite ? "fill-rose-500 text-rose-500" : ""}`}
+                  <Star
+                    className={`h-5 w-5 transition ${
+                      isFavorite ? "fill-amber-400 text-amber-500" : ""
+                    }`}
                     aria-hidden="true"
                   />
                 </button>

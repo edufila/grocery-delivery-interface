@@ -1,6 +1,6 @@
 "use client"
 
-import { Plus, Minus } from "lucide-react"
+import { Plus, Minus, Star } from "lucide-react"
 
 import type { Product } from "@/lib/products"
 
@@ -9,9 +9,19 @@ type Props = {
   quantity: number
   onAdd: (id: string) => void
   onRemove: (id: string) => void
+  /** Sin sesión no se ofrece: no habría dónde guardarlo. */
+  esFavorito?: boolean
+  onFavorito?: (id: string) => void
 }
 
-export function ProductCard({ product, quantity, onAdd, onRemove }: Props) {
+export function ProductCard({
+  product,
+  quantity,
+  onAdd,
+  onRemove,
+  esFavorito,
+  onFavorito,
+}: Props) {
   const inCart = quantity > 0
   // Agotado no es lo mismo que quitado: sigue en la grilla, apagado, para que
   // se sepa que el abasto lo vende y valga la pena volver.
@@ -35,6 +45,29 @@ export function ProductCard({ product, quantity, onAdd, onRemove }: Props) {
               Mayorista
             </span>
           )
+        )}
+
+        {/* La estrella también en lo agotado: marcar lo que uno compra siempre
+            sirve justo cuando no hay, para volver cuando reponen. */}
+        {onFavorito && (
+          <button
+            type="button"
+            onClick={() => onFavorito(product.id)}
+            aria-pressed={esFavorito}
+            aria-label={
+              esFavorito
+                ? `Quitar ${product.name} de mis habituales`
+                : `Guardar ${product.name} en mis habituales`
+            }
+            className="absolute right-1 top-1 flex h-9 w-9 items-center justify-center rounded-full text-gray-400 transition active:scale-90"
+          >
+            <Star
+              className={`h-5 w-5 transition ${
+                esFavorito ? "fill-amber-400 text-amber-500" : ""
+              }`}
+              aria-hidden="true"
+            />
+          </button>
         )}
       </div>
 
