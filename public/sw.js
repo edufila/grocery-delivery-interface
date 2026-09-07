@@ -37,6 +37,73 @@ self.addEventListener("activate", (evento) => {
   )
 })
 
+/**
+ * El aviso llega sin contenido a propósito: mandarlo con texto obliga a
+ * cifrarlo con el esquema del navegador, que es fácil de equivocar y falla en
+ * silencio. Aquí se recibe el golpe y se le pregunta a la app qué mostrar; la
+ * app sabe quién es esta persona por su sesión.
+ *
+ * Si la consulta falla -- sin señal, sesión vencida -- se muestra un aviso
+ * genérico igual. Un push recibido y no mostrado hace que el navegador deje de
+ * mandarlos, así que callarse no es una opción.
+ */
+self.addEventListener("push", (evento) => {
+  evento.waitUntil(
+    (async () => {
+      let aviso = { titulo: "Abasto", cuerpo: "Tienes algo pendiente.", url: "/" }
+
+      try {
+        const r = await fetch("/api/aviso-pendiente", {
+          credentials: "include",
+          cache: "no-store",
+        })
+        if (r.ok) {
+          const d = await r.json()
+          if (d?.titulo) aviso = { titulo: d.titulo, cuerpo: d.cuerpo, url: d.url ?? "/" }
+        }
+      } catch {
+        // Queda el aviso genérico.
+      }
+
+      await self.registration.showNotification(aviso.titulo, {
+        body: aviso.cuerpo,
+        icon: "/icon-192.png",
+        badge: "/icon-192.png",
+        // Un tema fijo: si entran tres pedidos, se reemplaza el aviso en vez de
+        // apilar tres que dicen casi lo mismo.
+        tag: "abasto",
+        data: { url: aviso.url },
+      })
+    })(),
+  )
+})
+
+/** Tocar el aviso lleva a donde hay que hacer algo, no a la portada. */
+self.addEventListener("notificationclick", (evento) => {
+  evento.notification.close()
+  const destino = evento.notification.data?.url ?? "/"
+
+  evento.waitUntil(
+    (async () => {
+      const abiertas = await self.clients.matchAll({
+        type: "window",
+        includeUncontrolled: true,
+      })
+
+      // Si ya hay una ventana de la app, se reusa: abrir otra deja al shopper
+      // con tres copias de la app y el mapa corriendo en todas.
+      for (const cliente of abiertas) {
+        if ("focus" in cliente) {
+          await cliente.navigate(destino).catch(() => {})
+          return cliente.focus()
+        }
+      }
+
+      return self.clients.openWindow(destino)
+    })(),
+  )
+})
+
 self.addEventListener("fetch", (evento) => {
   const pedido = evento.request
 
