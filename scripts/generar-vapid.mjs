@@ -38,11 +38,35 @@ const publica = url64(
 
 const privada = url64(Buffer.from(privateKey.export({ format: "jwk" }).d, "base64url"))
 
-console.log("\nTres variables para Vercel (Settings -> Environment Variables):\n")
-console.log("  NEXT_PUBLIC_VAPID_PUBLIC_KEY")
-console.log("  " + publica + "\n")
-console.log("  VAPID_PRIVATE_KEY   <-- esta NO lleva NEXT_PUBLIC_, es secreta")
-console.log("  " + privada + "\n")
-console.log("  VAPID_SUBJECT       <-- tu correo, para que el servicio de push")
-console.log("  mailto:tu@correo.com    sepa a quién avisarle si algo va mal\n")
-console.log("Después de agregarlas hay que volver a desplegar.\n")
+/**
+ * Se imprime el nombre y el valor por separado en cada renglón.
+ *
+ * La versión anterior los ponía uno debajo del otro sin decir cuál era cuál, y
+ * al lado del tercero dejaba `mailto:tu@correo.com` como ejemplo. Eso se presta
+ * a copiar el ejemplo creyendo que es el valor, y a confundir el aviso de "esta
+ * no lleva NEXT_PUBLIC_" con parte del nombre.
+ *
+ * Vale la pena la verborrea: equivocarse aquí en un sentido no hace nada, y en
+ * el otro publica una clave secreta.
+ */
+console.log("\nTres variables para Vercel (Settings -> Environment Variables).")
+console.log("Copia el nombre y el valor por separado, uno por uno.\n")
+
+console.log("  1) Nombre:  NEXT_PUBLIC_VAPID_PUBLIC_KEY")
+console.log("     Valor:   " + publica + "\n")
+
+console.log("  2) Nombre:  VAPID_PRIVATE_KEY")
+console.log("     Valor:   " + privada)
+console.log("     Ojo:     va SIN NEXT_PUBLIC_ adelante. Con ese prefijo viajaría")
+console.log("              al navegador de todo el mundo. Y no la pegues en un chat.\n")
+
+console.log("  3) Nombre:  VAPID_SUBJECT")
+console.log("     Valor:   mailto: seguido de TU correo -- no copies un ejemplo.")
+console.log("              Es a donde el servicio de push avisa si algo va mal.\n")
+
+console.log("Falta una cuarta, que quizá ya esté cargada: SUPABASE_SERVICE_ROLE_KEY.")
+console.log("Sin ella los avisos no salen, porque no se pueden buscar los teléfonos")
+console.log("de admin y dev. Esa sale del panel de Supabase.\n")
+
+console.log("Después de agregarlas hay que volver a desplegar: las variables no")
+console.log("entran en un despliegue que ya se hizo.\n")
