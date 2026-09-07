@@ -33,9 +33,17 @@ la base en vez de confiar en el archivo. Dos veces el SQL decía una cosa y la
 base tenía otra:
 
 ```bash
-node scripts/auditar-funciones.mjs   # qué puede invocar alguien sin sesión
-node scripts/auditar-tablas.mjs      # qué puede leer y escribir sin sesión
+pnpm audit:funciones   # qué puede invocar alguien sin sesión
+pnpm audit:tablas      # qué puede leer y escribir sin sesión
+pnpm build && pnpm audit:bundle   # qué claves viajan al navegador
 ```
+
+Sobre lo último, que se pregunta seguido: **la clave publicable de Supabase se
+ve con Inspeccionar, y está bien.** Va al navegador a propósito, porque el
+navegador tiene que hablar con la base. Lo que protege los datos no es
+esconderla sino las políticas de RLS, y eso es lo que revisan los otros dos
+scripts. Lo que nunca puede viajar es la llave de servicio: eso es lo que
+`audit:bundle` vigila.
 
 ## Recibir avisos de pago automáticamente
 

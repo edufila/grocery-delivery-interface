@@ -7,6 +7,9 @@
     "build": "next build",
     "start": "next start",
     "check:supabase": "node scripts/check-supabase.mjs",
+    "audit:bundle": "node scripts/auditar-bundle.mjs",
+    "audit:tablas": "node scripts/auditar-tablas.mjs",
+    "audit:funciones": "node scripts/auditar-funciones.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },
