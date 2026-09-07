@@ -2,20 +2,33 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { BadgeCheck, Loader2, Search } from "lucide-react"
+import { BadgeCheck, Clock, Loader2, Search } from "lucide-react"
 
 import { AvisoPagos } from "@/components/admin/aviso-pagos"
 import { formatMoney, formatOrderDate, type Order } from "@/lib/orders"
+import { formatBolivares, ultimosDigitos } from "@/lib/pagos"
 import { createClient } from "@/lib/supabase/client"
 
 export type PedidoPorCobrar = Pick<
   Order,
-  "id" | "code" | "total" | "final_total" | "payment_method" | "payment_reference" | "payment_reported_at"
+  | "id"
+  | "code"
+  | "total"
+  | "final_total"
+  | "amount_ves"
+  | "payment_method"
+  | "payment_reference"
+  | "payment_reported_at"
 >
 
 /**
  * Los pedidos esperando que alguien confirme que el dinero llegó, y la forma
  * de meter un pago que se vio en el banco.
+ *
+ * Esta pantalla traba a propósito el resto de la operación: mientras un pago
+ * está aquí sin confirmar, su pedido no le aparece a ningún shopper. Antes
+ * salía igual, y si el dinero nunca llegaba la mercancía ya estaba comprada.
+ * Así que lo que se hace acá no es papeleo: es lo que destraba el pedido.
  *
  * Por qué existe el formulario si ya está el botón de confirmar: porque el
  * orden real no es el que uno esperaría. A veces el pago aparece en el banco
@@ -35,6 +48,7 @@ export function ConciliacionPagos({ pedidos }: { pedidos: PedidoPorCobrar[] }) {
   const [error, setError] = useState("")
   const [resultado, setResultado] = useState("")
   const [verificando, setVerificando] = useState<string | null>(null)
+  const [confirmado, setConfirmado] = useState("")
 
   const digitos = referencia.replace(/\D/g, "")
 
@@ -70,24 +84,50 @@ export function ConciliacionPagos({ pedidos }: { pedidos: PedidoPorCobrar[] }) {
     setMonto("")
 
     if (r?.ya_estaba) setResultado("Ese pago ya estaba registrado y enganchado a un pedido.")
-    else if (r?.conciliado) setResultado("Enganchado: el pedido quedó verificado.")
+    else if (r?.conciliado)
+      setResultado("Enganchado: el pedido quedó verificado y ya sale a buscar shopper.")
     else setResultado("Guardado. Cuando el cliente reporte esa referencia, se verifica solo.")
 
     router.refresh()
   }
 
-  async function verificar(id: string) {
-    setVerificando(id)
+  async function verificar(pedido: PedidoPorCobrar) {
+    setVerificando(pedido.id)
     setError("")
-    const { error: rpcError } = await createClient().rpc("verify_payment", {
-      p_order_id: id,
+    setConfirmado("")
+
+    const { data, error: rpcError } = await createClient().rpc("verify_payment", {
+      p_order_id: pedido.id,
       p_ok: true,
     })
+
     setVerificando(null)
+
     if (rpcError) {
-      setError(rpcError.message)
+      setError(
+        rpcError.message.includes("does not exist")
+          ? "Falta correr la migración 0037 en Supabase."
+          : rpcError.message,
+      )
       return
     }
+
+    /**
+     * Se repite en pantalla qué quedó confirmado. Confirmar un pago libera un
+     * pedido que después nadie vuelve a mirar, así que el momento de darse
+     * cuenta de que se tocó la tarjeta de al lado es este y no mañana.
+     *
+     * La 0037 hizo que la función devolviera esos datos; antes devolvía solo
+     * verdadero, y si la base todavía está vieja se dice lo genérico.
+     */
+    const r = data as { code?: string; amount_ves?: number | null } | null
+    setConfirmado(
+      r?.code
+        ? `Confirmado ${r.code}${
+            r.amount_ves != null ? ` por Bs. ${formatBolivares(Number(r.amount_ves))}` : ""
+          }. El pedido ya sale a buscar shopper.`
+        : "Confirmado. El pedido ya sale a buscar shopper.",
+    )
     router.refresh()
   }
 
@@ -144,9 +184,18 @@ export function ConciliacionPagos({ pedidos }: { pedidos: PedidoPorCobrar[] }) {
       </section>
 
       <section>
-        <h3 className="mb-2 text-sm font-semibold text-gray-900">
+        <h3 className="mb-1 text-sm font-semibold text-gray-900">
           Esperando verificación ({pedidos.length})
         </h3>
+        <p className="mb-2 text-xs leading-relaxed text-gray-500">
+          Estos pedidos están detenidos. No le aparecen a ningún shopper hasta que confirmes.
+        </p>
+
+        {confirmado && (
+          <p className="mb-2 rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+            {confirmado}
+          </p>
+        )}
 
         {pedidos.length === 0 ? (
           <p className="text-sm leading-relaxed text-gray-500">
@@ -155,38 +204,12 @@ export function ConciliacionPagos({ pedidos }: { pedidos: PedidoPorCobrar[] }) {
         ) : (
           <ul className="flex flex-col gap-2">
             {pedidos.map((pedido) => (
-              <li
+              <TarjetaPago
                 key={pedido.id}
-                className="flex flex-wrap items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50/60 p-3"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-gray-900">
-                    <span className="font-mono">{pedido.code}</span> ·{" "}
-                    {formatMoney(pedido.final_total ?? pedido.total)}
-                  </p>
-                  <p className="truncate text-xs text-gray-600">
-                    Ref.{" "}
-                    <span className="font-mono font-semibold">{pedido.payment_reference}</span>
-                    {pedido.payment_reported_at
-                      ? ` · reportado ${formatOrderDate(pedido.payment_reported_at)}`
-                      : ""}
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => void verificar(pedido.id)}
-                  disabled={verificando === pedido.id}
-                  className="flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white disabled:bg-gray-200 disabled:text-gray-400"
-                >
-                  {verificando === pedido.id ? (
-                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                  ) : (
-                    <BadgeCheck className="h-4 w-4" aria-hidden="true" />
-                  )}
-                  Lo vi, confirmar
-                </button>
-              </li>
+                pedido={pedido}
+                ocupado={verificando === pedido.id}
+                onVerificar={() => void verificar(pedido)}
+              />
             ))}
           </ul>
         )}
@@ -197,6 +220,96 @@ export function ConciliacionPagos({ pedidos }: { pedidos: PedidoPorCobrar[] }) {
           tiene forma de saber sola si el dinero llegó.
         </p>
       </section>
+    </div>
+  )
+}
+
+/**
+ * Un pago por verificar, con las dos cosas que hay que cotejar contra el banco
+ * y nada más: el monto exacto y los últimos dígitos de la referencia.
+ *
+ * El monto va primero y grande porque es el dato fuerte: lo pone el sistema con
+ * céntimos únicos, así que dos pedidos nunca deben lo mismo y el número por sí
+ * solo identifica el pago. La referencia la copia el cliente a mano y se
+ * equivoca; sirve para confirmar, no para decidir.
+ */
+function TarjetaPago({
+  pedido,
+  ocupado,
+  onVerificar,
+}: {
+  pedido: PedidoPorCobrar
+  ocupado: boolean
+  onVerificar: () => void
+}) {
+  const ultimos = ultimosDigitos(pedido.payment_reference)
+  const enBolivares = pedido.amount_ves != null
+  const escrito = (pedido.payment_reference ?? "").replace(/\D/g, "")
+
+  return (
+    <li className="rounded-2xl border border-amber-200 bg-amber-50/60 p-3">
+      <div className="flex items-center justify-between gap-2">
+        <p className="font-mono text-sm font-semibold text-gray-900">{pedido.code}</p>
+        <p className="flex items-center gap-1 text-xs text-amber-700">
+          <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+          {pedido.payment_reported_at ? formatOrderDate(pedido.payment_reported_at) : "reportado"}
+        </p>
+      </div>
+
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        <Evidencia
+          etiqueta={enBolivares ? "Monto exacto" : "Total"}
+          valor={
+            enBolivares
+              ? `Bs. ${formatBolivares(Number(pedido.amount_ves))}`
+              : formatMoney(pedido.final_total ?? pedido.total)
+          }
+          nota={enBolivares ? formatMoney(pedido.final_total ?? pedido.total) : null}
+        />
+        <Evidencia
+          etiqueta="Últimos 4"
+          valor={ultimos || "—"}
+          // Si escribió más dígitos de los cuatro que pedimos, se muestran:
+          // buscar en el banco por seis es más rápido que por cuatro.
+          nota={escrito.length > ultimos.length ? `escribió ${escrito}` : null}
+        />
+      </div>
+
+      <button
+        type="button"
+        onClick={onVerificar}
+        disabled={ocupado}
+        className="mt-2 flex h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white disabled:bg-gray-200 disabled:text-gray-400"
+      >
+        {ocupado ? (
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+        ) : (
+          <BadgeCheck className="h-4 w-4" aria-hidden="true" />
+        )}
+        Lo vi, confirmar
+      </button>
+
+      {/* No hay botón de rechazar y es a propósito: no encontrar el pago en el
+          banco casi nunca significa que no llegó, significa que todavía no
+          aparece. Dejarlo aquí sin tocar es exactamente lo correcto. */}
+    </li>
+  )
+}
+
+function Evidencia({
+  etiqueta,
+  valor,
+  nota,
+}: {
+  etiqueta: string
+  valor: string
+  nota: string | null
+}) {
+  return (
+    <div className="rounded-xl bg-white px-3 py-2">
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-500">{etiqueta}</p>
+      <p className="truncate text-base font-bold tabular-nums text-gray-900">{valor}</p>
+      {nota && <p className="truncate text-[11px] text-gray-500">{nota}</p>}
     </div>
   )
 }

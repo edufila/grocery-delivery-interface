@@ -58,8 +58,8 @@ export function AvisoPagos() {
           avisados.current.add(marca)
 
           avisar(
-            "Pago reportado",
-            `El pedido ${ahora.code} dice haber pagado. Ref. ${ahora.payment_reference}`,
+            "Pago por verificar",
+            `El ${ahora.code} está detenido hasta que confirmes. Ref. ${ahora.payment_reference}`,
             `pago-${ahora.code}`,
           )
 
@@ -80,8 +80,8 @@ export function AvisoPagos() {
     <InterruptorAviso
       titulo="Avisarme cuando reporten un pago"
       encendido={encendido}
-      textoEncendido="Suena y vibra en cuanto alguien dice que pagó. Deja esta pantalla abierta."
-      textoApagado="Ahora mismo hay que entrar a mirar si alguien reportó."
+      textoEncendido="Suena y vibra en cuanto alguien dice que pagó. Su pedido queda detenido hasta que lo confirmes."
+      textoApagado="Ahora mismo hay que entrar a mirar si alguien reportó, y mientras tanto su pedido no sale."
       bloqueado={bloqueado}
       onAlternar={() => void alternar()}
     />

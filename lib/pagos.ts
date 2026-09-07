@@ -66,3 +66,28 @@ export async function fetchMetodosPago(supabase: SupabaseClient): Promise<Metodo
     currency: (fila.currency as string) ?? "USD",
   }))
 }
+
+/**
+ * "1234.56" -> "1.234,56", que es como se lee un monto aquí.
+ *
+ * Vive junto a lo demás de pagos porque lo usan las dos puntas de la misma
+ * conversación: la pantalla donde el cliente ve cuánto pagar y la del abasto
+ * donde alguien compara ese número contra el banco. Si se formatearan distinto
+ * -- uno con coma decimal y otro con punto -- comparar dejaría de ser obvio,
+ * que es justo lo único que esa pantalla tiene que lograr.
+ */
+export function formatBolivares(monto: number) {
+  return monto.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+/**
+ * Los últimos dígitos de una referencia, que es lo que el cliente escribe y lo
+ * que se busca en el banco.
+ *
+ * Se queda solo con números: unos escriben "0001234", otros "Ref. 001234" y
+ * otros con espacios, y todos quieren decir lo mismo.
+ */
+export function ultimosDigitos(referencia: string | null, cuantos = 4) {
+  const digitos = (referencia ?? "").replace(/\D/g, "")
+  return digitos.slice(-cuantos)
+}

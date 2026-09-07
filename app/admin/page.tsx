@@ -37,6 +37,7 @@ type PedidoAdmin = Pick<
   | "payment_reference"
   | "payment_reported_at"
   | "payment_verified_at"
+  | "amount_ves"
 >
 
 export default async function AdminPage() {
@@ -85,7 +86,7 @@ export default async function AdminPage() {
       supabase
         .from("orders")
         .select(
-          "id, code, status, total, final_total, created_at, address_label, shopper_id, payment_method, payment_reference, payment_reported_at, payment_verified_at",
+          "id, code, status, total, final_total, created_at, address_label, shopper_id, payment_method, payment_reference, payment_reported_at, payment_verified_at, amount_ves",
         )
         .order("created_at", { ascending: false })
         .limit(100)
