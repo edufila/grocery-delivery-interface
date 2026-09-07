@@ -7,9 +7,37 @@ lleva.
 La construyen dos hermanos. El repo es de `edufila`, el Supabase también, y el
 proyecto de Vercel igual — que hoy sirve en **abastoweb.vercel.app**.
 
-## Antes de tocar nada
+## Lo primero de cada sesión, sin excepción
 
-**Traer lo último**: `git pull`. Trabajan dos personas sobre el mismo repo.
+```bash
+pnpm al-dia
+```
+
+Dice si esta copia está al día con GitHub y qué hacer si no. **Si sale con
+error, no edites nada todavía.** Somos cuatro tocando el mismo repo -- dos
+hermanos y el Claude de cada uno -- y nadie arranca sabiendo qué hizo el otro
+hace media hora.
+
+Al terminar algo, subirlo: `git add -A && git commit && git push`. Trabajo que
+se queda sin subir es trabajo que el otro va a pisar sin saber.
+
+### Lo que nunca se hace en este repo
+
+| No | Por qué |
+|---|---|
+| `git push --force` | borra del servidor lo que hizo el otro, sin aviso |
+| `git reset --hard` | tira cambios que quizá no son tuyos |
+| `git checkout .` | lo mismo, y más silencioso todavía |
+| deshacer un commit ajeno | si algo del otro parece mal, se pregunta primero |
+| bajar el ZIP de GitHub encima de la carpeta | un ZIP es una foto vieja: revierte todo lo que no estaba en ella |
+
+Ese último es el que ya mordió. **La carpeta se clona, no se descarga.** Si
+`pnpm al-dia` dice que esto no es un repositorio de git, es exactamente eso lo
+que pasó, y el script explica cómo salir.
+
+Cuando el push rebota porque las dos copias se separaron, la salida es
+`git pull --rebase` y volver a empujar. Si el rebase se traba, **para y
+pregunta**: trabarse cuesta minutos, forzar cuesta el trabajo de alguien.
 
 **El dominio no se escribe a mano en ningún lado.** Ya cambió una vez y dejó
 rastros rotos. Sale de `lib/brand.ts`, que lo lee de las variables de Vercel.
