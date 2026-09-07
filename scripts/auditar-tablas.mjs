@@ -40,6 +40,7 @@ const TABLAS = [
   { nombre: "order_delivery_codes", lee: "nada", porque: "es la llave de la entrega" },
   { nombre: "payments_received", lee: "nada", porque: "son movimientos de dinero" },
   { nombre: "favorites", lee: "nada", porque: "es de cada cuenta" },
+  { nombre: "product_favorites", lee: "nada", porque: "es lo que compra cada quien" },
 ]
 
 function leerEnv() {

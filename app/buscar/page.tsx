@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { PackageSearch, Store } from "lucide-react"
+import { PackageSearch, Star, Store } from "lucide-react"
 
 import { BottomNav } from "@/components/bottom-nav"
 import { Buscador } from "@/components/buscar/buscador"
@@ -54,6 +54,7 @@ export default async function BuscarPage({
 
   let resultados: Fila[] = []
   let tiendas = new Map<string, string>()
+  let habituales: Fila[] = []
 
   if (isSupabaseConfigured && hayFiltro) {
     const supabase = await createClient()
@@ -82,6 +83,44 @@ export default async function BuscarPage({
     resultados = (productos ?? []).filter((p) => tiendas.has(p.store_id))
   }
 
+  /**
+   * Sin filtro, esta pantalla solo decía "elige una categoría". Ese es el lugar
+   * natural para lo que la persona compra siempre: llega aquí a buscar algo, y
+   * lo que busca casi siempre es lo mismo de la semana pasada.
+   */
+  if (isSupabaseConfigured && !hayFiltro) {
+    const supabase = await createClient()
+
+    // RLS limita a los propios, así que no hace falta filtrar por usuario.
+    const { data: marcados } = await supabase
+      .from("product_favorites")
+      .select("product_id")
+      .order("created_at", { ascending: false })
+      .limit(30)
+      .returns<{ product_id: string }[]>()
+
+    const ids = (marcados ?? []).map((f) => f.product_id)
+
+    if (ids.length > 0) {
+      const [{ data: productos }, { data: locales }] = await Promise.all([
+        supabase
+          .from("products")
+          .select("id, name, unit, price, image, store_id")
+          .in("id", ids)
+          .eq("active", true)
+          .returns<Fila[]>(),
+        supabase
+          .from("stores")
+          .select("id, name")
+          .eq("active", true)
+          .returns<{ id: string; name: string }[]>(),
+      ])
+
+      tiendas = new Map((locales ?? []).map((t) => [t.id, t.name]))
+      habituales = (productos ?? []).filter((p) => tiendas.has(p.store_id))
+    }
+  }
+
   // Agrupados por abasto, porque el mismo producto cuesta distinto en cada uno.
   const porTienda = new Map<string, Fila[]>()
   for (const fila of resultados) {
@@ -107,9 +146,45 @@ export default async function BuscarPage({
 
       <div className="mx-auto max-w-md px-4 py-4">
         {!hayFiltro ? (
-          <p className="py-16 text-center text-sm leading-relaxed text-gray-500">
-            Elige una categoría o escribe qué buscas. Miramos en todos los abastos a la vez.
-          </p>
+          habituales.length > 0 ? (
+            <section>
+              <h2 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-gray-900">
+                <Star className="h-4 w-4 fill-amber-400 text-amber-500" aria-hidden="true" />
+                Lo que compras siempre
+              </h2>
+              <ul className="flex flex-col gap-2">
+                {habituales.map((fila) => (
+                  <li key={fila.id}>
+                    <Link
+                      href={`/catalogo?tienda=${fila.store_id}&q=${encodeURIComponent(fila.name)}`}
+                      className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-3 active:bg-gray-50"
+                    >
+                      <img
+                        src={fila.image || "/placeholder.svg"}
+                        alt=""
+                        className="h-14 w-14 shrink-0 rounded-xl bg-gray-50 object-cover"
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-medium text-gray-900">
+                          {fila.name}
+                        </span>
+                        <span className="block truncate text-sm text-gray-500">
+                          {tiendas.get(fila.store_id)}
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-sm font-semibold tabular-nums text-gray-900">
+                        ${Number(fila.price).toFixed(2)}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : (
+            <p className="py-16 text-center text-sm leading-relaxed text-gray-500">
+              Elige una categoría o escribe qué buscas. Miramos en todos los abastos a la vez.
+            </p>
+          )
         ) : resultados.length === 0 ? (
           <div className="py-16 text-center">
             <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
