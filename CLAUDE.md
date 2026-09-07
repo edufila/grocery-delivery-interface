@@ -118,10 +118,29 @@ prueba con una cuenta personal y conciliación semiautomática: el abasto regist
 el pago que ve en su banco y el pedido se verifica solo.
 
 Las notificaciones con la app cerrada ya están escritas (`lib/push-servidor.ts`,
-`lib/push-cliente.ts`, `/api/avisar`) pero no funcionan hasta que Edu cargue en
-Vercel las tres variables que imprime `node scripts/generar-vapid.mjs`, y hasta
-que se corra la 0036. Sin eso, los avisos siguen sonando solo con la pantalla
-abierta, que es como funcionaban antes.
+`lib/push-cliente.ts`, `/api/avisar`) y la base ya está lista, pero no salen
+hasta que en Vercel estén **cuatro** variables: las tres que imprime
+`node scripts/generar-vapid.mjs` más `SUPABASE_SERVICE_ROLE_KEY`, que es la que
+permite buscar los teléfonos de admin y dev -- por definición no son los de quien
+está pidiendo, así que la sesión no alcanza. El proyecto de Vercel es de Edu.
+
+Y después hay que volver a desplegar: las variables no entran en un despliegue
+que ya se hizo.
+
+Para saber qué falta sin adivinar, sin exponer nada:
+
+```bash
+curl -X POST https://abastoweb.vercel.app/api/avisar   -H "Content-Type: application/json" -d '{"motivo":"pago-reportado"}'
+```
+
+`Faltan las claves VAPID` → falta alguna del script. `Falta la llave de
+servicio` → falta la de Supabase. **`Hace falta sesión` → están las cuatro**;
+eso no es un error, es la ruta lista rechazando a quien llama sin sesión.
+
+Mientras tanto los avisos suenan solo con la app abierta o en segundo plano, que
+no es lo mismo que cerrada: en segundo plano la app sigue viva y mantiene la
+conexión con Supabase, y por eso el aviso llega igual. Deja de llegar cuando el
+sistema mata la app, y gasta batería mientras tanto.
 
 En iPhone el push necesita que la app esté agregada a la pantalla de inicio. En
 una pestaña de Safari no llega nada, y el interruptor lo dice en pantalla en vez
