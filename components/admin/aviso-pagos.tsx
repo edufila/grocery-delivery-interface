@@ -22,6 +22,8 @@ export function AvisoPagos() {
   const router = useRouter()
   const { encendido, alternar, avisar, bloqueado } = useAviso("abasto:avisos-pagos")
   const refrescar = useRef<ReturnType<typeof setTimeout> | null>(null)
+  /** Qué pagos ya se avisaron, para no repetir en cada cambio del pedido. */
+  const avisados = useRef<Set<string>>(new Set())
 
   useEffect(() => {
     if (!encendido || !isSupabaseConfigured) return
@@ -33,21 +35,27 @@ export function AvisoPagos() {
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "orders" },
         (payload) => {
-          const antes = payload.old as { payment_reference?: string | null }
           const ahora = payload.new as {
+            id: string
             code: string
             payment_reference: string | null
             payment_verified_at: string | null
           }
 
-          // Solo cuando aparece o cambia una referencia sin verificar. El resto
-          // de los cambios de un pedido -- estado, ubicación del shopper --
-          // pasan por aquí todo el tiempo y no tienen nada que ver.
-          const reportoAhora =
-            ahora.payment_reference != null &&
-            ahora.payment_reference !== antes?.payment_reference
+          if (ahora.payment_reference == null || ahora.payment_verified_at != null) return
 
-          if (!reportoAhora || ahora.payment_verified_at != null) return
+          /**
+           * No se compara contra la fila anterior aunque sea lo natural:
+           * Postgres solo la manda si la tabla tiene REPLICA IDENTITY FULL, y
+           * por defecto llega vacía. La comparación daba siempre "cambió", así
+           * que cada vez que el shopper enviaba su ubicación -- cada quince
+           * segundos -- volvía a sonar por un pago ya avisado.
+           *
+           * Se recuerda qué se avisó en esta pantalla y no se repite.
+           */
+          const marca = `${ahora.id}:${ahora.payment_reference}`
+          if (avisados.current.has(marca)) return
+          avisados.current.add(marca)
 
           avisar(
             "Pago reportado",
