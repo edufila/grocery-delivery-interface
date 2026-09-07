@@ -58,6 +58,21 @@ export default async function ShopperPage() {
   const disponibles = todos.filter((o) => o.shopper_id === null && o.status !== "cancelado")
   const entregados = todos.filter((o) => o.shopper_id === user.id && o.status === "entregado")
 
+  /**
+   * Lo entregado esta semana, contando desde el lunes. Se calcula sobre los
+   * pedidos que ya se trajeron: no cuesta una consulta más.
+   *
+   * Por qué la semana y no el total: es el período con el que se le paga a
+   * alguien, y es lo que un shopper quiere saber sin ponerse a contar.
+   */
+  const lunes = new Date()
+  lunes.setHours(0, 0, 0, 0)
+  // getDay() da 0 el domingo; así el domingo cierra la semana en vez de abrirla.
+  lunes.setDate(lunes.getDate() - ((lunes.getDay() + 6) % 7))
+
+  const deLaSemana = entregados.filter((o) => new Date(o.created_at) >= lunes)
+  const vendidoEnLaSemana = deLaSemana.reduce((suma, o) => suma + Number(o.total ?? 0), 0)
+
   return (
     <main className="min-h-dvh bg-gray-50">
       <header className="pt-barra-estado border-b border-gray-100 bg-white">
@@ -79,6 +94,16 @@ export default async function ShopperPage() {
       <OrdersLiveRefresh />
 
       <div className="mx-auto flex max-w-md flex-col gap-6 px-4 pb-16 pt-5">
+        {/* Solo cuando ya entregó algo: a quien empieza, un cero grande no le
+            dice nada y le ocupa la pantalla. */}
+        {entregados.length > 0 && (
+          <section className="grid grid-cols-3 gap-2">
+            <Dato valor={String(deLaSemana.length)} etiqueta="esta semana" />
+            <Dato valor={formatMoney(vendidoEnLaSemana)} etiqueta="vendido" />
+            <Dato valor={String(entregados.length)} etiqueta="en total" />
+          </section>
+        )}
+
         <AvisoPedidos userId={user.id} />
         <Grupo titulo="En curso" vacio="No tienes pedidos tomados." pedidos={mios} />
         <Grupo
@@ -91,6 +116,19 @@ export default async function ShopperPage() {
         )}
       </div>
     </main>
+  )
+}
+
+/**
+ * Un número del resumen. El valor grande y la etiqueta chica debajo: se lee de
+ * un vistazo, que es para lo que sirve.
+ */
+function Dato({ valor, etiqueta }: { valor: string; etiqueta: string }) {
+  return (
+    <div className="rounded-2xl border border-gray-100 bg-white px-3 py-3 text-center">
+      <p className="text-lg font-bold tabular-nums text-gray-900">{valor}</p>
+      <p className="mt-0.5 text-xs leading-tight text-gray-500">{etiqueta}</p>
+    </div>
   )
 }
 
