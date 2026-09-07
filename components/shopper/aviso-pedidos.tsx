@@ -31,7 +31,7 @@ type FilaPedido = {
  */
 export function AvisoPedidos({ userId }: { userId: string }) {
   const router = useRouter()
-  const { encendido, alternar, avisar, bloqueado } = useAviso("abasto:avisos-shopper")
+  const { encendido, alternar, avisar, cerrado, bloqueado } = useAviso("abasto:avisos-shopper")
   /** Qué pedidos ya se avisaron: un pedido cambia varias veces de fila. */
   const avisados = useRef<Set<string>>(new Set())
 
@@ -81,6 +81,7 @@ export function AvisoPedidos({ userId }: { userId: string }) {
       textoEncendido="Suena y vibra cuando uno queda listo para tomar."
       textoApagado="Ahora mismo tienes que estar mirando la pantalla."
       bloqueado={bloqueado}
+      cerrado={cerrado}
       onAlternar={() => void alternar()}
     />
   )

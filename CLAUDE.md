@@ -89,6 +89,15 @@ cargados, y con tasa del día si cobra en bolívares.
 **Cada pedido en bolívares lleva céntimos únicos**, para poder reconocer el pago
 por el monto sin depender de que el cliente copie bien una referencia.
 
+**El pedido no sale a buscar shopper hasta que el pago esté confirmado.** Lo
+imponen las políticas de RLS de la 0037, no la pantalla: un shopper no ve el
+pedido, ni sus renglones, mientras `payment_required` sea verdadero y
+`payment_verified_at` esté vacío. El efectivo contra entrega no espera nada.
+
+**Al cliente se le pide la referencia y nada más.** El monto lo pone el sistema.
+Un monto escrito a mano se puede equivocar -- o inflar -- y perdería el sentido
+de los céntimos únicos.
+
 **admin y dev no son lo mismo.** Un admin maneja el abasto entero; solo un dev
 reparte los roles de admin y dev, y un admin no puede tocarle el rol a otro
 admin.
@@ -100,5 +109,12 @@ registrada. Sin RIF no hay C2P, ni botón de pago, ni tarjetas. Mientras tanto s
 prueba con una cuenta personal y conciliación semiautomática: el abasto registra
 el pago que ve en su banco y el pedido se verifica solo.
 
-Las notificaciones con la app cerrada necesitan push, que necesita servidor. Hoy
-los avisos suenan solo con la pantalla abierta.
+Las notificaciones con la app cerrada ya están escritas (`lib/push-servidor.ts`,
+`lib/push-cliente.ts`, `/api/avisar`) pero no funcionan hasta que Edu cargue en
+Vercel las tres variables que imprime `node scripts/generar-vapid.mjs`, y hasta
+que se corra la 0036. Sin eso, los avisos siguen sonando solo con la pantalla
+abierta, que es como funcionaban antes.
+
+En iPhone el push necesita que la app esté agregada a la pantalla de inicio. En
+una pestaña de Safari no llega nada, y el interruptor lo dice en pantalla en vez
+de dejar a alguien confiando en un aviso que no va a existir.

@@ -14,7 +14,7 @@
  * por una conversación. Si alguna vez se filtra, se generan otras y las
  * suscripciones viejas dejan de servir -- molesto, pero no grave.
  */
-import { generateKeyPairSync, createPublicKey } from "node:crypto"
+import { generateKeyPairSync } from "node:crypto"
 
 const { privateKey, publicKey } = generateKeyPairSync("ec", { namedCurve: "prime256v1" })
 
@@ -23,7 +23,11 @@ const url64 = (buf) =>
   buf.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "")
 
 // La pública viaja como los 65 bytes crudos del punto: 0x04 seguido de X e Y.
-const jwk = createPublicKey(publicKey).export({ format: "jwk" })
+//
+// Se exporta directo y no con `createPublicKey(publicKey)`: eso último parece lo
+// natural pero lanza, porque cuando recibe un objeto de clave Node exige que sea
+// la privada. Aquí ya tenemos la pública, así que no hay nada que derivar.
+const jwk = publicKey.export({ format: "jwk" })
 const publica = url64(
   Buffer.concat([
     Buffer.from([4]),

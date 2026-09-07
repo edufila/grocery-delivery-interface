@@ -6,6 +6,7 @@ import { BadgeCheck, Check, Copy, Loader2 } from "lucide-react"
 
 import { formatMoney } from "@/lib/orders"
 import { formatBolivares } from "@/lib/pagos"
+import { avisarAlEquipo } from "@/lib/push-cliente"
 import { createClient } from "@/lib/supabase/client"
 
 /**
@@ -73,6 +74,16 @@ export function PagarPedido({
       )
       return
     }
+
+    /**
+     * Se despierta a admin y dev. Este es el punto donde el pedido se detiene
+     * esperando a una persona: hasta que alguien confirme el pago, no sale a
+     * buscar shopper. Que el aviso llegue tarde es que el cliente espere.
+     *
+     * No se aguarda la respuesta: el pago ya quedó reportado y la pantalla
+     * tiene que reflejarlo aunque el aviso falle.
+     */
+    void avisarAlEquipo("pago-reportado")
     router.refresh()
   }
 

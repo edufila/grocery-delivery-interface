@@ -7,6 +7,7 @@ import { BadgeCheck, Clock, Loader2, Search } from "lucide-react"
 import { AvisoPagos } from "@/components/admin/aviso-pagos"
 import { formatMoney, formatOrderDate, type Order } from "@/lib/orders"
 import { formatBolivares, ultimosDigitos } from "@/lib/pagos"
+import { avisarAlEquipo } from "@/lib/push-cliente"
 import { createClient } from "@/lib/supabase/client"
 
 export type PedidoPorCobrar = Pick<
@@ -83,6 +84,8 @@ export function ConciliacionPagos({ pedidos }: { pedidos: PedidoPorCobrar[] }) {
     setReferencia("")
     setMonto("")
 
+    if (r?.conciliado) void avisarAlEquipo("pedido-listo")
+
     if (r?.ya_estaba) setResultado("Ese pago ya estaba registrado y enganchado a un pedido.")
     else if (r?.conciliado)
       setResultado("Enganchado: el pedido quedó verificado y ya sale a buscar shopper.")
@@ -111,6 +114,9 @@ export function ConciliacionPagos({ pedidos }: { pedidos: PedidoPorCobrar[] }) {
       )
       return
     }
+
+    // Recién ahora el pedido existe para los shoppers: se les avisa.
+    void avisarAlEquipo("pedido-listo")
 
     /**
      * Se repite en pantalla qué quedó confirmado. Confirmar un pago libera un

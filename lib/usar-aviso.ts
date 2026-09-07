@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 
+import { borrarPush, sePuedeRecibirPush, suscribirPush } from "@/lib/push-cliente"
+
 /**
  * Un interruptor de avisos: suena, vibra y muestra una notificación.
  *
@@ -9,17 +11,34 @@ import { useCallback, useEffect, useRef, useState } from "react"
  * para los pagos reportados. Son la misma necesidad -- enterarse de algo sin
  * estar mirando la pantalla -- y antes estaba escrito dos veces.
  *
- * El aviso solo llega con la app abierta. Para que llegue cerrada hacen falta
- * notificaciones push, que necesitan servidor.
+ * Encenderlo hace dos cosas a la vez, y es a propósito: prepara el aviso en
+ * pantalla -- sonido, vibración, notificación -- y registra este navegador para
+ * recibir avisos con la app cerrada. Es la misma intención dicha una sola vez;
+ * pedir dos permisos para lo mismo solo consigue que la gente conceda uno.
+ *
+ * `cerrado` dice si lo segundo funcionó. No siempre funciona: en iPhone hace
+ * falta tener la app instalada en la pantalla de inicio, y quien no la instaló
+ * merece enterarse de por qué no le llega nada en vez de creer que sí.
  */
 export function useAviso(clave: string) {
   const [encendido, setEncendido] = useState(false)
   const [permiso, setPermiso] = useState<NotificationPermission | "no-soportado">("default")
+  const [cerrado, setCerrado] = useState(false)
   const audio = useRef<AudioContext | null>(null)
 
   useEffect(() => {
-    setEncendido(localStorage.getItem(clave) === "1")
+    const estaba = localStorage.getItem(clave) === "1"
+    setEncendido(estaba)
     setPermiso("Notification" in window ? Notification.permission : "no-soportado")
+
+    /**
+     * Si ya estaba encendido de antes, se vuelve a registrar. Las suscripciones
+     * de push caducan solas cada tanto y el navegador no avisa cuando pasa: sin
+     * esto, un shopper dejaría de recibir avisos sin enterarse nunca.
+     */
+    if (estaba && sePuedeRecibirPush()) {
+      void suscribirPush().then(setCerrado)
+    }
   }, [clave])
 
   /**
@@ -75,7 +94,9 @@ export function useAviso(clave: string) {
   const alternar = useCallback(async () => {
     if (encendido) {
       setEncendido(false)
+      setCerrado(false)
       localStorage.setItem(clave, "0")
+      void borrarPush()
       return
     }
 
@@ -100,7 +121,11 @@ export function useAviso(clave: string) {
     setEncendido(true)
     localStorage.setItem(clave, "1")
     sonar()
+
+    // Después de encender y no antes: sin permiso concedido no hay a qué
+    // suscribirse, y el permiso se acaba de pedir justo arriba.
+    setCerrado(await suscribirPush())
   }, [encendido, clave, sonar])
 
-  return { encendido, alternar, avisar, bloqueado: permiso === "denied" }
+  return { encendido, alternar, avisar, cerrado, bloqueado: permiso === "denied" }
 }

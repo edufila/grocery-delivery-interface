@@ -20,7 +20,7 @@ import { useAviso } from "@/lib/usar-aviso"
  */
 export function AvisoPagos() {
   const router = useRouter()
-  const { encendido, alternar, avisar, bloqueado } = useAviso("abasto:avisos-pagos")
+  const { encendido, alternar, avisar, cerrado, bloqueado } = useAviso("abasto:avisos-pagos")
   const refrescar = useRef<ReturnType<typeof setTimeout> | null>(null)
   /** Qué pagos ya se avisaron, para no repetir en cada cambio del pedido. */
   const avisados = useRef<Set<string>>(new Set())
@@ -83,6 +83,7 @@ export function AvisoPagos() {
       textoEncendido="Suena y vibra en cuanto alguien dice que pagó. Su pedido queda detenido hasta que lo confirmes."
       textoApagado="Ahora mismo hay que entrar a mirar si alguien reportó, y mientras tanto su pedido no sale."
       bloqueado={bloqueado}
+      cerrado={cerrado}
       onAlternar={() => void alternar()}
     />
   )

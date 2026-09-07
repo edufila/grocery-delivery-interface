@@ -13,6 +13,7 @@ export function InterruptorAviso({
   textoEncendido,
   textoApagado,
   bloqueado,
+  cerrado,
   onAlternar,
 }: {
   titulo: string
@@ -21,6 +22,8 @@ export function InterruptorAviso({
   /** Aquí conviene decir qué se pierde estando apagado, no repetir el título. */
   textoApagado: string
   bloqueado: boolean
+  /** Si este navegador quedó registrado para recibir avisos con la app cerrada. */
+  cerrado?: boolean
   onAlternar: () => void
 }) {
   return (
@@ -62,6 +65,22 @@ export function InterruptorAviso({
           />
         </button>
       </div>
+
+      {/* La diferencia entre "suena mientras miras" y "suena aunque cierres la
+          app" es la única que le importa a quien está esperando un pedido. En
+          iPhone depende de tener la app instalada en la pantalla de inicio, y
+          callarlo dejaría a alguien confiando en un aviso que no va a llegar. */}
+      {encendido && !bloqueado && (
+        <p
+          className={`mt-3 rounded-xl px-3 py-2.5 text-sm leading-relaxed ${
+            cerrado ? "bg-emerald-50 text-emerald-800" : "bg-gray-50 text-gray-600"
+          }`}
+        >
+          {cerrado
+            ? "Te llega aunque cierres la app."
+            : "Solo te llega con esta pantalla abierta. Para que llegue cerrada, agrega la app a tu pantalla de inicio y vuelve a encender esto."}
+        </p>
+      )}
 
       {encendido && bloqueado && (
         <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2.5 text-sm leading-relaxed text-amber-800">
