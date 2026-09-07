@@ -82,9 +82,24 @@ else falla("Google deshabilitado. Authentication → Sign In / Providers.")
 if (settings.external?.email) ok("Email habilitado.")
 else falla("Email deshabilitado. Authentication → Sign In / Providers.")
 
+/**
+ * El dominio no se escribe aquí: ya cambió una vez -- de
+ * grocery-delivery-interface a abastoweb -- y este archivo se quedó nombrando
+ * el viejo, mandando a permitir una URL que ya no existe. Sale de la variable
+ * de entorno, la misma que usa la app para armar sus enlaces absolutos.
+ */
+const sitio =
+  env.NEXT_PUBLIC_SITE_URL ??
+  (env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${env.VERCEL_PROJECT_PRODUCTION_URL}` : null)
+
 warn("Las URLs de callback tienen que estar permitidas en URL Configuration:")
 console.log("        http://localhost:3000/auth/callback")
-console.log("        https://grocery-delivery-interface.vercel.app/auth/callback")
+if (sitio) {
+  console.log(`        ${sitio}/auth/callback`)
+} else {
+  console.log("        https://TU-DOMINIO/auth/callback")
+  console.log("        (sale de NEXT_PUBLIC_SITE_URL; en Vercel lo pone el propio despliegue)")
+}
 
 // ------------------------------------------------------------ esquema
 

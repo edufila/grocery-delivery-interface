@@ -1,6 +1,7 @@
 import { DeliveryTopBar } from "@/components/delivery-top-bar"
 import { SearchBar } from "@/components/search-bar"
 import { NearbyStores } from "@/components/nearby-stores"
+import { PedidoEnCurso } from "@/components/pedido-en-curso"
 import { BottomNav } from "@/components/bottom-nav"
 import type { Store } from "@/lib/admin"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
@@ -32,6 +33,8 @@ export default async function HomePage() {
           Las categorías viven dentro del catálogo de cada uno, y en Explorar
           para buscar en todos a la vez. */}
       <div className="pb-28">
+        {/* Quien espera un pedido abre la app justo por eso: va primero. */}
+        <PedidoEnCurso />
         <NearbyStores stores={stores} />
       </div>
 
