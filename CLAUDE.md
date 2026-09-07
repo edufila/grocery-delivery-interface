@@ -58,6 +58,14 @@ pnpm check:supabase    # conexión, proveedores de login, contenido
 Supabase concede `execute` a `anon` por defecto en cada función nueva. Toda
 función que no revoque después queda abierta al mundo.
 
+**Con una excepción que ya mordió**: una función que se usa DENTRO de una
+política de RLS tiene que poder ejecutarla todo rol al que la política le
+aplique, `anon` incluido. La política se evalúa con el rol de quien consulta, no
+con el del dueño de la tabla, así que revocarla no cierra nada -- la tabla ya
+está cerrada por la política misma -- y en cambio convierte el bloqueo limpio en
+un `permission denied for function ...` que además dice el nombre. Pasó con
+`pago_resuelto` en la 0037 y lo arregló la 0038.
+
 ## Sobre las claves
 
 La clave publicable de Supabase **viaja al navegador y está bien**: se ve con
