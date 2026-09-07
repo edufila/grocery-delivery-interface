@@ -1,0 +1,28 @@
+-- Corrige un efecto de la 0037 que se vio midiendo contra la base.
+--
+-- La 0037 metió `pago_resuelto` dentro de las políticas de `orders` y de
+-- `order_items`, y le revocó el permiso de ejecución a `anon` por costumbre.
+--
+-- El problema es que una política de RLS se evalúa CON EL ROL DE QUIEN
+-- CONSULTA, no con el del dueño de la tabla. Así que cuando un anónimo pedía
+-- cualquier cosa de `orders`, Postgres intentaba evaluar la política, no podía
+-- llamar a la función, y respondía:
+--
+--   401  permission denied for function pago_resuelto
+--
+-- en vez del bloqueo limpio de siempre. Los datos nunca estuvieron expuestos
+-- -- el anónimo seguía sin ver ni una fila -- pero el mensaje le decía el
+-- nombre de una función interna, y sobre todo dejaba la lectura de la tabla
+-- dependiendo de un permiso que no tenía por qué estar en el medio.
+--
+-- La regla que queda: una función que se usa DENTRO de una política tiene que
+-- poder ejecutarla todo rol al que la política le aplique. Revocarla no cierra
+-- nada, porque la tabla ya está cerrada por la política misma.
+--
+-- Y aquí no hay nada que reservar: `pago_resuelto` recibe un booleano y una
+-- fecha, no toca ninguna tabla, y devuelve un booleano. Quien la llame con sus
+-- propios valores aprende exactamente lo que ya sabía.
+--
+-- Correr entero en Supabase → SQL Editor. Es idempotente.
+
+grant execute on function public.pago_resuelto(boolean, timestamptz) to anon;

@@ -5,7 +5,7 @@
  *   node scripts/auditar-tablas.mjs
  *
  * Hermano de auditar-funciones.mjs, y por el mismo motivo: mide contra la base
- * en vez de leer las migraciones. Un archivo puede decir que una política
+ * en vez de leer las migraciónes. Un archivo puede decir que una política
  * existe y la base tener otra cosa -- ya nos pasó con deliver_order.
  *
  * Lo que se espera de cada tabla está escrito abajo, así que el script no solo
@@ -41,6 +41,11 @@ const TABLAS = [
   { nombre: "payments_received", lee: "nada", porque: "son movimientos de dinero" },
   { nombre: "favorites", lee: "nada", porque: "es de cada cuenta" },
   { nombre: "product_favorites", lee: "nada", porque: "es lo que compra cada quien" },
+  {
+    nombre: "push_subscriptions",
+    lee: "nada",
+    porque: "una dirección de push ajena permite mandarle avisos a otro",
+  },
 ]
 
 function leerEnv() {
@@ -154,6 +159,49 @@ for (const nombre of ["orders", "profiles", "addresses", "payments_received", "p
     console.log(`  \x1b[31mFUGA\x1b[0m ${nombre.padEnd(22)} dejó insertar sin sesión`)
   } else {
     console.log(`  \x1b[32mok\x1b[0m   ${nombre.padEnd(22)} rechaza (HTTP ${r.status})`)
+  }
+}
+
+/**
+ * Que la columna exista de verdad, no solo en el archivo de la migración.
+ *
+ * Es el error que más caro salió en este proyecto: el código se despliega solo
+ * al hacer push y las migraciónes se corren a mano, así que entre una cosa y la
+ * otra hay un rato en el que la columna no existe. PostgREST no rechaza esa
+ * columna: rechaza la consulta ENTERA, y una pantalla se queda vacía sin decir
+ * por qué.
+ *
+ * Se pregunta pidiendo la columna, no leyendo el esquema: el esquema de
+ * PostgREST solo se lo entrega a una clave secreta, y aquí no hay ninguna ni la
+ * va a haber. Pedir una columna que no existe da 400 y lo dice; pedir una que
+ * sí existe da cualquier otra cosa -- vacío, o denegado por la política -- y
+ * eso alcanza, porque lo que se esta comprobando es si la migración entro, no
+ * si se puede leer.
+ */
+console.log("\nColumnas que el código ya usa\n")
+
+const ESPERADAS = {
+  orders: ["payment_required", "payment_verified_at", "amount_ves", "rate_ves"],
+  products: ["in_stock"],
+  payment_methods: ["currency"],
+  settings: ["rate_ves"],
+  push_subscriptions: ["endpoint", "user_id", "p256dh", "auth"],
+}
+
+for (const [tabla, columnas] of Object.entries(ESPERADAS)) {
+  const faltan = []
+
+  for (const columna of columnas) {
+    const r = await fetch(`${url}/rest/v1/${tabla}?select=${columna}&limit=1`, { headers: cab })
+    if (r.status === 400) faltan.push(columna)
+  }
+
+  if (faltan.length > 0) {
+    problemas++
+    console.log(`  \x1b[31mFALTA\x1b[0m ${tabla.padEnd(20)} sin ${faltan.join(", ")}`)
+    console.log("         Falta correr una migración: la consulta que la pida falla entera.")
+  } else {
+    console.log(`  \x1b[32mok\x1b[0m   ${tabla.padEnd(20)} ${columnas.length} al día`)
   }
 }
 

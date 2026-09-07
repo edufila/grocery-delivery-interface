@@ -41,6 +41,8 @@ const FUNCIONES = [
   ["record_payment", { p_reference: "1234" }],
   ["conciliar_pedido", { p_order_id: CERO }],
   ["referencias_coinciden", { p_reportada: "1234", p_recibida: "1234" }],
+  ["avisos_pendientes", {}],
+  ["pago_resuelto", { p_required: true, p_verified: null }],
 ]
 
 function leerEnv() {
