@@ -10,11 +10,16 @@ proyecto de Vercel igual — que hoy sirve en **abastoweb.vercel.app**.
 ## Lo primero de cada sesión, sin excepción
 
 ```bash
-pnpm al-dia
+node scripts/al-dia.mjs
 ```
 
 Dice si esta copia está al día con GitHub y qué hacer si no. **Si sale con
-error, no edites nada todavía.** Somos cuatro tocando el mismo repo -- dos
+error, no edites nada todavía.**
+
+Se invoca con `node` y no con `pnpm al-dia` -- que también sirve -- porque
+`pnpm` no está instalado en todas las máquinas del proyecto, y un primer paso
+que falla por eso es un primer paso que nadie vuelve a correr. Da igual desde
+qué carpeta se llame: mira el repo donde vive el script, no donde estés parado. Somos cuatro tocando el mismo repo -- dos
 hermanos y el Claude de cada uno -- y nadie arranca sabiendo qué hizo el otro
 hace media hora.
 
@@ -32,7 +37,7 @@ se queda sin subir es trabajo que el otro va a pisar sin saber.
 | bajar el ZIP de GitHub encima de la carpeta | un ZIP es una foto vieja: revierte todo lo que no estaba en ella |
 
 Ese último es el que ya mordió. **La carpeta se clona, no se descarga.** Si
-`pnpm al-dia` dice que esto no es un repositorio de git, es exactamente eso lo
+el comando dice que esto no es un repositorio de git, es exactamente eso lo
 que pasó, y el script explica cómo salir.
 
 Cuando el push rebota porque las dos copias se separaron, la salida es

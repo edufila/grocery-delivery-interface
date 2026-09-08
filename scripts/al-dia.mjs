@@ -20,6 +20,19 @@
  * Sale con código 1 si no se puede trabajar, para que sirva de portón.
  */
 import { execSync } from "node:child_process"
+import { dirname, resolve } from "node:path"
+import { fileURLToPath } from "node:url"
+
+/**
+ * El repo es la carpeta de arriba de `scripts/`, no desde donde se invoque.
+ *
+ * Sin esto, llamarlo con la ruta completa desde otra carpeta -- que es
+ * justo como se llama cuando uno no sabe dónde está parado -- respondía
+ * "esto no es un repositorio, vuelve a clonar" con todo en orden. Seguir
+ * ese consejo clona encima del trabajo de alguien: el script diría la
+ * mentira más cara que puede decir.
+ */
+const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 
 const V = "\x1b[32m"
 const R = "\x1b[31m"
@@ -30,7 +43,11 @@ const X = "\x1b[0m"
 /** Devuelve la salida, o null si el comando falla. No lanza. */
 function git(orden) {
   try {
-    return execSync(`git ${orden}`, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim()
+    return execSync(`git ${orden}`, {
+      cwd: REPO,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    }).trim()
   } catch {
     return null
   }
