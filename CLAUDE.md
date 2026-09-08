@@ -14,14 +14,14 @@ node scripts/al-dia.mjs
 ```
 
 Dice si esta copia está al día con GitHub y qué hacer si no. **Si sale con
-error, no edites nada todavía.**
+error, no edites nada todavía.** Somos cuatro tocando el mismo repo -- dos
+hermanos y el Claude de cada uno -- y nadie arranca sabiendo qué hizo el otro
+hace media hora.
 
 Se invoca con `node` y no con `pnpm al-dia` -- que también sirve -- porque
 `pnpm` no está instalado en todas las máquinas del proyecto, y un primer paso
 que falla por eso es un primer paso que nadie vuelve a correr. Da igual desde
-qué carpeta se llame: mira el repo donde vive el script, no donde estés parado. Somos cuatro tocando el mismo repo -- dos
-hermanos y el Claude de cada uno -- y nadie arranca sabiendo qué hizo el otro
-hace media hora.
+qué carpeta se llame: mira el repo donde vive el script, no donde estés parado.
 
 Al terminar algo, subirlo: `git add -A && git commit && git push`. Trabajo que
 se queda sin subir es trabajo que el otro va a pisar sin saber.
