@@ -144,11 +144,14 @@ export function DeliveryTopBar() {
   return (
     <>
       <header className="pt-barra-estado border-b border-gray-100 bg-white/90 backdrop-blur-md">
-        <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3">
+        <div className="mx-auto flex max-w-md items-center gap-1 px-2 py-3">
+          {/* Arriba a la izquierda, como en Instacart: es el atajo más usado,
+              así que va primero, antes que la dirección. */}
+          <CartIndicator />
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="flex min-w-0 items-center gap-2 text-left"
+            className="flex min-w-0 flex-1 items-center gap-2 px-2 text-left"
             aria-label="Cambiar dirección de entrega"
             aria-expanded={open}
           >
@@ -165,10 +168,7 @@ export function DeliveryTopBar() {
               </span>
             </span>
           </button>
-          <div className="flex shrink-0 items-center gap-0.5">
-            <CartIndicator />
-            <ProfileAvatar />
-          </div>
+          <ProfileAvatar />
         </div>
       </header>
 

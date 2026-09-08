@@ -1,5 +1,6 @@
 import { DeliveryTopBar } from "@/components/delivery-top-bar"
 import { SearchBar } from "@/components/search-bar"
+import { CategoryShortcuts } from "@/components/category-shortcuts"
 import { NearbyStores } from "@/components/nearby-stores"
 import { PedidoEnCurso } from "@/components/pedido-en-curso"
 import { BottomNav } from "@/components/bottom-nav"
@@ -29,9 +30,11 @@ export default async function HomePage() {
         </div>
       </div>
 
-      {/* Sin categorías de productos aquí: el inicio es para elegir abasto.
-          Las categorías viven dentro del catálogo de cada uno, y en Explorar
-          para buscar en todos a la vez. */}
+      {/* Estas son categorías de tipo de negocio (víveres, restaurante...),
+          no de producto: esas siguen viviendo dentro del catálogo de cada
+          abasto, y en Explorar para buscar en todos a la vez. */}
+      <CategoryShortcuts />
+
       <div className="pb-28">
         {/* Quien espera un pedido abre la app justo por eso: va primero. */}
         <PedidoEnCurso />
