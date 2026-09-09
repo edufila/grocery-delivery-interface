@@ -5,6 +5,7 @@ import type { Store } from "@/lib/admin"
 import { APP_NAME } from "@/lib/brand"
 import { toCategory } from "@/lib/categories"
 import { fetchProducts } from "@/lib/products"
+import { fetchSettings } from "@/lib/settings"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/server"
 
@@ -39,7 +40,10 @@ export default async function CatalogoPage({
   if (!store || !store.active) notFound()
 
   // Se cargan en el servidor para que la grilla llegue armada en el HTML.
-  const products = await fetchProducts(supabase, store.id)
+  const [products, settings] = await Promise.all([
+    fetchProducts(supabase, store.id),
+    fetchSettings(supabase),
+  ])
 
   return (
     <ProductCatalog
@@ -50,6 +54,7 @@ export default async function CatalogoPage({
       initialQuery={params.q ?? ""}
       initialCategory={toCategory(params.categoria)}
       initialWholesaleOnly={params.mayorista === "1"}
+      tasaVes={settings?.rate_ves ?? null}
     />
   )
 }

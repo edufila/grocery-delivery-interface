@@ -3,6 +3,8 @@
 import Image from "next/image"
 import { Minus, Plus, Trash2 } from "lucide-react"
 
+import { bsEquivalent, formatBolivares } from "@/lib/pagos"
+
 export type CartLine = {
   id: string
   name: string
@@ -17,9 +19,10 @@ type Props = {
   onInc: (id: string) => void
   onDec: (id: string) => void
   onRemove: (id: string) => void
+  tasaVes?: number | null
 }
 
-export function CartItemList({ items, onInc, onDec, onRemove }: Props) {
+export function CartItemList({ items, onInc, onDec, onRemove, tasaVes }: Props) {
   return (
     <section aria-labelledby="cart-items-heading" className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
       <h2 id="cart-items-heading" className="mb-4 text-base font-semibold text-gray-900">
@@ -46,6 +49,11 @@ export function CartItemList({ items, onInc, onDec, onRemove }: Props) {
               <p className="truncate text-sm font-medium text-gray-900">{item.name}</p>
               <p className="truncate text-xs text-gray-500">{item.presentation}</p>
               <p className="mt-0.5 text-sm font-semibold text-emerald-600">${item.price.toFixed(2)}</p>
+              {bsEquivalent(item.price, tasaVes ?? null) != null && (
+                <p className="text-xs text-gray-500">
+                  Bs {formatBolivares(bsEquivalent(item.price, tasaVes ?? null)!)}
+                </p>
+              )}
             </div>
 
             <div className="flex flex-col items-end gap-2">

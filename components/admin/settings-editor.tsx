@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { Check, Loader2 } from "lucide-react"
 
 import type { Settings } from "@/lib/admin"
+import { formatOrderDate } from "@/lib/orders"
 import { createClient } from "@/lib/supabase/client"
 
 export function SettingsEditor({ settings }: { settings: Settings }) {
@@ -20,9 +21,16 @@ export function SettingsEditor({ settings }: { settings: Settings }) {
     setError("")
     setSaved(false)
 
+    // Escribirla a mano queda marcada como tal: la corrida automática la va a
+    // pisar de nuevo mañana, pero hasta entonces manda esta.
     const { error: saveError } = await createClient()
       .from("settings")
-      .update({ service_fee: serviceFee, rate_ves: tasa > 0 ? tasa : null })
+      .update({
+        service_fee: serviceFee,
+        rate_ves: tasa > 0 ? tasa : null,
+        rate_ves_updated_at: tasa > 0 ? new Date().toISOString() : null,
+        rate_ves_source: tasa > 0 ? "manual" : null,
+      })
       .eq("id", "global")
 
     setBusy(false)
@@ -78,9 +86,17 @@ export function SettingsEditor({ settings }: { settings: Settings }) {
       </label>
 
       <p className="mt-2 text-xs leading-relaxed text-gray-500">
-        De qué fuente la sacas es decisión tuya. Sin tasa cargada, el pago móvil no se le ofrece
-        al cliente: no habría con qué decirle cuántos bolívares pagar.
+        Se actualiza sola todos los días con la tasa oficial del BCV. Si escribes un número aquí,
+        ese manda hasta que la próxima corrida automática lo pise de nuevo. Sin tasa cargada, el
+        pago móvil no se le ofrece al cliente: no habría con qué decirle cuántos bolívares pagar.
       </p>
+
+      {settings.rate_ves_updated_at && (
+        <p className="mt-1 text-xs leading-relaxed text-gray-400">
+          Cargada {settings.rate_ves_source === "manual" ? "a mano" : "por el BCV"} el{" "}
+          {formatOrderDate(settings.rate_ves_updated_at)}.
+        </p>
+      )}
 
       {tasa > 0 && (
         <p className="mt-2 text-xs leading-relaxed text-gray-500">

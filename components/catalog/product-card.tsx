@@ -2,6 +2,7 @@
 
 import { Plus, Minus, Star } from "lucide-react"
 
+import { bsEquivalent, formatBolivares } from "@/lib/pagos"
 import type { Product } from "@/lib/products"
 
 type Props = {
@@ -12,6 +13,8 @@ type Props = {
   /** Sin sesión no se ofrece: no habría dónde guardarlo. */
   esFavorito?: boolean
   onFavorito?: (id: string) => void
+  /** Sin tasa cargada no se muestra la referencia en bolívares. */
+  tasaVes?: number | null
 }
 
 export function ProductCard({
@@ -21,7 +24,9 @@ export function ProductCard({
   onRemove,
   esFavorito,
   onFavorito,
+  tasaVes,
 }: Props) {
+  const bs = bsEquivalent(product.price, tasaVes ?? null)
   const inCart = quantity > 0
   // Agotado no es lo mismo que quitado: sigue en la grilla, apagado, para que
   // se sepa que el abasto lo vende y valga la pena volver.
@@ -80,8 +85,15 @@ export function ProductCard({
         <p className="mt-0.5 text-xs text-gray-500">{product.unit}</p>
 
         <div className="mt-auto flex items-end justify-between pt-3">
-          <p className={`text-xl font-bold ${agotado ? "text-gray-400" : "text-gray-900"}`}>
-            ${product.price.toFixed(2)}
+          <p className={agotado ? "text-gray-400" : "text-gray-900"}>
+            <span className="block text-xl font-bold leading-tight">
+              ${product.price.toFixed(2)}
+            </span>
+            {bs != null && (
+              <span className="block text-xs font-medium text-gray-500">
+                Bs {formatBolivares(bs)}
+              </span>
+            )}
           </p>
 
           {agotado ? (

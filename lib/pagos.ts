@@ -81,6 +81,16 @@ export function formatBolivares(monto: number) {
 }
 
 /**
+ * El equivalente en bolívares de un precio en dólares, o null sin tasa
+ * cargada. Los precios de catálogo siguen en dólares -- esto es solo la
+ * referencia que se muestra al lado, no cambia cómo se cobra.
+ */
+export function bsEquivalent(usd: number, tasaVes: number | null) {
+  if (!tasaVes || tasaVes <= 0) return null
+  return usd * tasaVes
+}
+
+/**
  * Los últimos dígitos de una referencia, que es lo que el cliente escribe y lo
  * que se busca en el banco.
  *

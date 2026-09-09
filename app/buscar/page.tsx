@@ -7,6 +7,8 @@ import { Buscador } from "@/components/buscar/buscador"
 import { CategoriaChips } from "@/components/buscar/categoria-chips"
 import { pageTitle } from "@/lib/brand"
 import { toCategory, type Category } from "@/lib/categories"
+import { bsEquivalent, formatBolivares } from "@/lib/pagos"
+import { fetchSettings } from "@/lib/settings"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/server"
 
@@ -55,6 +57,10 @@ export default async function BuscarPage({
   let resultados: Fila[] = []
   let tiendas = new Map<string, string>()
   let habituales: Fila[] = []
+
+  const tasaVes = isSupabaseConfigured
+    ? ((await fetchSettings(await createClient()))?.rate_ves ?? null)
+    : null
 
   if (isSupabaseConfigured && hayFiltro) {
     const supabase = await createClient()
@@ -172,8 +178,15 @@ export default async function BuscarPage({
                           {tiendas.get(fila.store_id)}
                         </span>
                       </span>
-                      <span className="shrink-0 text-sm font-semibold tabular-nums text-gray-900">
-                        ${Number(fila.price).toFixed(2)}
+                      <span className="shrink-0 text-right">
+                        <span className="block text-sm font-semibold tabular-nums text-gray-900">
+                          ${Number(fila.price).toFixed(2)}
+                        </span>
+                        {bsEquivalent(Number(fila.price), tasaVes) != null && (
+                          <span className="block text-xs tabular-nums text-gray-500">
+                            Bs {formatBolivares(bsEquivalent(Number(fila.price), tasaVes)!)}
+                          </span>
+                        )}
                       </span>
                     </Link>
                   </li>
@@ -236,8 +249,15 @@ export default async function BuscarPage({
                           </span>
                           <span className="block text-sm text-gray-500">{fila.unit}</span>
                         </span>
-                        <span className="shrink-0 text-sm font-semibold tabular-nums text-gray-900">
-                          ${Number(fila.price).toFixed(2)}
+                        <span className="shrink-0 text-right">
+                          <span className="block text-sm font-semibold tabular-nums text-gray-900">
+                            ${Number(fila.price).toFixed(2)}
+                          </span>
+                          {bsEquivalent(Number(fila.price), tasaVes) != null && (
+                            <span className="block text-xs tabular-nums text-gray-500">
+                              Bs {formatBolivares(bsEquivalent(Number(fila.price), tasaVes)!)}
+                            </span>
+                          )}
                         </span>
                       </Link>
                     </li>

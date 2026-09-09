@@ -13,7 +13,7 @@ import { PaymentMethods } from "./payment-methods"
 import { OrderSummary } from "./order-summary"
 import { useCart } from "@/lib/cart"
 import { nombreDesdeId } from "@/lib/carrito"
-import { fetchMetodosPago, sePuedeOfrecer, type MetodoPago } from "@/lib/pagos"
+import { bsEquivalent, fetchMetodosPago, formatBolivares, sePuedeOfrecer, type MetodoPago } from "@/lib/pagos"
 import type { Address } from "@/lib/orders"
 import { createClient } from "@/lib/supabase/client"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
@@ -361,7 +361,13 @@ export function CheckoutView() {
             )}
 
             <DeliveryCard session={session} />
-            <CartItemList items={items} onInc={add} onDec={removeOne} onRemove={removeAll} />
+            <CartItemList
+              items={items}
+              onInc={add}
+              onDec={removeOne}
+              onRemove={removeAll}
+              tasaVes={tasaVes}
+            />
             <section className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
               <label htmlFor="nota" className="block text-base font-semibold text-gray-900">
                 Indicaciones para la entrega
@@ -388,7 +394,12 @@ export function CheckoutView() {
               tasaVes={tasaVes}
               total={total}
             />
-            <OrderSummary subtotal={subtotal} serviceFee={serviceFee} deliveryFee={deliveryFee} />
+            <OrderSummary
+              subtotal={subtotal}
+              serviceFee={serviceFee}
+              deliveryFee={deliveryFee}
+              tasaVes={tasaVes}
+            />
             {error && (
               <p role="alert" className="text-sm text-rose-600">
                 {error}
@@ -413,7 +424,13 @@ export function CheckoutView() {
                 <ShoppingBag className="h-5 w-5" aria-hidden="true" />
               )}
               {placing ? "Registrando..." : "Realizar pedido"}
-              {!placing && <span className="tabular-nums">· ${total.toFixed(2)}</span>}
+              {!placing && (
+                <span className="tabular-nums">
+                  · ${total.toFixed(2)}
+                  {bsEquivalent(total, tasaVes) != null &&
+                    ` (Bs ${formatBolivares(bsEquivalent(total, tasaVes)!)})`}
+                </span>
+              )}
             </button>
           </div>
         </div>

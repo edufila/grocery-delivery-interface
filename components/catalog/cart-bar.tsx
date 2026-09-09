@@ -3,12 +3,16 @@
 import Link from "next/link"
 import { ShoppingCart } from "lucide-react"
 
+import { bsEquivalent, formatBolivares } from "@/lib/pagos"
+
 type Props = {
   count: number
   total: number
+  tasaVes?: number | null
 }
 
-export function CartBar({ count, total }: Props) {
+export function CartBar({ count, total, tasaVes }: Props) {
+  const bs = bsEquivalent(total, tasaVes ?? null)
   const visible = count > 0
 
   return (
@@ -36,11 +40,16 @@ export function CartBar({ count, total }: Props) {
           </span>
         </span>
 
-        <span className="flex items-center gap-2 text-sm font-bold">
-          Ver Carrito
-          <span className="rounded-lg bg-white/20 px-2 py-1 tabular-nums">
-            ${total.toFixed(2)}
+        <span className="flex flex-col items-end gap-0.5">
+          <span className="flex items-center gap-2 text-sm font-bold">
+            Ver Carrito
+            <span className="rounded-lg bg-white/20 px-2 py-1 tabular-nums">
+              ${total.toFixed(2)}
+            </span>
           </span>
+          {bs != null && (
+            <span className="text-xs font-medium text-white/80">Bs {formatBolivares(bs)}</span>
+          )}
         </span>
       </Link>
     </div>

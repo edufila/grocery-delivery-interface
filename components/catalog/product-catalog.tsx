@@ -18,6 +18,7 @@ type Props = {
   initialQuery?: string
   initialCategory?: Category
   initialWholesaleOnly?: boolean
+  tasaVes?: number | null
 }
 
 export function ProductCatalog({
@@ -28,6 +29,7 @@ export function ProductCatalog({
   initialQuery = "",
   initialCategory = "Todos",
   initialWholesaleOnly = false,
+  tasaVes,
 }: Props) {
   const { quantities, count, subtotal, add, removeOne } = useCart()
   const favoritos = useFavoritos()
@@ -112,13 +114,14 @@ export function ProductCatalog({
                 onRemove={removeOne}
                 esFavorito={favoritos.ids.has(product.id)}
                 onFavorito={favoritos.haySesion ? favoritos.alternar : undefined}
+                tasaVes={tasaVes}
               />
             ))}
           </div>
         )}
       </main>
 
-      <CartBar count={count} total={subtotal} />
+      <CartBar count={count} total={subtotal} tasaVes={tasaVes} />
     </div>
   )
 }

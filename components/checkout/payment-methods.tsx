@@ -88,7 +88,9 @@ export function PaymentMethods({ value, onChange, metodos, sinSesion, tasaVes, t
               maximumFractionDigits: 2,
             })}
           </span>
-          . El monto exacto sale al confirmar.
+          . El monto exacto sale al confirmar, a la tasa BCV de hoy: Bs.{" "}
+          {tasaVes.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} por
+          dólar.
         </p>
       )}
 

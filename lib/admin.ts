@@ -31,6 +31,10 @@ export type Settings = {
   service_fee: number
   /** Bolívares por dólar. Nula mientras no se cargue. */
   rate_ves: number | null
+  /** Cuándo quedó cargada la tasa vigente, sea automática o a mano. */
+  rate_ves_updated_at: string | null
+  /** 'bcv' si la trajo sola la corrida diaria, 'manual' si la escribió un admin. */
+  rate_ves_source: "bcv" | "manual" | null
 }
 
 /** Los campos del catálogo del inicio que se editan como texto libre. */

@@ -5,12 +5,13 @@ import { useEffect, useState } from "react"
 import { Clock, Bike, BadgePercent, Star } from "lucide-react"
 
 import type { Store } from "@/lib/admin"
+import { bsEquivalent, formatBolivares } from "@/lib/pagos"
 import { createClient } from "@/lib/supabase/client"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 
 const FAVORITES_KEY = "abastos-favoritos"
 
-export function NearbyStores({ stores }: { stores: Store[] }) {
+export function NearbyStores({ stores, tasaVes }: { stores: Store[]; tasaVes?: number | null }) {
   const [favorites, setFavorites] = useState<string[]>([])
   const [userId, setUserId] = useState<string | null>(null)
 
@@ -163,6 +164,12 @@ export function NearbyStores({ stores }: { stores: Store[] }) {
                   <span className="flex items-center gap-1.5">
                     <Bike className="h-4 w-4 text-gray-400" aria-hidden="true" />
                     Envío ${Number(store.delivery_fee).toFixed(2)}
+                    {(() => {
+                      const bs = bsEquivalent(Number(store.delivery_fee), tasaVes ?? null)
+                      return bs != null ? (
+                        <span className="text-gray-400"> · Bs {formatBolivares(bs)}</span>
+                      ) : null
+                    })()}
                   </span>
                 </div>
 
