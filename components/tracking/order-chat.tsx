@@ -134,7 +134,10 @@ export function OrderChat({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="relative mt-3 inline-flex min-h-11 items-center gap-2 rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition active:scale-[0.98]"
+        // El 600 y no el 500: con blanco encima, el 500 se queda en 3,5 a 1 y
+        // el mínimo para leer texto son 4,5. Es además el verde de todos los
+        // demás botones de la app.
+        className="relative mt-3 inline-flex min-h-11 items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition active:scale-[0.98]"
       >
         <MessageCircle className="h-4 w-4" aria-hidden="true" />
         {title}
