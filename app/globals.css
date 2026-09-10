@@ -45,6 +45,68 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/**
+ * Los colores de Abasto.
+ *
+ * Toda la app está pintada con cuatro escalas de Tailwind -- gris, emerald,
+ * amber y rose -- usadas tal como vienen. Redefinirlas aquí retiñe las más de
+ * mil clases de color de una vez, sin tocar ni un componente: `bg-emerald-600`
+ * se sigue escribiendo igual y sale distinto.
+ *
+ * QUÉ ESTABA MAL. El gris de Tailwind tira a azul (matiz 260) y el emerald a
+ * menta fría (163). Juntos daban una app correcta y helada, de planilla de
+ * cálculo. Para comida eso juega en contra: lo frío no da hambre.
+ *
+ * QUÉ SE HIZO. Los grises pasan a matiz cálido (~80), que es el del papel y el
+ * cartón -- un abasto, no un tablero. Y el verde se mueve de menta a verde de
+ * hoja (155) con más saturación, para que el botón de comprar se vea vivo.
+ *
+ * Son cambios chicos en número y grandes en efecto: nadie va a decir "cambió el
+ * matiz", van a decir que se ve mejor.
+ */
+@theme {
+  /* Grises cálidos. La croma se mantiene baja a propósito: pasada 0.02 el gris
+     deja de leerse como gris y empieza a verse sucio. */
+  --color-gray-50: oklch(0.985 0.003 85);
+  --color-gray-100: oklch(0.967 0.005 85);
+  --color-gray-200: oklch(0.925 0.008 85);
+  --color-gray-300: oklch(0.869 0.011 83);
+  --color-gray-400: oklch(0.708 0.016 80);
+  --color-gray-500: oklch(0.556 0.018 78);
+  --color-gray-600: oklch(0.448 0.019 76);
+  --color-gray-700: oklch(0.374 0.018 74);
+  --color-gray-800: oklch(0.28 0.016 72);
+  --color-gray-900: oklch(0.214 0.014 70);
+  --color-gray-950: oklch(0.136 0.012 70);
+
+  /* Verde de hoja. El 600 es el de los botones, así que es el que manda. */
+  --color-emerald-50: oklch(0.975 0.021 156);
+  --color-emerald-100: oklch(0.946 0.045 156);
+  --color-emerald-200: oklch(0.898 0.079 156);
+  --color-emerald-300: oklch(0.833 0.113 156);
+  --color-emerald-400: oklch(0.745 0.14 155);
+  --color-emerald-500: oklch(0.679 0.152 154);
+  --color-emerald-600: oklch(0.588 0.148 153);
+  --color-emerald-700: oklch(0.497 0.126 153);
+  --color-emerald-800: oklch(0.415 0.103 153);
+  --color-emerald-900: oklch(0.352 0.085 154);
+  --color-emerald-950: oklch(0.232 0.058 155);
+
+  /* Ámbar: es el color de "esto está esperando por ti" -- un pago sin
+     confirmar, un pedido detenido. Se corre hacia el naranja para que apure un
+     poco más que el amarillo, sin llegar a alarma. */
+  --color-amber-50: oklch(0.982 0.026 78);
+  --color-amber-100: oklch(0.958 0.06 78);
+  --color-amber-200: oklch(0.917 0.111 76);
+  --color-amber-300: oklch(0.864 0.152 73);
+  --color-amber-400: oklch(0.805 0.17 66);
+  --color-amber-500: oklch(0.744 0.171 60);
+  --color-amber-600: oklch(0.66 0.176 51);
+  --color-amber-700: oklch(0.556 0.152 45);
+  --color-amber-800: oklch(0.47 0.123 44);
+  --color-amber-900: oklch(0.408 0.1 45);
+}
+
 :root {
   color-scheme: light;
   --background: oklch(1 0 0);
