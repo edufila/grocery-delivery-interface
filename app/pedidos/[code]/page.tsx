@@ -78,11 +78,18 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
     .eq("id", order.payment_method)
     .maybeSingle<{ instructions: string | null; needs_reference: boolean }>()
 
+  /**
+   * Si este pedido espera pago lo dice el pedido, no el método.
+   *
+   * Antes se miraba `needs_reference` del método tal como está hoy. Eso deja
+   * dos trampas, porque la base decide con `payment_required`, que se guardó al
+   * pedir y ya no cambia: si alguien apaga "pide referencia" en Pago Móvil, un
+   * cliente con el pedido detenido pierde la pantalla de pagar y se queda
+   * trabado sin forma de reportar nada; y al revés, un pedido en efectivo
+   * empezaría a pedir pago por un cambio de configuración que no le tocaba.
+   */
   const hayQuePagar =
-    !cancelled &&
-    order.status !== "entregado" &&
-    !!metodo?.needs_reference &&
-    !!metodo.instructions?.trim()
+    !cancelled && order.status !== "entregado" && order.payment_required !== false
 
   return (
     <main className="min-h-dvh bg-gray-50">
@@ -131,7 +138,7 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
             orderId={order.id}
             total={order.final_total ?? order.total}
             montoVes={order.amount_ves}
-            instrucciones={metodo.instructions!.trim()}
+            instrucciones={metodo?.instructions?.trim() ?? ""}
             referencia={order.payment_reference}
             verificado={order.payment_verified_at != null}
           />

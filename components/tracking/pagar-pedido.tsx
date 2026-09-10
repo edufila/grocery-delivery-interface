@@ -131,26 +131,41 @@ export function PagarPedido({
         <p className="mt-1 text-lg font-bold tabular-nums text-gray-900">{formatMoney(total)}</p>
       )}
 
-      <div className="mt-3 rounded-xl bg-gray-50 p-3">
-        <div className="flex items-start justify-between gap-2">
-          <p className="whitespace-pre-line text-sm leading-relaxed text-gray-800">
-            {instrucciones}
-          </p>
-          <button
-            type="button"
-            onClick={() => void copiar()}
-            className="flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 text-xs font-semibold text-gray-600 active:bg-gray-100"
-            aria-label="Copiar los datos de pago"
-          >
-            {copiado ? (
-              <Check className="h-3.5 w-3.5 text-emerald-600" aria-hidden="true" />
-            ) : (
-              <Copy className="h-3.5 w-3.5" aria-hidden="true" />
-            )}
-            {copiado ? "Copiado" : "Copiar"}
-          </button>
+      {/**
+       * Sin datos de pago cargados se dice, en vez de dejar el hueco.
+       *
+       * Puede pasar: el abasto los borra o los está cambiando. Antes, en ese
+       * caso, esta pantalla entera desaparecía -- el pedido seguía detenido
+       * esperando un pago, y el cliente no veía ni a dónde pagar ni por qué no
+       * avanzaba. Un pedido trabado sin explicación es la peor combinación.
+       */}
+      {instrucciones ? (
+        <div className="mt-3 rounded-xl bg-gray-50 p-3">
+          <div className="flex items-start justify-between gap-2">
+            <p className="whitespace-pre-line text-sm leading-relaxed text-gray-800">
+              {instrucciones}
+            </p>
+            <button
+              type="button"
+              onClick={() => void copiar()}
+              className="flex h-11 shrink-0 items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 text-xs font-semibold text-gray-600 active:bg-gray-100"
+              aria-label="Copiar los datos de pago"
+            >
+              {copiado ? (
+                <Check className="h-3.5 w-3.5 text-emerald-600" aria-hidden="true" />
+              ) : (
+                <Copy className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
+              {copiado ? "Copiado" : "Copiar"}
+            </button>
+          </div>
         </div>
-      </div>
+      ) : (
+        <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2.5 text-sm leading-relaxed text-amber-900">
+          Ahora mismo no tenemos publicados los datos para pagar. Escríbele al abasto para que te
+          los pase; cuando pagues, puedes reportar la referencia aquí abajo igual.
+        </p>
+      )}
 
       <label htmlFor="referencia" className="mt-4 block text-sm font-medium text-gray-700">
         {referencia ? "Tu referencia" : "Cuando pagues, escribe la referencia"}
