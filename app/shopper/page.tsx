@@ -145,7 +145,7 @@ function Grupo({
 }) {
   return (
     <section>
-      <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-400">
+      <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">
         {titulo}
       </h2>
 

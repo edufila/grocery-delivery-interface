@@ -104,7 +104,7 @@ export default async function ShopperOrderPage({
               <MapPin className="h-4 w-4 text-emerald-600" aria-hidden="true" />
             </span>
             <div className="min-w-0">
-              <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
+              <p className="text-[11px] font-medium uppercase tracking-wide text-gray-500">
                 Entregar en
               </p>
               <p className="text-sm font-semibold text-gray-900">{order.address_label}</p>
@@ -125,7 +125,7 @@ export default async function ShopperOrderPage({
                 <User className="h-4 w-4 text-gray-500" aria-hidden="true" />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
+                <p className="text-[11px] font-medium uppercase tracking-wide text-gray-500">
                   Le entregas a
                 </p>
                 <p className="truncate text-sm font-semibold text-gray-900">

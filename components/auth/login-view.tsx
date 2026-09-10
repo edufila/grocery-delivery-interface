@@ -212,7 +212,7 @@ export function LoginView({ next, initialError }: { next: string; initialError?:
 
               <div className="flex items-center gap-4 py-7">
                 <span className="h-px flex-1 bg-gray-100" aria-hidden="true" />
-                <span className="text-xs font-medium uppercase tracking-wide text-gray-400">o</span>
+                <span className="text-xs font-medium uppercase tracking-wide text-gray-500">o</span>
                 <span className="h-px flex-1 bg-gray-100" aria-hidden="true" />
               </div>
 
@@ -299,7 +299,7 @@ export function LoginView({ next, initialError }: { next: string; initialError?:
 
             <div className="mt-8 text-center">
               {secondsLeft > 0 ? (
-                <p className="text-sm text-gray-400">Puedes pedir otro enlace en {secondsLeft}s</p>
+                <p className="text-sm text-gray-500">Puedes pedir otro enlace en {secondsLeft}s</p>
               ) : (
                 <button
                   type="button"
@@ -316,7 +316,7 @@ export function LoginView({ next, initialError }: { next: string; initialError?:
       </div>
 
       <footer className="mx-auto w-full max-w-md px-5 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] pt-8">
-        <p className="text-center text-xs leading-relaxed text-gray-400">
+        <p className="text-center text-xs leading-relaxed text-gray-500">
           Al continuar aceptas los Términos y la Política de Privacidad.
         </p>
       </footer>

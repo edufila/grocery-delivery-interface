@@ -30,7 +30,7 @@ export default function Error({
         </p>
 
         {error.digest && (
-          <p className="mt-4 font-mono text-xs text-gray-400">Referencia: {error.digest}</p>
+          <p className="mt-4 font-mono text-xs text-gray-500">Referencia: {error.digest}</p>
         )}
 
         <button

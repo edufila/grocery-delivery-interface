@@ -195,7 +195,7 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
                           ? "bg-emerald-600 text-white"
                           : current
                             ? "bg-emerald-100 text-emerald-700 ring-4 ring-emerald-50"
-                            : "bg-gray-100 text-gray-400"
+                            : "bg-gray-100 text-gray-500"
                       }`}
                       aria-hidden="true"
                     >
@@ -204,7 +204,7 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
                     <div className="min-w-0 flex-1">
                       <p
                         className={`text-sm font-semibold ${
-                          done || current ? "text-gray-900" : "text-gray-400"
+                          done || current ? "text-gray-900" : "text-gray-500"
                         }`}
                       >
                         {statusLabel(status, order.shopper_id)}
@@ -250,7 +250,7 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
                   <div className="min-w-0">
                     <p
                       className={`text-sm font-medium ${
-                        faltante ? "text-gray-400 line-through" : "text-gray-900"
+                        faltante ? "text-gray-500 line-through" : "text-gray-900"
                       }`}
                     >
                       {faltante ? item.qty : llevadas} × {item.name}
@@ -269,7 +269,7 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
                   </div>
                   <span
                     className={`shrink-0 text-sm font-semibold tabular-nums ${
-                      faltante ? "text-gray-400 line-through" : "text-gray-900"
+                      faltante ? "text-gray-500 line-through" : "text-gray-900"
                     }`}
                   >
                     {formatMoney(item.unit_price * (faltante ? item.qty : llevadas))}
@@ -294,7 +294,7 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
             </div>
             {order.final_total != null && order.final_total !== order.total ? (
               <>
-                <div className="flex justify-between text-gray-400">
+                <div className="flex justify-between text-gray-500">
                   <dt>Estimado al confirmar</dt>
                   <dd className="tabular-nums line-through">{formatMoney(order.total)}</dd>
                 </div>
@@ -334,7 +334,7 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
             <div className="flex items-start gap-3">
               <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" aria-hidden="true" />
               <div>
-                <dt className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                <dt className="text-xs font-medium uppercase tracking-wide text-gray-500">
                   Entrega
                 </dt>
                 <dd className="text-gray-900">
@@ -344,13 +344,13 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
               </div>
             </div>
             <div>
-              <dt className="text-xs font-medium uppercase tracking-wide text-gray-400">Pago</dt>
+              <dt className="text-xs font-medium uppercase tracking-wide text-gray-500">Pago</dt>
               <dd className="text-gray-900">
                 {PAYMENT_LABEL[order.payment_method] ?? order.payment_method}
               </dd>
             </div>
             <div>
-              <dt className="text-xs font-medium uppercase tracking-wide text-gray-400">
+              <dt className="text-xs font-medium uppercase tracking-wide text-gray-500">
                 Si falta un producto
               </dt>
               <dd className="text-gray-900">
