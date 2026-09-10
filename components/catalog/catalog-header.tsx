@@ -114,7 +114,7 @@ export function CatalogHeader({
                   type="button"
                   onClick={() => onCategoryChange(cat)}
                   aria-current={isActive ? "true" : undefined}
-                  className={`min-h-9 whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition ${
+                  className={`min-h-11 whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition ${
                     isActive
                       ? "bg-emerald-600 text-white"
                       : "bg-gray-100 text-gray-600 active:bg-gray-200"

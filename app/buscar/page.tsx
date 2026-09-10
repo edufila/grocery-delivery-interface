@@ -259,7 +259,7 @@ export default async function BuscarPage({
                   </h2>
                   <Link
                     href={enlaceATienda(storeId, { termino, categoria, soloMayorista })}
-                    className="shrink-0 text-sm font-medium text-emerald-600"
+                    className="-mr-2 flex min-h-11 shrink-0 items-center px-2 text-sm font-medium text-emerald-600"
                   >
                     Ver ahí
                   </Link>

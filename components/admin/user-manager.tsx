@@ -211,7 +211,7 @@ export function UserManager({
                       onClick={() => void setRole(user, role.value)}
                       disabled={busyId === user.id || user.role === role.value || bloqueado}
                       title={bloqueado ? "Solo un dev puede repartir estos roles" : undefined}
-                      className={`min-h-9 rounded-full px-3 text-sm font-medium transition ${
+                      className={`min-h-11 rounded-full px-3.5 text-sm font-medium transition ${
                         user.role === role.value
                           ? "bg-gray-900 text-white"
                           : "border border-gray-200 text-gray-600 active:bg-gray-50"

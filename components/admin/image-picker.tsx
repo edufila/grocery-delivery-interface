@@ -262,7 +262,7 @@ export function ImagePicker({
                         type="button"
                         onClick={() => void remove(file.name)}
                         disabled={busy}
-                        className="absolute right-1 top-1 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-gray-500 backdrop-blur active:text-rose-600"
+                        className="absolute right-1 top-1 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-gray-500 backdrop-blur active:text-rose-600"
                         aria-label={`Borrar ${file.name}`}
                       >
                         <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />

@@ -151,7 +151,7 @@ export function DeliveryTopBar() {
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="flex min-w-0 flex-1 items-center gap-2 px-2 text-left"
+            className="flex min-h-11 min-w-0 flex-1 items-center gap-2 px-2 text-left"
             aria-label="Cambiar dirección de entrega"
             aria-expanded={open}
           >

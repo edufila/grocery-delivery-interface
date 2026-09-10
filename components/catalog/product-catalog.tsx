@@ -90,7 +90,7 @@ export function ProductCatalog({
           type="button"
           onClick={() => setWholesaleOnly((v) => !v)}
           aria-pressed={wholesaleOnly}
-          className={`mb-4 min-h-9 rounded-full px-4 py-1.5 text-sm font-medium transition ${
+          className={`mb-4 min-h-11 rounded-full px-4 py-1.5 text-sm font-medium transition ${
             wholesaleOnly
               ? "bg-emerald-600 text-white"
               : "border border-gray-200 bg-white text-gray-600 active:bg-gray-100"

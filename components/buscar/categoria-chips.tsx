@@ -38,7 +38,7 @@ export function CategoriaChips({
               <Link
                 href={enlace(categoria)}
                 aria-current={esActiva ? "true" : undefined}
-                className={`flex min-h-9 items-center rounded-full px-3.5 text-sm font-medium transition ${
+                className={`flex min-h-11 items-center rounded-full px-4 text-sm font-medium transition ${
                   esActiva
                     ? "bg-emerald-600 text-white"
                     : "border border-gray-200 bg-white text-gray-600 active:bg-gray-50"

@@ -103,7 +103,7 @@ export function OrdersCleanup({ orders }: { orders: Row[] }) {
             key={f.value}
             type="button"
             onClick={() => setFilter(f.value)}
-            className={`min-h-9 rounded-full px-3 text-sm font-medium transition ${
+            className={`min-h-11 rounded-full px-3.5 text-sm font-medium transition ${
               filter === f.value
                 ? "bg-gray-900 text-white"
                 : "border border-gray-200 text-gray-600 active:bg-gray-50"
@@ -130,7 +130,7 @@ export function OrdersCleanup({ orders }: { orders: Row[] }) {
           <button
             type="button"
             onClick={selectAllShown}
-            className="min-h-9 text-sm font-medium text-emerald-600"
+            className="min-h-11 text-sm font-medium text-emerald-600"
           >
             Seleccionar los {shown.length}
           </button>

@@ -171,7 +171,7 @@ export function DetallePedido({ orderId, onClose }: { orderId: string; onClose: 
                 {cliente?.phone && (
                   <a
                     href={`tel:${cliente.phone.replace(/\s/g, "")}`}
-                    className="mt-1 inline-flex min-h-9 items-center gap-1.5 text-sm font-medium text-emerald-600"
+                    className="mt-1 inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-emerald-600"
                   >
                     <Phone className="h-4 w-4" aria-hidden="true" />
                     {cliente.phone}
