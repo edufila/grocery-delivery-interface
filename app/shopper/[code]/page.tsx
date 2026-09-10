@@ -65,7 +65,14 @@ export default async function ShopperOrderPage({
   const lines = items ?? []
   const mine = order.shopper_id === user.id
 
-  // Solo nombre y teléfono, y solo mientras el pedido esté en curso.
+  /**
+   * Solo nombre y teléfono, y solo mientras el pedido esté en curso.
+   *
+   * Desde la 0042 la base devuelve únicamente el primer nombre: el apellido no
+   * sale de ahí. El `firstName` de abajo se deja igual, aunque ya no recorte
+   * nada, para que la pantalla siga siendo correcta contra una base donde esa
+   * migración todavía no se corrió.
+   */
   const { data: customerRows } = await supabase.rpc("order_customer", { p_order_id: order.id })
   const customer = (customerRows as { full_name: string | null; phone: string | null }[] | null)?.[0]
 
