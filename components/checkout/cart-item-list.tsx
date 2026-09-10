@@ -61,7 +61,7 @@ export function CartItemList({ items, onInc, onDec, onRemove, tasaVes }: Props) 
                 type="button"
                 onClick={() => onRemove(item.id)}
                 aria-label={`Eliminar ${item.name}`}
-                className="text-gray-400 transition-colors hover:text-red-500"
+                className="-mr-2 flex h-11 w-11 items-center justify-center rounded-full text-gray-400 transition-colors hover:text-rose-600 active:bg-gray-100"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
@@ -71,18 +71,18 @@ export function CartItemList({ items, onInc, onDec, onRemove, tasaVes }: Props) 
                   type="button"
                   onClick={() => onDec(item.id)}
                   aria-label={`Disminuir cantidad de ${item.name}`}
-                  className="flex h-7 w-7 items-center justify-center rounded-full text-gray-600 transition-colors hover:bg-gray-100"
+                  className="relative flex h-9 w-9 items-center justify-center rounded-full text-gray-600 transition-colors before:absolute before:-inset-y-1 before:-left-2 before:right-0 before:content-[''] hover:bg-gray-100"
                 >
-                  <Minus className="h-3.5 w-3.5" />
+                  <Minus className="h-4 w-4" />
                 </button>
                 <span className="w-6 text-center text-sm font-semibold tabular-nums text-gray-900">{item.qty}</span>
                 <button
                   type="button"
                   onClick={() => onInc(item.id)}
                   aria-label={`Aumentar cantidad de ${item.name}`}
-                  className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-white transition-colors hover:bg-emerald-600"
+                  className="relative flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 text-white transition-colors before:absolute before:-inset-y-1 before:left-0 before:-right-2 before:content-[''] hover:bg-emerald-700"
                 >
-                  <Plus className="h-3.5 w-3.5" />
+                  <Plus className="h-4 w-4" />
                 </button>
               </div>
             </div>
