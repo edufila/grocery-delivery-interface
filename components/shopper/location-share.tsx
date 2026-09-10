@@ -53,6 +53,38 @@ export function LocationShare({
     }
   }, [])
 
+  /**
+   * Volver a pedir la pantalla encendida al regresar a la app.
+   *
+   * El sistema suelta el bloqueo solo en cuanto la pantalla se apaga o el
+   * shopper se va a otra app -- a ver el mapa, a contestar un mensaje -- y no
+   * lo devuelve al volver. Sin esto, el bloqueo servía una sola vez: a la
+   * primera interrupción la pantalla volvía a apagarse sola, el navegador
+   * suspendía el JavaScript, y la ubicación dejaba de viajar en mitad de la
+   * entrega. Que es justo cuando el cliente está mirando el mapa.
+   */
+  useEffect(() => {
+    if (!estado.sharing) return
+
+    const alVolver = async () => {
+      if (document.visibilityState !== "visible" || wakeLockRef.current) return
+      try {
+        wakeLockRef.current = (await navigator.wakeLock?.request("screen")) ?? null
+        // El sistema avisa cuando lo suelta; sin limpiar la referencia,
+        // creeríamos que sigue tomado y no lo volveríamos a pedir.
+        wakeLockRef.current?.addEventListener("release", () => {
+          wakeLockRef.current = null
+        })
+      } catch {
+        // Navegador que no lo permite, o pantalla ya apagada. Se reintenta la
+        // próxima vez que vuelva a primer plano.
+      }
+    }
+
+    document.addEventListener("visibilitychange", alVolver)
+    return () => document.removeEventListener("visibilitychange", alVolver)
+  }, [estado.sharing])
+
   async function start() {
     if (!("geolocation" in navigator)) {
       setEstado((e) => ({ ...e, error: "Este navegador no da acceso a la ubicación." }))
@@ -102,7 +134,7 @@ export function LocationShare({
           sharing: false,
           error:
             geoError.code === geoError.PERMISSION_DENIED
-              ? "Bloqueaste el permiso de ubicación. Habilitalo en los ajustes del navegador."
+              ? "Bloqueaste el permiso de ubicación. Habilítalo en los ajustes del navegador."
               : "No pudimos leer tu ubicación.",
         }))
       },
@@ -162,7 +194,7 @@ export function LocationShare({
             </p>
           )}
           {estado.lastSent && (
-            <p className="mt-1 text-xs text-gray-400">
+            <p className="mt-1 text-xs text-gray-500">
               Última posición enviada a las{" "}
               {estado.lastSent.toLocaleTimeString("es-VE", {
                 hour: "numeric",

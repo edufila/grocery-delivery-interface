@@ -142,7 +142,7 @@ export function AddressManager({ userId, addresses }: { userId: string; addresse
 
                   {sinPin && (
                     <p className="mt-1 text-xs leading-relaxed text-amber-700">
-                      Sin punto en el mapa. Editala y marca dónde entregar, o el seguimiento no
+                      Sin punto en el mapa. Edítala y marca dónde entregar, o el seguimiento no
                       puede dibujar el mapa.
                     </p>
                   )}
