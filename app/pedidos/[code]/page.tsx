@@ -112,7 +112,12 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
         </div>
       </header>
 
-      <OrderLiveRefresh orderId={order.id} status={order.status} shopperId={order.shopper_id} />
+      <OrderLiveRefresh
+        orderId={order.id}
+        status={order.status}
+        shopperId={order.shopper_id}
+        pagoVerificado={order.payment_verified_at}
+      />
 
       <div className="mx-auto max-w-lg space-y-4 px-4 pb-10 pt-4">
         {!cancelled && (

@@ -6,7 +6,11 @@ import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 
-type OrderRow = { status?: string; shopper_id?: string | null }
+type OrderRow = {
+  status?: string
+  shopper_id?: string | null
+  payment_verified_at?: string | null
+}
 
 /**
  * Estas pantallas se arman en el servidor, así que un cambio de estado no se
@@ -19,17 +23,27 @@ export function OrderLiveRefresh({
   orderId,
   status,
   shopperId,
+  pagoVerificado = null,
 }: {
   orderId: string
   status: string
   shopperId: string | null
+  /**
+   * Cuándo se confirmó el pago, si ya se confirmó.
+   *
+   * Se vigila porque es el momento en que el cliente está más pendiente de la
+   * pantalla: acaba de pagar y su pedido está detenido esperando. Sin esto el
+   * cambio no llegaba por Realtime y se veía recién en el refresco de
+   * respaldo, hasta quince segundos después de que alguien lo confirmara.
+   */
+  pagoVerificado?: string | null
 }) {
   const router = useRouter()
-  const seen = useRef({ status, shopperId })
+  const seen = useRef({ status, shopperId, pagoVerificado })
 
   useEffect(() => {
-    seen.current = { status, shopperId }
-  }, [status, shopperId])
+    seen.current = { status, shopperId, pagoVerificado }
+  }, [status, shopperId, pagoVerificado])
 
   useEffect(() => {
     if (!isSupabaseConfigured) return
@@ -44,7 +58,9 @@ export function OrderLiveRefresh({
           const row = payload.new as OrderRow
           const cambio =
             (row.status !== undefined && row.status !== seen.current.status) ||
-            (row.shopper_id !== undefined && row.shopper_id !== seen.current.shopperId)
+            (row.shopper_id !== undefined && row.shopper_id !== seen.current.shopperId) ||
+            (row.payment_verified_at !== undefined &&
+              row.payment_verified_at !== seen.current.pagoVerificado)
           if (cambio) router.refresh()
         },
       )
