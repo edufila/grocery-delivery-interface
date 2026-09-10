@@ -38,6 +38,7 @@ type PedidoAdmin = Pick<
   | "payment_reported_at"
   | "payment_verified_at"
   | "amount_ves"
+  | "payment_required"
 >
 
 export default async function AdminPage() {
@@ -86,7 +87,7 @@ export default async function AdminPage() {
       supabase
         .from("orders")
         .select(
-          "id, code, status, total, final_total, created_at, address_label, shopper_id, payment_method, payment_reference, payment_reported_at, payment_verified_at, amount_ves",
+          "id, code, status, total, final_total, created_at, address_label, shopper_id, payment_method, payment_reference, payment_reported_at, payment_verified_at, amount_ves, payment_required",
         )
         .order("created_at", { ascending: false })
         .limit(100)
@@ -176,6 +177,14 @@ export default async function AdminPage() {
           <ConciliacionPagos
             pedidos={(orders ?? []).filter(
               (o) => o.payment_reported_at != null && o.payment_verified_at == null,
+            )}
+            sinPagar={(orders ?? []).filter(
+              (o) =>
+                o.payment_required !== false &&
+                o.payment_reported_at == null &&
+                o.payment_verified_at == null &&
+                o.status !== "cancelado" &&
+                o.status !== "entregado",
             )}
           />
         </Section>

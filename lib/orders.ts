@@ -115,6 +115,15 @@ export type Order = {
   rate_ves: number | null
   /** Lo exacto a pagar en bolívares, con céntimos únicos para identificarlo. */
   amount_ves: number | null
+  /**
+   * Si hay que confirmar el pago antes de que el pedido salga a buscar shopper.
+   * Falso en el efectivo contra entrega, que se cobra en la puerta.
+   *
+   * Se guarda en el pedido y no se consulta al método cada vez: si mañana el
+   * abasto cambia cómo cobra, los pedidos viejos siguen con la regla bajo la
+   * que se hicieron.
+   */
+  payment_required: boolean
   /** Lo que el cliente reportó de su transferencia. */
   payment_reference: string | null
   payment_reported_at: string | null

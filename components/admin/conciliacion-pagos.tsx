@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { BadgeCheck, Clock, Loader2, Search } from "lucide-react"
 
 import { AvisoPagos } from "@/components/admin/aviso-pagos"
+import { DetallePedido } from "@/components/admin/detalle-pedido"
 import { formatMoney, formatOrderDate, type Order } from "@/lib/orders"
 import { formatBolivares, ultimosDigitos } from "@/lib/pagos"
 import { avisarAlEquipo } from "@/lib/push-cliente"
@@ -41,7 +42,14 @@ export type PedidoPorCobrar = Pick<
  * las va a haber. El dato entra por aquí o, si algún día el banco manda avisos
  * por correo, por lo que se automatice: el cruce ya está hecho y es el mismo.
  */
-export function ConciliacionPagos({ pedidos }: { pedidos: PedidoPorCobrar[] }) {
+export function ConciliacionPagos({
+  pedidos,
+  sinPagar = [],
+}: {
+  pedidos: PedidoPorCobrar[]
+  /** Detenidos porque el cliente todavía no dice haber pagado. */
+  sinPagar?: PedidoPorCobrar[]
+}) {
   const router = useRouter()
   const [referencia, setReferencia] = useState("")
   const [monto, setMonto] = useState("")
@@ -50,6 +58,8 @@ export function ConciliacionPagos({ pedidos }: { pedidos: PedidoPorCobrar[] }) {
   const [resultado, setResultado] = useState("")
   const [verificando, setVerificando] = useState<string | null>(null)
   const [confirmado, setConfirmado] = useState("")
+  /** Qué pedido se está mirando en el modal, si hay alguno. */
+  const [detalle, setDetalle] = useState<string | null>(null)
 
   const digitos = referencia.replace(/\D/g, "")
 
@@ -226,6 +236,59 @@ export function ConciliacionPagos({ pedidos }: { pedidos: PedidoPorCobrar[] }) {
           tiene forma de saber sola si el dinero llegó.
         </p>
       </section>
+
+      {/**
+       * Los que entraron y nadie pagó.
+       *
+       * No aparecían en ningún lado. Un pedido que entra y se queda sin pagar
+       * no dispara ningún aviso -- no hay nada que verificar todavía -- así que
+       * se quedaba callado hasta que alguien se acordara de mirar la lista
+       * entera. Y detrás de cada uno hay una persona que quizá pagó y no supo
+       * dónde poner la referencia, o que se arrepintió y ocupa un monto
+       * reservado.
+       *
+       * Va después de lo urgente porque no lo es: aquí no hay nada que
+       * confirmar, hay a quién preguntarle.
+       */}
+      {sinPagar.length > 0 && (
+        <section>
+          <h3 className="mb-1 text-sm font-semibold text-gray-900">
+            Esperando que el cliente pague ({sinPagar.length})
+          </h3>
+          <p className="mb-2 text-xs leading-relaxed text-gray-500">
+            Todavía no reportaron nada. Tampoco salen a buscar shopper.
+          </p>
+
+          <ul className="flex flex-col gap-2">
+            {sinPagar.map((pedido) => (
+              <li
+                key={pedido.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-gray-200 bg-white p-3"
+              >
+                <div className="min-w-0">
+                  <p className="font-mono text-sm font-semibold text-gray-900">{pedido.code}</p>
+                  <p className="truncate text-xs text-gray-500">
+                    {pedido.amount_ves != null
+                      ? `Bs. ${formatBolivares(Number(pedido.amount_ves))}`
+                      : formatMoney(pedido.final_total ?? pedido.total)}
+                  </p>
+                </div>
+                {/* El mismo detalle que abre la lista de pedidos: no hay una
+                    ruta propia para un pedido, es un modal. */}
+                <button
+                  type="button"
+                  onClick={() => setDetalle(pedido.id)}
+                  className="shrink-0 rounded-lg px-2 py-1 text-sm font-medium text-emerald-600 active:bg-emerald-50"
+                >
+                  Ver
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {detalle && <DetallePedido orderId={detalle} onClose={() => setDetalle(null)} />}
     </div>
   )
 }
