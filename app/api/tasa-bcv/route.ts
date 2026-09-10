@@ -56,6 +56,45 @@ export async function GET(request: Request) {
     return responder({ error: "El BCV no respondió con una tasa usable", detalle: datos }, 502)
   }
 
+  /**
+   * Que no entre una tasa de otro orden de magnitud.
+   *
+   * "Un número positivo" no alcanza como comprobación cuando ese número
+   * multiplica todos los precios de la app. Si la fuente devuelve 8,2 en vez de
+   * 820 -- un punto decimal corrido, un cambio de formato, una respuesta de
+   * error que casualmente parsea -- un pedido de $3,50 se cotizaría en Bs 28 en
+   * lugar de Bs 2.870. Se vendería a una centésima del precio, solo, de
+   * madrugada y sin que nadie mire.
+   *
+   * El límite es un factor de dos y no un porcentaje: la tasa aquí se mueve, y
+   * a veces salta fuerte, así que un tope estrecho rechazaría movimientos
+   * legítimos. Duplicarse o partirse a la mitad de un día para otro no es un
+   * movimiento, es un error de dato.
+   *
+   * Rechazar tiene su costo -- se sigue cobrando con la tasa vieja -- pero es
+   * un costo acotado y visible: la app muestra de cuándo es la tasa que está
+   * usando, y un admin la puede escribir a mano. Aceptar basura no tiene fondo.
+   */
+  const anterior = await fetch(`${url}/rest/v1/settings?id=eq.global&select=rate_ves`, {
+    headers: { apikey: llave, Authorization: `Bearer ${llave}` },
+    cache: "no-store",
+  })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((filas) => Number(filas?.[0]?.rate_ves))
+    .catch(() => Number.NaN)
+
+  if (Number.isFinite(anterior) && anterior > 0 && (tasa > anterior * 2 || tasa < anterior / 2)) {
+    return responder(
+      {
+        error: "La tasa nueva es de otro orden que la anterior, así que no se aplicó",
+        anterior,
+        recibida: tasa,
+        que_hacer: "Comprobarla contra el BCV y, si es real, cargarla a mano desde el panel.",
+      },
+      409,
+    )
+  }
+
   const respuesta = await fetch(`${url}/rest/v1/settings?id=eq.global`, {
     method: "PATCH",
     headers: {
