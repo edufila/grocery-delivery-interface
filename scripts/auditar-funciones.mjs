@@ -57,6 +57,25 @@ function leerEnv() {
   return env
 }
 
+/**
+ * Las que TIENEN que estar abiertas, y por qué.
+ *
+ * Sin esta lista el auditor las marcaba en rojo y cerraba diciendo "revocarlas
+ * con revoke execute...". Quien le hiciera caso volvería a romper justo lo que
+ * arregló la 0038: una función que se usa dentro de una política de RLS la
+ * ejecuta el rol de quien consulta, así que revocársela a `anon` no cierra nada
+ * -- la tabla ya está cerrada por la política -- y en cambio convierte el
+ * bloqueo limpio en un error que además dice el nombre de la función.
+ *
+ * Una alarma que pide hacer daño es peor que no tener alarma.
+ */
+const ABIERTAS_A_PROPOSITO = {
+  pago_resuelto:
+    "la usan las políticas de orders y order_items, y una política se evalúa " +
+    "con el rol de quien consulta (ver 0038). No lee ninguna tabla: recibe un " +
+    "booleano y una fecha, y devuelve un booleano.",
+}
+
 const env = leerEnv()
 const url = env.NEXT_PUBLIC_SUPABASE_URL
 const key = env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
@@ -83,10 +102,26 @@ for (const [nombre, args] of FUNCIONES) {
   if (cuerpo.includes("Could not find the function")) {
     console.log(`  \x1b[90m—\x1b[0m      ${nombre.padEnd(24)} no existe todavía`)
   } else if (cuerpo.includes("permission denied for function")) {
-    console.log(`  \x1b[32mcerrada\x1b[0m ${nombre}`)
+    // Que una de las que tienen que estar abiertas aparezca cerrada también es
+    // una alarma: significa que alguien la revocó y la app quedó rota.
+    if (ABIERTAS_A_PROPOSITO[nombre]) {
+      abiertas++
+      console.log(
+        `  \x1b[31mCERRADA\x1b[0m ${nombre.padEnd(24)} y tenía que estar abierta:\n` +
+          `          ${ABIERTAS_A_PROPOSITO[nombre]}`,
+      )
+    } else {
+      console.log(`  \x1b[32mcerrada\x1b[0m ${nombre}`)
+    }
   } else if (r.status === 200) {
-    abiertas++
-    console.log(`  \x1b[31mABIERTA\x1b[0m ${nombre.padEnd(24)} respondió: ${cuerpo.slice(0, 60)}`)
+    const porque = ABIERTAS_A_PROPOSITO[nombre]
+
+    if (porque) {
+      console.log(`  \x1b[32mabierta\x1b[0m ${nombre.padEnd(24)} a propósito:\n          ${porque}`)
+    } else {
+      abiertas++
+      console.log(`  \x1b[31mABIERTA\x1b[0m ${nombre.padEnd(24)} respondió: ${cuerpo.slice(0, 60)}`)
+    }
   } else {
     console.log(`  \x1b[33m?\x1b[0m      ${nombre.padEnd(24)} HTTP ${r.status}: ${cuerpo.slice(0, 60)}`)
   }
