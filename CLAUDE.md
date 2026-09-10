@@ -62,6 +62,37 @@ Se usa desde el teléfono, en la calle, con datos móviles. Área táctil mínim
 44 píxeles, respetar `env(safe-area-inset-*)`, y medir el peso de lo que se
 manda al navegador antes de sumar una librería.
 
+### Lo del área táctil se mide, no se supone
+
+Estuvo escrito mucho tiempo y no se cumplía en ninguna pantalla: los `+` y `−`
+de cantidad median 28×28 y el basurero del carrito 16×16. Se ve corriendo esto
+en la consola del navegador, con la app abierta:
+
+```js
+[...document.querySelectorAll('a,button,input')]
+  .map((el) => [el, el.getBoundingClientRect()])
+  .filter(([, r]) => r.width && r.height && (r.width < 44 || r.height < 44))
+  .map(([el, r]) => `${Math.round(r.width)}x${Math.round(r.height)} ${el.ariaLabel ?? el.textContent?.trim()}`)
+```
+
+**Cuando no cabe a 44**, como los dos botones de cantidad al lado del precio en
+una tarjeta de dos columnas: se ven de 36 y se tocan de 44, estirando el área
+con un pseudo elemento (`before:absolute before:-inset-y-1 before:-left-2`).
+Cada uno crece hacia afuera y en dirección contraria al otro -- si las dos zonas
+se solaparan, apuntar al más se llevaría el menos, que es peor que el botón
+chico.
+
+### Y el contraste igual
+
+Dos fallos que llevaban ahí desde el principio y solo aparecieron midiendo:
+`emerald-600` daba 3,86 a 1 con blanco encima -- fallaban todos los botones y
+todos los enlaces -- y `text-gray-400` da 2,6 a 1. **El 400 es para iconos y
+bordes; si aparece en una palabra, es un error.** El texto secundario va en 500.
+
+Para medirlo hay que resolver el color con un canvas, no leyendo la cadena:
+Chrome devuelve `oklch(...)` y parsearlo como si fuera RGB da números que
+parecen reales y no lo son.
+
 ### Las fotos, que es donde se va el peso
 
 **`next/image` no funciona hoy en este proyecto.** Se probó: el endpoint que

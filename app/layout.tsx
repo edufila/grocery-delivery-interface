@@ -72,11 +72,19 @@ export const viewport: Viewport = {
    * lo que el equipo diga que hace falta.
    */
   viewportFit: 'cover',
-  colorScheme: 'light dark',
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: 'white' },
-    { media: '(prefers-color-scheme: dark)', color: 'black' },
-  ],
+  /**
+   * La app es solo clara, y hasta aquí decía lo contrario.
+   *
+   * Declaraba `light dark` y pedía barra negra en modo oscuro, pero justo abajo
+   * se le fuerza la clase `light` al <html> porque no hay diseño oscuro.
+   * Resultado: en un teléfono en modo oscuro se veía una franja negra encima de
+   * una app blanca, y los campos de texto se pintaban oscuros.
+   *
+   * El color es blanco porque el borde de arriba de la app es la barra blanca
+   * del encabezado, y con `viewportFit: cover` la página llega hasta ahí.
+   */
+  colorScheme: 'light',
+  themeColor: 'white',
 }
 
 /**
