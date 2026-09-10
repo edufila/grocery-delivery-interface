@@ -142,6 +142,16 @@ export async function avisarAlEquipo(motivo: "pago-reportado" | "pedido-listo") 
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ motivo }),
+      /**
+       * Que la petición sobreviva a que se cierre la pantalla.
+       *
+       * El momento típico es justo este: el cliente toca "Ya pagué" y se sale
+       * de la app, o bloquea el teléfono. Sin `keepalive`, el navegador cancela
+       * lo que quede en vuelo al descargar la página, y el aviso que le diría
+       * al abasto que hay un pago por confirmar no sale nunca. El pedido se
+       * queda detenido esperando a alguien que no se enteró.
+       */
+      keepalive: true,
     })
   } catch {
     // El aviso es un extra: que no llegue no puede romper lo que lo disparó.
