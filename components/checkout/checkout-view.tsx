@@ -416,19 +416,36 @@ export function CheckoutView() {
               type="button"
               onClick={() => void placeOrder()}
               disabled={!canPlace}
-              className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-6 text-base font-semibold text-white shadow-lg shadow-emerald-600/25 transition active:scale-[0.99] disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none"
+              className="flex h-14 w-full items-center justify-between gap-3 rounded-2xl bg-emerald-600 px-5 text-base font-semibold text-white shadow-lg shadow-emerald-600/25 transition active:scale-[0.99] disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none"
             >
-              {placing ? (
-                <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
-              ) : (
-                <ShoppingBag className="h-5 w-5" aria-hidden="true" />
-              )}
-              {placing ? "Registrando..." : "Realizar pedido"}
+              {/**
+               * La acción a un lado y el monto al otro, y no todo seguido.
+               *
+               * Antes era "Realizar pedido · $42.55 (Bs 34.895,33)" en una sola
+               * línea: en un teléfono no cabía, se partía en dos, y el botón más
+               * importante de la app se veía roto. Los dos montos apilados a la
+               * derecha caben de sobra en los 56 píxeles de alto que ya tenía.
+               */}
+              <span className="flex items-center gap-2">
+                {placing ? (
+                  <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+                ) : (
+                  <ShoppingBag className="h-5 w-5" aria-hidden="true" />
+                )}
+                {placing ? "Registrando..." : "Realizar pedido"}
+              </span>
+
               {!placing && (
-                <span className="tabular-nums">
-                  · ${total.toFixed(2)}
-                  {bsEquivalent(total, tasaVes) != null &&
-                    ` (Bs ${formatBolivares(bsEquivalent(total, tasaVes)!)})`}
+                <span className="text-right leading-tight">
+                  <span className="block tabular-nums">${total.toFixed(2)}</span>
+                  {bsEquivalent(total, tasaVes) != null && (
+                    /* Opacidad y no `text-white/90`: cuando el botón está
+                       deshabilitado se pone gris claro, y un blanco fijo encima
+                       quedaba invisible. Así hereda el color que toque. */
+                    <span className="block text-xs font-medium tabular-nums opacity-90">
+                      Bs {formatBolivares(bsEquivalent(total, tasaVes)!)}
+                    </span>
+                  )}
                 </span>
               )}
             </button>
@@ -458,7 +475,7 @@ function DeliveryCard({ session }: { session: Session }) {
         </p>
         <Link
           href="/login?next=/checkout"
-          className="mt-3 flex h-12 w-full items-center justify-center rounded-xl bg-amber-900 text-sm font-semibold text-white"
+          className="mt-3 flex h-12 w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-semibold text-white"
         >
           Iniciar sesión
         </Link>
@@ -475,7 +492,7 @@ function DeliveryCard({ session }: { session: Session }) {
         </p>
         <Link
           href="/perfil"
-          className="mt-3 flex h-12 w-full items-center justify-center rounded-xl bg-amber-900 text-sm font-semibold text-white"
+          className="mt-3 flex h-12 w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-semibold text-white"
         >
           Agregar dirección
         </Link>
@@ -493,7 +510,7 @@ function DeliveryCard({ session }: { session: Session }) {
         </p>
         <Link
           href="/perfil"
-          className="mt-3 flex h-12 w-full items-center justify-center rounded-xl bg-amber-900 text-sm font-semibold text-white"
+          className="mt-3 flex h-12 w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-semibold text-white"
         >
           Marcar el punto
         </Link>
