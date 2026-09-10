@@ -184,7 +184,7 @@ const ESPERADAS = {
   orders: ["payment_required", "payment_verified_at", "amount_ves", "rate_ves"],
   products: ["in_stock"],
   payment_methods: ["currency"],
-  settings: ["rate_ves"],
+  settings: ["rate_ves", "rate_ves_updated_at", "rate_ves_source"],
   push_subscriptions: ["endpoint", "user_id", "p256dh", "auth"],
 }
 
