@@ -168,6 +168,79 @@ const bucket = await fetch(`${url}/storage/v1/object/list/fotos`, {
 if (bucket.ok) ok("Bucket de fotos creado.")
 else falla("Falta el bucket de fotos. Correr la migración de storage.")
 
+// ------------------------------------------------- listo para vender hoy
+
+/**
+ * Lo de arriba comprueba que la casa esté construida. Esto, que se pueda abrir
+ * hoy: sin tasa cargada el pago móvil no se le ofrece a nadie, y sin método de
+ * pago activo no hay con qué cobrar. Son las dos cosas que dejan la app en pie
+ * y sin poder vender, y no se notan mirando el código.
+ */
+title("Listo para vender hoy")
+
+const ajustes = await fetch(
+  `${url}/rest/v1/settings?id=eq.global&select=rate_ves,rate_ves_updated_at,rate_ves_source`,
+  { headers },
+)
+  .then((r) => (r.ok ? r.json() : null))
+  .then((filas) => filas?.[0] ?? null)
+  .catch(() => null)
+
+if (!ajustes) {
+  falla("No se pudieron leer los ajustes.")
+} else if (!ajustes.rate_ves) {
+  falla("Sin tasa cargada: el pago móvil no se le ofrece al cliente.")
+} else {
+  const cuando = ajustes.rate_ves_updated_at ? new Date(ajustes.rate_ves_updated_at) : null
+  const dias = cuando ? Math.floor((Date.now() - cuando.getTime()) / 86400000) : null
+  const de = ajustes.rate_ves_source === "manual" ? "a mano" : "del BCV"
+
+  if (dias == null) warn(`Tasa Bs ${ajustes.rate_ves} cargada, pero sin fecha.`)
+  else if (dias >= 2)
+    falla(
+      `La tasa (Bs ${ajustes.rate_ves}, ${de}) lleva ${dias} días sin actualizarse ` +
+        "y se está cobrando con ella.",
+    )
+  else ok(`Tasa Bs ${ajustes.rate_ves} ${de}, de hace ${dias === 0 ? "menos de un día" : "un día"}.`)
+}
+
+const metodos = await fetch(
+  `${url}/rest/v1/payment_methods?select=id,label,active,needs_reference,currency&order=sort_order`,
+  { headers },
+)
+  .then((r) => (r.ok ? r.json() : []))
+  .catch(() => [])
+
+const activos = metodos.filter((m) => m.active)
+
+if (activos.length === 0) {
+  falla("Ningún método de pago activo: no hay con qué cobrar.")
+} else {
+  for (const m of activos) {
+    const enBs = m.currency === "VES"
+
+    // Activo no es lo mismo que ofrecido: además hace falta la tasa si cobra en
+    // bolívares, y tener cargado a dónde paga el cliente si pide referencia.
+    // Lo segundo no se ve sin sesión, así que se dice en vez de darlo por hecho.
+    if (enBs && !ajustes?.rate_ves) {
+      falla(`${m.label} está activo pero no se le ofrece a nadie: falta la tasa.`)
+    } else if (m.needs_reference) {
+      warn(`${m.label} activo. Se ofrece solo si tiene cargado a dónde pagar.`)
+    } else {
+      ok(`${m.label} activo, y se ofrece: se paga en la puerta.`)
+    }
+  }
+}
+
+/**
+ * Lo que desde aquí no se puede ver, y conviene decirlo en vez de callarlo: a
+ * dónde paga el cliente está reservado a quien inició sesión (ver la 0031), y
+ * los roles tampoco se leen sin sesión.
+ */
+warn("Sin sesión no se ve si los datos de cobro están cargados ni si hay algún shopper.")
+warn("Eso se mira entrando a Administración, en Cobros y en Usuarios.")
+
+
 console.log(
   problemas === 0
     ? "\nTodo en orden.\n"
