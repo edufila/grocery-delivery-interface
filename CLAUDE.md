@@ -62,6 +62,27 @@ Se usa desde el teléfono, en la calle, con datos móviles. Área táctil mínim
 44 píxeles, respetar `env(safe-area-inset-*)`, y medir el peso de lo que se
 manda al navegador antes de sumar una librería.
 
+### Las fotos, que es donde se va el peso
+
+**`next/image` no funciona hoy en este proyecto.** Se probó: el endpoint que
+redimensiona responde bien -- deja una foto de 2,6 MB en 255 KB -- pero el
+componente dibuja en blanco, también en un build de producción. Casi seguro
+porque falta `sharp` y `npm install` está roto desde hace rato. Por eso
+`next.config.mjs` tiene `unoptimized: true`, y no por gusto: encenderlo sin
+arreglar lo otro deja la pantalla de inicio sin fotos.
+
+Vale la pena volver a intentarlo cuando se pueda instalar; es la diferencia
+entre megabytes y kilobytes en la primera pantalla que carga cualquiera.
+
+Mientras tanto:
+
+- **Las que sube el panel están bien.** El recortador guarda en WebP al 85% y
+  en el tamaño correcto. Si una foto pesa de más, lo más rápido es volver a
+  subirla desde Administración.
+- **Las que llegan al repo se achican a mano** con `pnpm achicar-fotos` (sin
+  argumentos dice qué haría; con `--hacerlo` lo hace). Las tres que trajo la
+  plantilla eran 6,5 MB y quedaron en 2,7 MB.
+
 ## La base de datos
 
 El esquema vive en `supabase/migrations/`, numerado. **No hay CLI conectado**:

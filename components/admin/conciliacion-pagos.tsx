@@ -30,7 +30,7 @@ export type PedidoPorCobrar = Pick<
  * Esta pantalla traba a propósito el resto de la operación: mientras un pago
  * está aquí sin confirmar, su pedido no le aparece a ningún shopper. Antes
  * salía igual, y si el dinero nunca llegaba la mercancía ya estaba comprada.
- * Así que lo que se hace acá no es papeleo: es lo que destraba el pedido.
+ * Así que lo que se hace aquí no es papeleo: es lo que destraba el pedido.
  *
  * Por qué existe el formulario si ya está el botón de confirmar: porque el
  * orden real no es el que uno esperaría. A veces el pago aparece en el banco

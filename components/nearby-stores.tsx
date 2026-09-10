@@ -111,6 +111,21 @@ export function NearbyStores({ stores, tasaVes }: { stores: Store[]; tasaVes?: n
               className="relative overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm shadow-gray-100 transition active:scale-[0.995]"
             >
               <div className="relative h-36 w-full">
+                {/**
+                 * Etiqueta suelta y no `next/image`, a propósito.
+                 *
+                 * Se probó: con `next/image` la foto sale en blanco, también en
+                 * un build de producción. El endpoint que redimensiona sí
+                 * responde -- devuelve la foto a 255 KB en vez de 2,6 MB -- así
+                 * que lo que falla es el componente, no la optimización. Muy
+                 * probablemente sea que `sharp` no está instalado y en este
+                 * proyecto `npm install` está roto.
+                 *
+                 * Cuando eso se arregle, esto vale la pena revisarlo: es la
+                 * diferencia entre 2,6 MB y 255 KB en la primera pantalla que
+                 * carga cualquiera con datos móviles. Mientras tanto, el peso se
+                 * bajó achicando el archivo mismo.
+                 */}
                 <img
                   src={store.image || "/placeholder.svg"}
                   alt={`Fachada de ${store.name}`}

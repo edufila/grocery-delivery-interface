@@ -153,7 +153,7 @@ export async function POST(request: Request) {
   const { enviados, muertos } = await mandarPush(suscripciones)
 
   /**
-   * Las suscripciones que el servicio dio por muertas se borran acá y no en el
+   * Las suscripciones que el servicio dio por muertas se borran aquí y no en el
    * navegador: quien las tenía ya no está para borrarlas, y si se dejan, cada
    * aviso futuro gasta una petición en un teléfono que no existe.
    */
