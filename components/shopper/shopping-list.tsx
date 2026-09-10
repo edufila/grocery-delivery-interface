@@ -115,13 +115,13 @@ export function ShoppingList({
                     type="button"
                     onClick={() => void mark(item, "ok")}
                     disabled={busyId === item.id}
-                    className={`flex min-h-9 items-center gap-1.5 rounded-full px-3 text-sm font-medium transition ${
+                    className={`flex min-h-11 items-center gap-1.5 rounded-full px-3 text-sm font-medium transition ${
                       item.status === "ok"
                         ? "bg-emerald-600 text-white"
                         : "border border-gray-200 text-gray-600 active:bg-gray-50"
                     }`}
                   >
-                    <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                    <Check className="h-4 w-4" aria-hidden="true" />
                     Lo llevé
                   </button>
 
@@ -129,9 +129,9 @@ export function ShoppingList({
                     type="button"
                     onClick={() => void mark(item, "ajustado", Math.max(0, llevadas - 1))}
                     disabled={busyId === item.id || llevadas <= 0}
-                    className="flex min-h-9 items-center gap-1.5 rounded-full border border-gray-200 px-3 text-sm font-medium text-gray-600 transition active:bg-gray-50 disabled:opacity-50"
+                    className="flex min-h-11 items-center gap-1.5 rounded-full border border-gray-200 px-3 text-sm font-medium text-gray-600 transition active:bg-gray-50 disabled:opacity-50"
                   >
-                    <Minus className="h-3.5 w-3.5" aria-hidden="true" />
+                    <Minus className="h-4 w-4" aria-hidden="true" />
                     Llevé menos
                   </button>
 
@@ -139,13 +139,13 @@ export function ShoppingList({
                     type="button"
                     onClick={() => void mark(item, "faltante")}
                     disabled={busyId === item.id}
-                    className={`flex min-h-9 items-center gap-1.5 rounded-full px-3 text-sm font-medium transition ${
+                    className={`flex min-h-11 items-center gap-1.5 rounded-full px-3 text-sm font-medium transition ${
                       faltante
                         ? "bg-rose-600 text-white"
                         : "border border-gray-200 text-gray-600 active:bg-gray-50"
                     }`}
                   >
-                    <PackageX className="h-3.5 w-3.5" aria-hidden="true" />
+                    <PackageX className="h-4 w-4" aria-hidden="true" />
                     No había
                   </button>
 

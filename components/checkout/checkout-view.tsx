@@ -524,11 +524,14 @@ function DeliveryCard({ session }: { session: Session }) {
         <MapPin className="h-4 w-4 text-emerald-600" aria-hidden="true" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">Entregar en</p>
+        <p className="text-[11px] font-medium uppercase tracking-wide text-gray-500">Entregar en</p>
         <p className="text-sm font-semibold text-gray-900">{session.address.label}</p>
         <p className="truncate text-sm text-gray-500">{session.address.detail}</p>
       </div>
-      <Link href="/perfil" className="min-h-9 shrink-0 text-sm font-medium text-emerald-600">
+      <Link
+        href="/perfil"
+        className="-mr-2 flex min-h-11 shrink-0 items-center px-2 text-sm font-medium text-emerald-600"
+      >
         Cambiar
       </Link>
     </section>

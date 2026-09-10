@@ -54,7 +54,7 @@ export function InterruptorAviso({
           role="switch"
           aria-checked={encendido}
           aria-label={titulo}
-          className={`relative h-7 w-12 shrink-0 rounded-full transition ${
+          className={`relative h-7 w-12 shrink-0 rounded-full transition before:absolute before:-inset-y-2 before:inset-x-0 before:content-[''] ${
             encendido ? "bg-emerald-600" : "bg-gray-200"
           }`}
         >
