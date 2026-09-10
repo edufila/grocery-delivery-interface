@@ -125,6 +125,39 @@ export default async function BuscarPage({
       tiendas = new Map((locales ?? []).map((t) => [t.id, t.name]))
       habituales = (productos ?? []).filter((p) => tiendas.has(p.store_id))
     }
+
+    /**
+     * Y además, lo que hay para comprar.
+     *
+     * Sin esto la pantalla era una frase gris en el medio de nada para todo el
+     * que entra por primera vez -- que es justamente quien menos sabe qué
+     * escribir en un buscador. Y es la segunda pestaña de la barra: mucha gente
+     * cae aquí antes que en ningún otro lado.
+     *
+     * Ahora se ve sin filtro, y buscar lo que hace es achicar la lista, que es
+     * como uno espera que se comporte algo llamado Explorar.
+     */
+    const [{ data: muestra }, { data: locales }] = await Promise.all([
+      supabase
+        .from("products")
+        .select("id, name, unit, price, image, store_id")
+        .eq("active", true)
+        .order("name")
+        // Treinta alcanza para que se vea llena y no pesa en datos móviles.
+        .limit(30)
+        .returns<Fila[]>(),
+      supabase
+        .from("stores")
+        .select("id, name")
+        .eq("active", true)
+        .returns<{ id: string; name: string }[]>(),
+    ])
+
+    if (tiendas.size === 0) {
+      tiendas = new Map((locales ?? []).map((t) => [t.id, t.name]))
+    }
+
+    resultados = (muestra ?? []).filter((p) => tiendas.has(p.store_id))
   }
 
   // Agrupados por abasto, porque el mismo producto cuesta distinto en cada uno.
@@ -150,10 +183,9 @@ export default async function BuscarPage({
         <CategoriaChips activa={categoria} termino={termino} mayorista={soloMayorista} />
       </header>
 
-      <div className="mx-auto max-w-md px-4 py-4">
-        {!hayFiltro ? (
-          habituales.length > 0 ? (
-            <section>
+      <div className="mx-auto flex max-w-md flex-col gap-6 px-4 py-4">
+        {!hayFiltro && habituales.length > 0 && (
+          <section>
               <h2 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-gray-900">
                 <Star className="h-4 w-4 fill-amber-400 text-amber-500" aria-hidden="true" />
                 Lo que compras siempre
@@ -193,27 +225,29 @@ export default async function BuscarPage({
                 ))}
               </ul>
             </section>
-          ) : (
-            <p className="py-16 text-center text-sm leading-relaxed text-gray-500">
-              Elige una categoría o escribe qué buscas. Miramos en todos los abastos a la vez.
-            </p>
-          )
-        ) : resultados.length === 0 ? (
+        )}
+
+        {resultados.length === 0 ? (
           <div className="py-16 text-center">
             <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
               <PackageSearch className="h-6 w-6 text-gray-400" aria-hidden="true" />
             </span>
             <p className="mt-4 text-sm leading-relaxed text-gray-500">
-              No encontramos {queSeBusco} en ningún abasto.
+              {hayFiltro
+                ? `No encontramos ${queSeBusco} en ningún abasto.`
+                : "Todavía no hay productos cargados en ningún abasto."}
             </p>
           </div>
         ) : (
           <div className="flex flex-col gap-6">
             <p className="text-sm text-gray-500">
-              {resultados.length === 1
-                ? "1 producto encontrado"
-                : `${resultados.length} productos encontrados`}
-              {porTienda.size > 1 && ` en ${porTienda.size} abastos`}
+              {hayFiltro
+                ? `${
+                    resultados.length === 1
+                      ? "1 producto encontrado"
+                      : `${resultados.length} productos encontrados`
+                  }${porTienda.size > 1 ? ` en ${porTienda.size} abastos` : ""}`
+                : "Escribe arriba o toca una categoría para buscar en todos los abastos a la vez."}
             </p>
 
             {[...porTienda.entries()].map(([storeId, filas]) => (
