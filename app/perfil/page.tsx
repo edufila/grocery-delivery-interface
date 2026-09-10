@@ -78,7 +78,7 @@ export default async function PerfilPage() {
       </header>
 
       <div className="mx-auto max-w-md px-4 pb-28 pt-6">
-        <section className="flex items-center gap-4 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm shadow-gray-100">
+        <section className="flex items-center gap-4 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm shadow-gray-900/[0.06]">
           {avatarUrl ? (
             <img
               src={avatarUrl}
@@ -112,7 +112,7 @@ export default async function PerfilPage() {
           </p>
         )}
 
-        <section className="mt-4 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm shadow-gray-100">
+        <section className="mt-4 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm shadow-gray-900/[0.06]">
           <h2 className="mb-4 text-base font-semibold text-gray-900">Tus datos</h2>
           <ProfileForm
             userId={user.id}
@@ -121,7 +121,7 @@ export default async function PerfilPage() {
           />
         </section>
 
-        <section className="mt-4 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm shadow-gray-100">
+        <section className="mt-4 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm shadow-gray-900/[0.06]">
           <h2 className="mb-4 text-base font-semibold text-gray-900">Direcciones de entrega</h2>
           <AddressManager userId={user.id} addresses={addresses ?? []} />
         </section>

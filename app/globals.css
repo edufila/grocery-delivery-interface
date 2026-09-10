@@ -66,27 +66,46 @@
  */
 @theme {
   /* Grises cálidos. La croma se mantiene baja a propósito: pasada 0.02 el gris
-     deja de leerse como gris y empieza a verse sucio. */
-  --color-gray-50: oklch(0.985 0.003 85);
-  --color-gray-100: oklch(0.967 0.005 85);
-  --color-gray-200: oklch(0.925 0.008 85);
+     deja de leerse como gris y empieza a verse sucio.
+
+     El 50 es más oscuro que el de Tailwind (0.985) porque es el fondo de todas
+     las pantallas y las tarjetas encima son blancas. Con 0.985 la diferencia
+     era de un 1,5% de claridad: en un teléfono al sol, ninguna. Todo se veía
+     como una sola sábana blanca y las tarjetas no se leían como objetos
+     separados. Con 0.968 se despegan sin que el fondo llegue a verse gris. */
+  --color-gray-50: oklch(0.968 0.004 85);
+  --color-gray-100: oklch(0.947 0.006 85);
+  --color-gray-200: oklch(0.912 0.008 85);
   --color-gray-300: oklch(0.869 0.011 83);
+  /* El 400 es para iconos y bordes, no para texto: sobre blanco da 2,6 a 1 y
+     el mínimo para leer son 4,5. Si aparece en una palabra, es un error. */
   --color-gray-400: oklch(0.708 0.016 80);
-  --color-gray-500: oklch(0.556 0.018 78);
+  /* El 500 es el gris de texto secundario. Apenas más oscuro que el de
+     Tailwind (0.556) porque sobre el fondo de las pantallas se quedaba en 4,33
+     a 1 -- a un pelo del mínimo. Sobre blanco ya pasaba; el que no llegaba era
+     el mismo texto sobre gris. */
+  --color-gray-500: oklch(0.542 0.018 78);
   --color-gray-600: oklch(0.448 0.019 76);
   --color-gray-700: oklch(0.374 0.018 74);
   --color-gray-800: oklch(0.28 0.016 72);
   --color-gray-900: oklch(0.214 0.014 70);
   --color-gray-950: oklch(0.136 0.012 70);
 
-  /* Verde de hoja. El 600 es el de los botones, así que es el que manda. */
+  /* Verde de hoja. El 600 es el de los botones, así que es el que manda.
+   *
+   * Es más oscuro que el de Tailwind (0.596) y eso se midió, no se eligió a
+   * ojo: a esa claridad, el blanco encima daba 3,86 a 1 de contraste y el
+   * mínimo para leer texto son 4,5. Fallaban de una sola vez todos los botones
+   * verdes y todos los enlaces de la app. A 0,52 la relación queda en 5 a 1 por
+   * los dos lados -- blanco sobre verde, y verde sobre blanco -- que es lo que
+   * hace falta para leerlo en un teléfono al sol. */
   --color-emerald-50: oklch(0.975 0.021 156);
   --color-emerald-100: oklch(0.946 0.045 156);
   --color-emerald-200: oklch(0.898 0.079 156);
   --color-emerald-300: oklch(0.833 0.113 156);
-  --color-emerald-400: oklch(0.745 0.14 155);
-  --color-emerald-500: oklch(0.679 0.152 154);
-  --color-emerald-600: oklch(0.588 0.148 153);
+  --color-emerald-400: oklch(0.72 0.145 155);
+  --color-emerald-500: oklch(0.63 0.15 154);
+  --color-emerald-600: oklch(0.52 0.132 153);
   --color-emerald-700: oklch(0.497 0.126 153);
   --color-emerald-800: oklch(0.415 0.103 153);
   --color-emerald-900: oklch(0.352 0.085 154);

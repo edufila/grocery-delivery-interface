@@ -82,7 +82,7 @@ export function BottomNav() {
                     : undefined
                 }
                 className={`flex min-h-11 flex-col items-center gap-1 rounded-xl px-4 py-1.5 text-xs font-medium transition ${
-                  isActive ? "text-emerald-600" : "text-gray-400"
+                  isActive ? "text-emerald-600" : "text-gray-500"
                 }`}
               >
                 <span className="relative">

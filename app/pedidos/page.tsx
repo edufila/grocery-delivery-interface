@@ -78,7 +78,7 @@ export default async function PedidosPage() {
               <li key={order.id}>
                 <Link
                   href={`/pedidos/${order.code}`}
-                  className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm shadow-gray-100 transition active:scale-[0.99]"
+                  className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm shadow-gray-900/[0.06] transition active:scale-[0.99]"
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">

@@ -108,7 +108,7 @@ export function NearbyStores({ stores, tasaVes }: { stores: Store[]; tasaVes?: n
           return (
             <article
               key={store.id}
-              className="relative overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm shadow-gray-100 transition active:scale-[0.995]"
+              className="relative overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm shadow-gray-900/[0.06] transition active:scale-[0.995]"
             >
               <div className="relative h-36 w-full">
                 {/**
@@ -182,7 +182,7 @@ export function NearbyStores({ stores, tasaVes }: { stores: Store[]; tasaVes?: n
                     {(() => {
                       const bs = bsEquivalent(Number(store.delivery_fee), tasaVes ?? null)
                       return bs != null ? (
-                        <span className="text-gray-400"> · Bs {formatBolivares(bs)}</span>
+                        <span className="text-gray-500"> · Bs {formatBolivares(bs)}</span>
                       ) : null
                     })()}
                   </span>

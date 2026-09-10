@@ -84,7 +84,7 @@ export function CategoryShortcuts() {
                 />
               </span>
               <span
-                className={`text-xs font-semibold ${disponible ? "text-gray-700" : "text-gray-400"}`}
+                className={`text-xs font-semibold ${disponible ? "text-gray-700" : "text-gray-500"}`}
               >
                 {categoria.label}
               </span>

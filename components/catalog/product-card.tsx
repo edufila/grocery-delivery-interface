@@ -33,7 +33,7 @@ export function ProductCard({
   const agotado = !product.in_stock
 
   return (
-    <article className="relative flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm shadow-gray-100 transition hover:shadow-md">
+    <article className="relative flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm shadow-gray-900/[0.06] transition hover:shadow-md">
       <div className="relative aspect-square w-full bg-gray-50 p-3">
         <img
           src={product.image || "/placeholder.svg"}

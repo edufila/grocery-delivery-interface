@@ -159,7 +159,7 @@ export function DeliveryTopBar() {
               <MapPin className="h-4 w-4 text-emerald-600" aria-hidden="true" />
             </span>
             <span className="min-w-0">
-              <span className="block text-[11px] font-medium uppercase tracking-wide text-gray-400">
+              <span className="block text-[11px] font-medium uppercase tracking-wide text-gray-500">
                 Entregar en
               </span>
               <span className="flex items-center gap-1 text-sm font-semibold text-gray-900">

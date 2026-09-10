@@ -38,7 +38,7 @@ export function TasaBcvBadge({
         </span>
       </div>
       {actualizada && !vigente && (
-        <p className="mt-1 px-1 text-[11px] leading-relaxed text-gray-400">
+        <p className="mt-1 px-1 text-[11px] leading-relaxed text-gray-500">
           Es la última que se pudo traer, del {formatOrderDate(actualizada)}.
         </p>
       )}

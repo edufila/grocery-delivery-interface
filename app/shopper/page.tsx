@@ -159,7 +159,7 @@ function Grupo({
             <li key={order.id}>
               <Link
                 href={`/shopper/${order.code}`}
-                className={`flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm shadow-gray-100 transition active:scale-[0.99] ${
+                className={`flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm shadow-gray-900/[0.06] transition active:scale-[0.99] ${
                   apagado ? "opacity-60" : ""
                 }`}
               >
