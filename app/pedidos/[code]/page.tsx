@@ -71,12 +71,13 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
     .eq("order_id", order.id)
     .maybeSingle<{ code: string; attempts: number }>()
 
-  // A dónde pagar. Los datos los carga el panel, no viven en el código.
+  // Solo a dónde pagar. Si el pedido espera pago o no, lo dice el pedido:
+  // ver `hayQuePagar` abajo.
   const { data: metodo } = await supabase
     .from("payment_methods")
-    .select("instructions, needs_reference")
+    .select("instructions")
     .eq("id", order.payment_method)
-    .maybeSingle<{ instructions: string | null; needs_reference: boolean }>()
+    .maybeSingle<{ instructions: string | null }>()
 
   /**
    * Si este pedido espera pago lo dice el pedido, no el método.
