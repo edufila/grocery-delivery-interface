@@ -201,6 +201,8 @@ export default async function BuscarPage({
                         src={fila.image || "/placeholder.svg"}
                         alt=""
                         className="h-14 w-14 shrink-0 rounded-xl bg-gray-50 object-cover"
+                        loading="lazy"
+                        decoding="async"
                       />
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-medium text-gray-900">
@@ -276,6 +278,8 @@ export default async function BuscarPage({
                           src={fila.image || "/placeholder.svg"}
                           alt=""
                           className="h-14 w-14 shrink-0 rounded-xl bg-gray-50 object-cover"
+                        loading="lazy"
+                        decoding="async"
                         />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-sm font-medium text-gray-900">

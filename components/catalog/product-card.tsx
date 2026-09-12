@@ -38,6 +38,9 @@ export function ProductCard({
         <img
           src={product.image || "/placeholder.svg"}
           alt={product.name}
+          // En una grilla larga, la mayoría empieza fuera de la pantalla.
+          loading="lazy"
+          decoding="async"
           className={`h-full w-full object-contain ${agotado ? "opacity-40 grayscale" : ""}`}
         />
         {agotado ? (

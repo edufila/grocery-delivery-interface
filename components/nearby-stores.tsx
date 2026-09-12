@@ -100,7 +100,7 @@ export function NearbyStores({ stores, tasaVes }: { stores: Store[]; tasaVes?: n
       </div>
 
       <div className="mx-auto max-w-md space-y-4 px-4 py-4">
-        {stores.map((store) => {
+        {stores.map((store, indice) => {
           // Cada tienda va a su propio catálogo.
           const href = `/catalogo?tienda=${store.id}`
           const isFavorite = favorites.includes(store.id)
@@ -126,10 +126,16 @@ export function NearbyStores({ stores, tasaVes }: { stores: Store[]; tasaVes?: n
                  * carga cualquiera con datos móviles. Mientras tanto, el peso se
                  * bajó achicando el archivo mismo.
                  */}
+                {/* La primera entra en pantalla al abrir; de la segunda en
+                    adelante hay que bajar para verlas, así que se bajan cuando
+                    toque. Eran 360 KB que el teléfono descargaba para algo que
+                    todavía no estaba mirando. */}
                 <img
                   src={store.image || "/placeholder.svg"}
                   alt={`Fachada de ${store.name}`}
                   className="h-full w-full object-cover"
+                  loading={indice === 0 ? "eager" : "lazy"}
+                  decoding="async"
                 />
                 {store.tag && (
                   <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white shadow-sm">
