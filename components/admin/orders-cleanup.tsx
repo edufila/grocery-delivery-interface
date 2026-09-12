@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { ChevronRight, Loader2, Trash2 } from "lucide-react"
+import { ChevronRight, Loader2, Lock, Trash2 } from "lucide-react"
 
 import { DetallePedido } from "@/components/admin/detalle-pedido"
 import { formatMoney, formatOrderDate, statusLabel, type Order } from "@/lib/orders"
@@ -10,8 +10,31 @@ import { createClient } from "@/lib/supabase/client"
 
 type Row = Pick<
   Order,
-  "id" | "code" | "status" | "total" | "created_at" | "address_label" | "shopper_id"
+  | "id"
+  | "code"
+  | "status"
+  | "total"
+  | "created_at"
+  | "address_label"
+  | "shopper_id"
+  | "payment_reported_at"
+  | "payment_verified_at"
 >
+
+/**
+ * Un pedido que ya movió dinero, o que ya se entregó, no se borra.
+ *
+ * Lo impide la base desde la 0044 -- ahí es donde tiene que estar, porque la
+ * pantalla se puede saltar -- y aquí se refleja para no ofrecer un botón que
+ * va a rebotar. Una casilla que no hace nada es peor que no tenerla.
+ */
+function sePuedeBorrar(order: Row) {
+  return (
+    order.status !== "entregado" &&
+    order.payment_reported_at == null &&
+    order.payment_verified_at == null
+  )
+}
 
 const FILTERS = [
   { value: "todos", label: "Todos" },
@@ -48,8 +71,13 @@ export function OrdersCleanup({ orders }: { orders: Row[] }) {
     }
   })
 
+  // Solo los que de verdad se pueden borrar: marcar uno protegido no haría
+  // nada -- la base lo rechaza sin error, devolviendo cero filas -- y quedaría
+  // pareciendo que se borró.
+  const borrables = shown.filter(sePuedeBorrar)
+
   function selectAllShown() {
-    setSelected(new Set(shown.map((o) => o.id)))
+    setSelected(new Set(borrables.map((o) => o.id)))
     setConfirming(false)
   }
 
@@ -78,7 +106,7 @@ export function OrdersCleanup({ orders }: { orders: Row[] }) {
     setConfirming(false)
 
     if (deleteError) {
-      setError("No pudimos borrarlos. ¿Tu rol sigue siendo admin o dev?")
+      setError("No pudimos borrarlos. ¿Sigues siendo admin o dev, y ninguno tiene un pago encima?")
       return
     }
     setSelected(new Set())
@@ -130,9 +158,12 @@ export function OrdersCleanup({ orders }: { orders: Row[] }) {
           <button
             type="button"
             onClick={selectAllShown}
-            className="min-h-11 text-sm font-medium text-emerald-600"
+            disabled={borrables.length === 0}
+            className="min-h-11 text-sm font-medium text-emerald-600 disabled:text-gray-400"
           >
-            Seleccionar los {shown.length}
+            {borrables.length === shown.length
+              ? `Seleccionar los ${shown.length}`
+              : `Seleccionar los ${borrables.length} que se pueden borrar`}
           </button>
         )}
       </div>
@@ -153,15 +184,35 @@ export function OrdersCleanup({ orders }: { orders: Row[] }) {
                   : "border-gray-200 bg-white"
               }`}
             >
-              <label className="flex h-11 w-6 shrink-0 items-center justify-center">
-                <span className="sr-only">Seleccionar {order.code} para borrar</span>
-                <input
-                  type="checkbox"
-                  checked={selected.has(order.id)}
-                  onChange={() => toggle(order.id)}
-                  className="h-4 w-4 accent-rose-600"
-                />
-              </label>
+              {sePuedeBorrar(order) ? (
+                <label className="flex h-11 w-6 shrink-0 items-center justify-center">
+                  <span className="sr-only">Seleccionar {order.code} para borrar</span>
+                  <input
+                    type="checkbox"
+                    checked={selected.has(order.id)}
+                    onChange={() => toggle(order.id)}
+                    className="h-4 w-4 accent-rose-600"
+                  />
+                </label>
+              ) : (
+                /* Un candado en vez de una casilla apagada: apagada parece que
+                   falta seleccionar algo antes; el candado dice que está
+                   protegido, y al tocarlo dice por qué. */
+                <span
+                  className="flex h-11 w-6 shrink-0 items-center justify-center text-gray-400"
+                  title={
+                    order.status === "entregado"
+                      ? "Entregado: el pedido es el comprobante y no se borra."
+                      : "Tiene un pago encima: borrarlo dejaría el dinero sin contra qué cruzarse."
+                  }
+                >
+                  <Lock className="h-4 w-4" aria-hidden="true" />
+                  <span className="sr-only">
+                    {order.code} no se puede borrar:{" "}
+                    {order.status === "entregado" ? "ya se entregó" : "tiene un pago encima"}
+                  </span>
+                </span>
+              )}
 
               <button
                 type="button"
