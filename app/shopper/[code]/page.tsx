@@ -56,31 +56,32 @@ export default async function ShopperOrderPage({
 
   if (!order) notFound()
 
-  const { data: items } = await supabase
-    .from("order_items")
-    .select("*")
-    .eq("order_id", order.id)
-    .returns<OrderItem[]>()
+  /**
+   * Las tres a la vez: dependen del pedido, pero no entre sí.
+   *
+   * Encadenadas eran tres viajes de ida y vuelta a Supabase seguidos, y esta es
+   * la pantalla que el shopper tiene abierta mientras compra y mientras maneja,
+   * en la calle y con datos. Juntas cuestan lo que la más lenta.
+   *
+   * Del cliente solo llegan nombre y teléfono, y solo mientras el pedido está
+   * en curso. Desde la 0042 la base devuelve únicamente el primer nombre: el
+   * apellido no sale de ahí. El `firstName` de abajo se deja igual, aunque ya
+   * no recorte nada, para que la pantalla siga siendo correcta contra una base
+   * donde esa migración todavía no se corrió.
+   */
+  const [{ data: items }, { data: customerRows }, { data: store }] = await Promise.all([
+    supabase.from("order_items").select("*").eq("order_id", order.id).returns<OrderItem[]>(),
+    supabase.rpc("order_customer", { p_order_id: order.id }),
+    supabase
+      .from("stores")
+      .select("name, lat, lng")
+      .eq("id", order.store_id ?? "girasol")
+      .maybeSingle<{ name: string; lat: number | null; lng: number | null }>(),
+  ])
 
   const lines = items ?? []
   const mine = order.shopper_id === user.id
-
-  /**
-   * Solo nombre y teléfono, y solo mientras el pedido esté en curso.
-   *
-   * Desde la 0042 la base devuelve únicamente el primer nombre: el apellido no
-   * sale de ahí. El `firstName` de abajo se deja igual, aunque ya no recorte
-   * nada, para que la pantalla siga siendo correcta contra una base donde esa
-   * migración todavía no se corrió.
-   */
-  const { data: customerRows } = await supabase.rpc("order_customer", { p_order_id: order.id })
   const customer = (customerRows as { full_name: string | null; phone: string | null }[] | null)?.[0]
-
-  const { data: store } = await supabase
-    .from("stores")
-    .select("name, lat, lng")
-    .eq("id", order.store_id ?? "girasol")
-    .maybeSingle<{ name: string; lat: number | null; lng: number | null }>()
 
   return (
     <main className="min-h-dvh bg-gray-50">

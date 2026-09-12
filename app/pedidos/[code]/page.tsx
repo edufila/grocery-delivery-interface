@@ -50,34 +50,39 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
   // RLS ya limita a los pedidos propios: si no vuelve nada, no es suyo o no existe.
   if (!order) notFound()
 
-  const { data: items } = await supabase
-    .from("order_items")
-    .select("*")
-    .eq("order_id", order.id)
-    .returns<OrderItem[]>()
+  /**
+   * Lo que falta, todo junto.
+   *
+   * Las cuatro dependen del pedido pero no entre sí, y encadenadas eran cuatro
+   * viajes de ida y vuelta a Supabase uno detrás de otro. Esta es la pantalla
+   * que el cliente deja abierta mirando por dónde viene su pedido, y que se
+   * rearma sola cada vez que algo cambia: cada viaje de más se paga muchas
+   * veces. Juntas cuestan lo que la más lenta.
+   */
+  const [{ data: items }, { data: shopperRows }, { data: deliveryCode }, { data: metodo }] =
+    await Promise.all([
+      supabase.from("order_items").select("*").eq("order_id", order.id).returns<OrderItem[]>(),
+      // Solo nombre, foto y @: no expone teléfono ni correo del shopper.
+      supabase.rpc("order_shopper", { p_order_id: order.id }),
+      // Solo el dueño del pedido puede leerlo: el shopper no tiene política aquí.
+      supabase
+        .from("order_delivery_codes")
+        .select("code, attempts")
+        .eq("order_id", order.id)
+        .maybeSingle<{ code: string; attempts: number }>(),
+      // Solo a dónde pagar. Si el pedido espera pago o no, lo dice el pedido:
+      // ver `hayQuePagar` abajo.
+      supabase
+        .from("payment_methods")
+        .select("instructions")
+        .eq("id", order.payment_method)
+        .maybeSingle<{ instructions: string | null }>(),
+    ])
 
   const lines = items ?? []
   const currentStep = STATUS_FLOW.indexOf(order.status)
   const cancelled = order.status === "cancelado"
-
-  // Solo devuelve nombre, foto y @: no expone teléfono ni correo del shopper.
-  const { data: shopperRows } = await supabase.rpc("order_shopper", { p_order_id: order.id })
   const shopper = (shopperRows as OrderShopper[] | null)?.[0] ?? null
-
-  // Solo el dueño del pedido puede leerlo: el shopper no tiene política aquí.
-  const { data: deliveryCode } = await supabase
-    .from("order_delivery_codes")
-    .select("code, attempts")
-    .eq("order_id", order.id)
-    .maybeSingle<{ code: string; attempts: number }>()
-
-  // Solo a dónde pagar. Si el pedido espera pago o no, lo dice el pedido:
-  // ver `hayQuePagar` abajo.
-  const { data: metodo } = await supabase
-    .from("payment_methods")
-    .select("instructions")
-    .eq("id", order.payment_method)
-    .maybeSingle<{ instructions: string | null }>()
 
   /**
    * Si este pedido espera pago lo dice el pedido, no el método.

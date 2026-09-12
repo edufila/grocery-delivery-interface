@@ -36,6 +36,58 @@ const CARPETA = join(REPO, "public", "images")
  */
 const LADO = 640
 
+/**
+ * Las fotos de los abastos se recortan a la forma con la que se ven.
+ *
+ * La tarjeta las muestra en una franja de 448 por 144, o sea algo más de tres a
+ * uno, y el navegador recorta el resto con `object-cover`. Guardarlas cuadradas
+ * significaba mandar al teléfono tres veces más imagen de la que se ve, para
+ * que la tirara. Recortando la misma franja que recorta el CSS, el resultado en
+ * pantalla es idéntico y pesa la tercera parte.
+ *
+ * Se recorta del centro, que es justo lo que hace `object-cover`.
+ */
+const PROPORCION_TARJETA = 448 / 144
+const ANCHO_TARJETA = 640
+
+function recortarFranja(origen, anchoOrigen, altoOrigen, anchoDestino, altoDestino) {
+  const salida = Buffer.alloc(anchoDestino * altoDestino * 4)
+
+  // La franja del original que corresponde: todo el ancho, y del alto lo que
+  // entre en la proporción, centrado.
+  const altoFranja = Math.min(altoOrigen, Math.round(anchoOrigen / PROPORCION_TARJETA))
+  const desde = Math.round((altoOrigen - altoFranja) / 2)
+
+  const escalaX = anchoOrigen / anchoDestino
+  const escalaY = altoFranja / altoDestino
+
+  for (let y = 0; y < altoDestino; y++) {
+    const y0 = desde + Math.floor(y * escalaY)
+    const y1 = Math.max(y0 + 1, desde + Math.floor((y + 1) * escalaY))
+
+    for (let x = 0; x < anchoDestino; x++) {
+      const x0 = Math.floor(x * escalaX)
+      const x1 = Math.max(x0 + 1, Math.floor((x + 1) * escalaX))
+
+      let r = 0, g = 0, b = 0, a = 0, n = 0
+      for (let sy = y0; sy < y1 && sy < altoOrigen; sy++) {
+        for (let sx = x0; sx < x1 && sx < anchoOrigen; sx++) {
+          const i = (sy * anchoOrigen + sx) * 4
+          r += origen[i]; g += origen[i + 1]; b += origen[i + 2]; a += origen[i + 3]; n++
+        }
+      }
+
+      const d = (y * anchoDestino + x) * 4
+      salida[d] = Math.round(r / n)
+      salida[d + 1] = Math.round(g / n)
+      salida[d + 2] = Math.round(b / n)
+      salida[d + 3] = Math.round(a / n)
+    }
+  }
+
+  return salida
+}
+
 const hacerlo = process.argv.includes("--hacerlo")
 
 const kb = (n) => `${Math.round(n / 1024)} KB`
@@ -74,22 +126,35 @@ for (const nombre of archivos) {
 
   const { ancho, alto, pixels } = imagen
 
-  if (ancho <= LADO && alto <= LADO) {
+  // Una de tienda ya recortada tiene la proporción de la tarjeta: se deja.
+  if (Math.abs(ancho / alto - PROPORCION_TARJETA) < 0.05) {
+    console.log(`  ${nombre.padEnd(24)} ya recortada a ${ancho}×${alto}, se deja`)
+    despues += original.length
+    continue
+  }
+
+  if (!nombre.startsWith("store-") && ancho <= LADO && alto <= LADO) {
     console.log(`  ${nombre.padEnd(24)} ya mide ${ancho}×${alto}, se deja`)
     despues += original.length
     continue
   }
 
-  // `redimensionar` trabaja sobre un cuadrado, que es lo que son estas fotos.
-  // Una que no lo sea se deja como está en vez de deformarla.
-  if (ancho !== alto) {
+  const esDeTienda = nombre.startsWith("store-")
+
+  // `redimensionar` trabaja sobre un cuadrado. Una foto que no lo sea y que no
+  // sea de tienda se deja como está en vez de deformarla.
+  if (!esDeTienda && ancho !== alto) {
     console.log(`  ${nombre.padEnd(24)} no es cuadrada (${ancho}×${alto}), se deja`)
     despues += original.length
     continue
   }
 
-  const chica = redimensionar(pixels, ancho, alto, LADO)
-  const nueva = png(LADO, chica)
+  const anchoFinal = esDeTienda ? ANCHO_TARJETA : LADO
+  const altoFinal = esDeTienda ? Math.round(ANCHO_TARJETA / PROPORCION_TARJETA) : LADO
+  const chica = esDeTienda
+    ? recortarFranja(pixels, ancho, alto, anchoFinal, altoFinal)
+    : redimensionar(pixels, ancho, alto, LADO)
+  const nueva = png(anchoFinal, chica, altoFinal)
 
   // Si por lo que sea no adelgaza, se deja la de antes: el objetivo es pesar
   // menos, no reescribir archivos.
@@ -103,7 +168,7 @@ for (const nombre of archivos) {
   const ahorro = Math.round((1 - nueva.length / original.length) * 100)
   console.log(
     `  ${nombre.padEnd(24)} ${ancho}×${alto} ${kb(original.length)}` +
-      `  ->  ${LADO}×${LADO} ${kb(nueva.length)}   (-${ahorro}%)`,
+      `  ->  ${anchoFinal}×${altoFinal} ${kb(nueva.length)}   (-${ahorro}%)`,
   )
 
   if (hacerlo) writeFileSync(ruta, nueva)

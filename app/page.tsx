@@ -13,19 +13,27 @@ import { createClient } from "@/lib/supabase/server"
 export default async function HomePage() {
   const supabase = isSupabaseConfigured ? await createClient() : null
 
-  // Las tiendas salen de la base para poder editarlas sin desplegar.
-  const stores = supabase
-    ? ((
-        await supabase
+  /**
+   * Las dos consultas a la vez, no una después de la otra.
+   *
+   * Cada una es un viaje de ida y vuelta a Supabase, y no dependen entre sí:
+   * encadenarlas hacía esperar dos veces para nada. Es la primera pantalla que
+   * carga cualquiera, con datos móviles, así que ese viaje de más se nota.
+   *
+   * Las tiendas salen de la base para poder editarlas sin desplegar.
+   */
+  const [stores, settings] = supabase
+    ? await Promise.all([
+        supabase
           .from("stores")
           .select("*")
           .eq("active", true)
           .order("sort_order")
           .returns<Store[]>()
-      ).data ?? [])
-    : []
-
-  const settings = supabase ? await fetchSettings(supabase) : null
+          .then(({ data }) => data ?? []),
+        fetchSettings(supabase),
+      ])
+    : [[] as Store[], null]
 
   return (
     <main className="min-h-dvh bg-gray-50">
