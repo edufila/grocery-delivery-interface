@@ -178,6 +178,29 @@ export default async function BuscarPage({
     porTienda.set(fila.store_id, lista)
   }
 
+  /**
+   * El más barato de cada producto que está en más de un abasto.
+   *
+   * Es la razón de tener varios abastos en una misma app: el mismo arroz cuesta
+   * distinto en cada uno, y esta es la única pantalla que los muestra juntos.
+   * Se compara por nombre y presentación, sin acentos: dos abastos que cargaron
+   * "Harina PAN" igual cuentan como el mismo producto. Si empatan, ninguno se
+   * marca: no hay nada que elegir.
+   */
+  const masBarato = new Set<string>()
+  const porProducto = new Map<string, Fila[]>()
+  for (const fila of resultados) {
+    const clave = normalizarTexto(`${fila.name} ${fila.unit}`)
+    porProducto.set(clave, [...(porProducto.get(clave) ?? []), fila])
+  }
+  for (const filas of porProducto.values()) {
+    const tiendasDistintas = new Set(filas.map((f) => f.store_id))
+    if (tiendasDistintas.size < 2) continue
+    const minimo = Math.min(...filas.map((f) => Number(f.price)))
+    const ganadores = filas.filter((f) => Number(f.price) === minimo)
+    if (ganadores.length === 1) masBarato.add(`${ganadores[0].store_id}-${ganadores[0].id}`)
+  }
+
   const queSeBusco = filtraTexto
     ? `"${termino}"`
     : filtraCategoria
@@ -293,14 +316,19 @@ export default async function BuscarPage({
                           src={fila.image || "/placeholder.svg"}
                           alt=""
                           className="h-14 w-14 shrink-0 rounded-xl bg-gray-50 object-cover"
-                        loading="lazy"
-                        decoding="async"
+                          loading="lazy"
+                          decoding="async"
                         />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-sm font-medium text-gray-900">
                             {fila.name}
                           </span>
                           <span className="block text-sm text-gray-500">{fila.unit}</span>
+                          {masBarato.has(`${storeId}-${fila.id}`) && (
+                            <span className="mt-1 inline-flex rounded-md bg-emerald-600 px-1.5 py-0.5 text-xs font-semibold text-white">
+                              Más barato aquí
+                            </span>
+                          )}
                         </span>
                         <span className="shrink-0 text-right">
                           <span className="block text-sm font-semibold tabular-nums text-gray-900">
