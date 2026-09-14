@@ -1,6 +1,9 @@
 "use client"
 
+import Link from "next/link"
 import { useMemo, useState } from "react"
+import { Search } from "lucide-react"
+
 import { CambiarAbasto } from "./cambiar-abasto"
 import { CatalogHeader } from "./catalog-header"
 import { ProductCard } from "./product-card"
@@ -125,9 +128,21 @@ export function ProductCatalog({
         </button>
 
         {visibleProducts.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-gray-200 bg-white px-4 py-10 text-center text-sm text-gray-500">
-            {sinResultados}
-          </p>
+          <div className="rounded-2xl border border-dashed border-gray-200 bg-white px-4 py-10 text-center">
+            <p className="text-sm text-gray-500">{sinResultados}</p>
+            {/* Lo que uno haría después de no encontrarlo aquí: ver si otro
+                abasto lo tiene. Sin esto había que salir, ir a Explorar y volver
+                a escribir lo mismo. */}
+            {query.trim().length >= 2 && (
+              <Link
+                href={`/buscar?q=${encodeURIComponent(query.trim())}`}
+                className="mx-auto mt-4 flex min-h-11 w-fit items-center gap-2 rounded-full bg-emerald-600 px-5 text-sm font-semibold text-white transition active:scale-95"
+              >
+                <Search className="h-4 w-4" aria-hidden="true" />
+                Buscarlo en todos los abastos
+              </Link>
+            )}
+          </div>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {visibleProducts.map((product) => (
