@@ -190,7 +190,7 @@ export default async function PedidoPage({
                 ? { lat: order.shopper_lat, lng: order.shopper_lng }
                 : null
             }
-            enVivo={order.status !== "entregado"}
+            enVivo
             enCamino={order.status === "en_camino"}
           />
         )}
