@@ -77,7 +77,7 @@ export function ShopperPanel({
           <Store className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           <span>
             {store?.name ?? "El abasto"} todavía no tiene su punto en el mapa, así que no podemos
-            trazarte la ruta hasta ahí. Se carga en la tabla <code className="text-xs">stores</code>.
+            trazarte la ruta hasta ahí. Un administrador lo marca desde Administración, en Tiendas.
           </span>
         </p>
       )}
@@ -106,6 +106,36 @@ export function ShopperPanel({
           shopper: "Tú",
         }}
       />
+
+      {/**
+       * Abrir la ruta en la app de navegación del teléfono.
+       *
+       * El mapa de aquí dibuja el camino, pero no habla ni avisa las vueltas, y
+       * quien va en moto no puede ir mirando la pantalla. Waze y Google Maps son
+       * lo que ya usa cualquiera que reparte: se les pasa el punto y listo.
+       */}
+      {destino && order.status !== "entregado" && order.status !== "cancelado" && (
+        <div className="grid grid-cols-2 gap-2">
+          <a
+            href={`https://waze.com/ul?ll=${destino.lat},${destino.lng}&navigate=yes`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex h-12 items-center justify-center gap-2 rounded-2xl bg-sky-700 text-sm font-semibold text-white transition active:scale-[0.98]"
+          >
+            <Navigation className="h-4 w-4" aria-hidden="true" />
+            Ir con Waze
+          </a>
+          <a
+            href={`https://www.google.com/maps/dir/?api=1&destination=${destino.lat},${destino.lng}&travelmode=driving`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex h-12 items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white text-sm font-semibold text-gray-900 transition active:scale-[0.98]"
+          >
+            <Navigation className="h-4 w-4 text-emerald-600" aria-hidden="true" />
+            Google Maps
+          </a>
+        </div>
+      )}
 
       {mine && order.status !== "entregado" && (
         <div className="rounded-2xl border border-gray-100 bg-white p-4">
