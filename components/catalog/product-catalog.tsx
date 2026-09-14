@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useCallback, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { ChevronDown, Search } from "lucide-react"
 
 import { CambiarAbasto } from "./cambiar-abasto"
@@ -45,7 +45,13 @@ export function ProductCatalog({
   initialWholesaleOnly = false,
   tasaVes,
 }: Props) {
-  const { quantities, count, subtotal, add, removeOne } = useCart()
+  const { quantities, count, subtotal, add, removeOne, conocer } = useCart()
+
+  // El carrito ya no baja el catálogo entero: se le pasan los de este abasto,
+  // que llegaron armados del servidor.
+  useEffect(() => {
+    conocer(products)
+  }, [conocer, products])
   const favoritos = useFavoritos()
 
   /**

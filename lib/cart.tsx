@@ -17,7 +17,7 @@ type CartValue = {
   lines: CartLine[]
   count: number
   subtotal: number
-  /** false hasta leer el storage y el catálogo. */
+  /** false hasta leer el storage y conocer cada producto que hay en él. */
   ready: boolean
   /**
    * Los abastos que hay en el carrito. Un pedido es de uno solo -- el shopper
@@ -39,6 +39,8 @@ type CartValue = {
   /** Pisa el carrito entero. Lo usa "volver a pedir". */
   reemplazar: (cantidades: Record<string, number>) => void
   clear: () => void
+  /** Le presenta al carrito productos que ya llegaron por otro lado. */
+  conocer: (lista: Product[]) => void
 }
 
 const CartContext = createContext<CartValue | null>(null)
@@ -60,40 +62,89 @@ function readStored(): Record<string, number> {
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [quantities, setQuantities] = useState<Record<string, number>>({})
-  const [products, setProducts] = useState<Product[]>([])
-  const [loaded, setLoaded] = useState(false)
+  const [byId, setById] = useState<Map<string, Product>>(() => new Map())
+  /** Los ids por los que ya se le preguntó a la base, estén o no. */
+  const [consultados, setConsultados] = useState<ReadonlySet<string>>(() => new Set())
+  const [leido, setLeido] = useState(false)
 
   useEffect(() => {
     setQuantities(readStored())
+    setLeido(true)
+  }, [])
 
+  /**
+   * Suma productos que ya se tienen a mano, sin ir a la base.
+   *
+   * El catálogo de un abasto ya trae sus productos del servidor: con esto el
+   * carrito los conoce desde el primer toque, y la barra de "Ver carrito"
+   * aparece al instante en vez de esperar una consulta.
+   */
+  const conocer = useCallback((lista: Product[]) => {
+    if (lista.length === 0) return
+    setById((prev) => {
+      const next = new Map(prev)
+      for (const p of lista) next.set(p.id, p)
+      return next
+    })
+    setConsultados((prev) => {
+      const next = new Set(prev)
+      for (const p of lista) next.add(p.id)
+      return next
+    })
+  }, [])
+
+  /**
+   * Solo lo que está en el carrito, y solo lo que todavía no se conoce.
+   *
+   * Antes se descargaba el catálogo entero de TODOS los abastos en cada pantalla
+   * que se abría, con el carrito vacío incluido: con nueve productos no se nota,
+   * con quinientos por abasto es un mega en cada visita, en datos móviles. Ahora
+   * con el carrito vacío no se pide nada.
+   */
+  const faltan = useMemo(
+    () => Object.keys(quantities).filter((id) => !consultados.has(id)).sort(),
+    [quantities, consultados],
+  )
+  const clavesFaltan = faltan.join(",")
+
+  useEffect(() => {
+    if (!leido || faltan.length === 0) return
     if (!isSupabaseConfigured) {
-      setLoaded(true)
+      setConsultados((prev) => new Set([...prev, ...faltan]))
       return
     }
 
     let cancelled = false
     void (async () => {
-      const list = await fetchProducts(createClient())
+      const lista = await fetchProducts(createClient(), undefined, faltan)
       if (cancelled) return
-      setProducts(list)
-      setLoaded(true)
+      setById((prev) => {
+        const next = new Map(prev)
+        for (const p of lista) next.set(p.id, p)
+        return next
+      })
+      // También los que no volvieron: así cuentan como perdidos y no se vuelven
+      // a pedir en cada render.
+      setConsultados((prev) => new Set([...prev, ...faltan]))
     })()
 
     return () => {
       cancelled = true
     }
-  }, [])
+    // La lista como texto, no el arreglo: se arma nuevo en cada render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leido, clavesFaltan])
+
+  const loaded = leido && faltan.length === 0
 
   useEffect(() => {
-    if (!loaded) return
+    if (!leido) return
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(quantities))
     } catch {
       // Storage bloqueado: el carrito vive solo en esta pestaña.
     }
-  }, [quantities, loaded])
-
-  const byId = useMemo(() => new Map(products.map((p) => [p.id, p])), [products])
+  }, [quantities, leido])
 
   const add = useCallback((id: string) => {
     setQuantities((prev) => ({ ...prev, [id]: (prev[id] ?? 0) + 1 }))
@@ -174,6 +225,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       descartarPerdidos,
       reemplazar,
       clear,
+      conocer,
     }),
     [
       quantities,
@@ -186,6 +238,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       descartarPerdidos,
       reemplazar,
       clear,
+      conocer,
     ],
   )
 

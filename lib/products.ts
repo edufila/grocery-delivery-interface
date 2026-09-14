@@ -28,10 +28,15 @@ const COLUMNAS = "id, name, unit, price, image, category, wholesale, store_id"
 export async function fetchProducts(
   supabase: SupabaseClient,
   storeId?: string,
+  /** Solo estos. Lo usa el carrito, que no necesita el catálogo entero. */
+  ids?: string[],
 ): Promise<Product[]> {
+  if (ids && ids.length === 0) return []
+
   const traer = async (columnas: string) => {
     let query = supabase.from("products").select(columnas).eq("active", true)
     if (storeId) query = query.eq("store_id", storeId)
+    if (ids) query = query.in("id", ids)
     return query.order("name")
   }
 
