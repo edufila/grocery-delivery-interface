@@ -209,10 +209,14 @@ export function ProfileForm({ userId, profile, nameLocked = false }: Props) {
           autoComplete="tel"
           enterKeyHint="done"
           placeholder="0414 123 4567"
-          className="mt-2 h-14 w-full rounded-2xl border border-gray-200 bg-white px-4 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
+          className="mt-2 h-14 w-full rounded-2xl border border-gray-200 bg-white px-4 text-base text-gray-900 outline-none transition placeholder:text-gray-500 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
         />
-        {!phoneOk && (
+        {!phoneOk ? (
           <p className="mt-2 text-sm text-rose-600">El teléfono parece incompleto.</p>
+        ) : (
+          <p className="mt-2 text-xs leading-relaxed text-gray-500">
+            Tu shopper te escribe por WhatsApp a este número si hace falta coordinar la entrega.
+          </p>
         )}
       </div>
 
