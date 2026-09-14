@@ -164,6 +164,15 @@ export default async function PedidoPage({
       <div className="mx-auto max-w-lg space-y-4 px-4 pb-10 pt-4">
         <EstadoHero order={order} esperaPago={hayQuePagar && order.payment_verified_at == null} />
 
+        {/* Solo con el pedido cerrado, y justo debajo del estado: antes estaba al
+            fondo de la página, debajo del detalle y los totales. Mientras está en
+            curso lo que quiere el cliente es seguirlo, no arrancar otro igual. */}
+        {(order.status === "entregado" || cancelled) && (
+          <RepetirPedido
+            items={lines.map((item) => ({ product_id: item.product_id, qty: item.qty }))}
+          />
+        )}
+
         {/* Mientras hay algo por pasar: con el pedido cerrado no queda qué avisar. */}
         {!cancelled && order.status !== "entregado" && <AvisamePedido />}
 
@@ -388,13 +397,6 @@ export default async function PedidoPage({
           <CancelOrder orderId={order.id} />
         )}
 
-        {/* Solo con el pedido cerrado: mientras está en curso, lo que quiere
-            el cliente es seguirlo, no arrancar otro igual. */}
-        {(order.status === "entregado" || cancelled) && (
-          <RepetirPedido
-            items={lines.map((item) => ({ product_id: item.product_id, qty: item.qty }))}
-          />
-        )}
 
         <section className="rounded-2xl border border-gray-100 bg-white p-5">
           <h2 className="mb-3 text-base font-semibold text-gray-900">Detalles</h2>
