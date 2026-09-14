@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation"
 import { ArrowLeft, Check, MapPin } from "lucide-react"
 
 import { OrderLiveRefresh } from "@/components/live-refresh"
+import { EstadoHero } from "@/components/tracking/estado-hero"
 import { DeliveryCodeCard } from "@/components/tracking/delivery-code-card"
 import { OrderMap } from "@/components/tracking/order-map"
 import { CancelOrder } from "@/components/tracking/cancel-order"
@@ -125,6 +126,8 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
       />
 
       <div className="mx-auto max-w-lg space-y-4 px-4 pb-10 pt-4">
+        <EstadoHero order={order} esperaPago={hayQuePagar && order.payment_verified_at == null} />
+
         {!cancelled && (
           <OrderMap
             orderId={order.id}
@@ -179,11 +182,6 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
                   hour: "numeric",
                   minute: "2-digit",
                 })}
-                {order.shopper_lat != null && order.shopper_lng != null && (
-                  <span className="block font-mono text-xs text-emerald-700">
-                    {order.shopper_lat.toFixed(5)}, {order.shopper_lng.toFixed(5)}
-                  </span>
-                )}
               </p>
             </div>
           </section>
