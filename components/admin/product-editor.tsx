@@ -25,6 +25,19 @@ export function ProductEditor({ products }: { products: AdminProduct[] }) {
   }
 
   async function save(product: AdminProduct) {
+    /**
+     * Un precio en cero no se guarda.
+     *
+     * El campo convierte lo vacío en 0: borrar el precio para escribir otro y
+     * tocar Guardar a mitad dejaba el producto gratis, y la base lo acepta
+     * (solo pide que no sea negativo). Si no hay, lo que corresponde es
+     * marcarlo agotado.
+     */
+    if (!(Number(product.price) > 0)) {
+      setError(`${product.name} quedó sin precio. Escríbelo antes de guardar, o márcalo agotado.`)
+      return
+    }
+
     setBusyId(product.id)
     setError("")
 
