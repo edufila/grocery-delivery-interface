@@ -16,7 +16,7 @@ type NavItem = {
 }
 
 const items: NavItem[] = [
-  { label: "Home", href: "/", Icon: Home },
+  { label: "Inicio", href: "/", Icon: Home },
   // A /buscar y no al catálogo: explorar es en todos los abastos, no en el
   // primero de la lista, que es donde caía antes.
   { label: "Explorar", href: "/buscar", Icon: Compass },
@@ -66,7 +66,7 @@ export function BottomNav() {
       className="fixed inset-x-0 bottom-0 z-30 border-t border-gray-100 bg-white/95 backdrop-blur-md"
       aria-label="Navegación principal"
     >
-      <ul className="mx-auto flex max-w-md items-center justify-around px-2 pb-[env(safe-area-inset-bottom)] pt-2">
+      <ul className="mx-auto flex max-w-md items-center justify-around px-2 pb-[calc(env(safe-area-inset-bottom)+0.25rem)] pt-1.5">
         {items.map(({ label, href, Icon }) => {
           const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href)
           const badge = label === "Pedidos" && activos > 0
@@ -78,21 +78,28 @@ export function BottomNav() {
                 aria-current={isActive ? "page" : undefined}
                 aria-label={
                   badge
-                    ? `${label}, ${activos} ${activos === 1 ? "en curso" : "en curso"}`
+                    ? `${label}, ${activos} en curso`
                     : undefined
                 }
-                className={`flex min-h-11 flex-col items-center gap-1 rounded-xl px-4 py-1.5 text-xs font-medium transition ${
-                  isActive ? "text-emerald-600" : "text-gray-500"
+                className={`flex min-h-11 flex-col items-center gap-0.5 px-2 py-1 text-xs transition ${
+                  isActive ? "font-semibold text-emerald-700" : "font-medium text-gray-500"
                 }`}
               >
-                <span className="relative">
+                {/* La pastilla detrás del icono marca dónde se está sin depender
+                    solo del color, que con sol en la pantalla casi no se ve. */}
+                <span
+                  className={`relative flex h-8 w-14 items-center justify-center rounded-full transition-colors duration-200 ${
+                    isActive ? "bg-emerald-100" : "bg-transparent"
+                  }`}
+                >
                   <Icon
-                    className={`h-6 w-6 ${isActive ? "fill-emerald-50" : ""}`}
+                    className="h-[22px] w-[22px]"
+                    strokeWidth={isActive ? 2.4 : 2}
                     aria-hidden="true"
                   />
                   {badge && (
                     <span
-                      className="absolute -right-1.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-600 px-1 text-[10px] font-bold tabular-nums text-white"
+                      className="absolute right-1 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold tabular-nums text-white ring-2 ring-white"
                       aria-hidden="true"
                     >
                       {activos}
