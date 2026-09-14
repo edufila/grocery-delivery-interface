@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { Crosshair, Loader2 } from "lucide-react"
+import { Check, Crosshair, Loader2 } from "lucide-react"
 import type { Map as MapLibreMap, Marker as MapLibreMarker } from "maplibre-gl"
 
 import { cargarMapa } from "@/lib/mapa"
@@ -122,7 +122,7 @@ export function UseMyLocation({
         setError(
           geoError.code === geoError.PERMISSION_DENIED
             ? "Bloqueaste el permiso. Puedes mover el pin a mano igual."
-            : "No pudimos leer tu ubicación. Movés el pin a mano y listo.",
+            : "No pudimos leer tu ubicación. Mueve el pin a mano y listo.",
         )
       },
       { enableHighAccuracy: true, timeout: 15_000 },
@@ -153,9 +153,12 @@ export function UseMyLocation({
         {busy ? "Buscando..." : "Centrar en mi ubicación"}
       </button>
 
+      {/* Antes mostraba las coordenadas crudas (9.56074, -69.20485), que a
+          nadie le dicen nada. Lo que hace falta saber es que quedó marcado. */}
       {coords && (
-        <p className="text-center font-mono text-xs text-gray-500">
-          {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}
+        <p className="flex items-center justify-center gap-1.5 text-sm font-medium text-emerald-700">
+          <Check className="h-4 w-4" aria-hidden="true" />
+          Punto marcado
         </p>
       )}
 
