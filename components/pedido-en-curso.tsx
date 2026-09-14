@@ -10,7 +10,14 @@ import { isSupabaseConfigured } from "@/lib/supabase/config"
 
 const EN_CURSO = ["confirmado", "preparando", "en_camino"]
 
-type EnCurso = { code: string; status: OrderStatus; shopper_id: string | null }
+type EnCurso = {
+  code: string
+  status: OrderStatus
+  shopper_id: string | null
+  payment_required: boolean | null
+  payment_verified_at: string | null
+  payment_reference: string | null
+}
 
 /**
  * El pedido que va en camino, arriba del inicio.
@@ -37,10 +44,17 @@ export function PedidoEnCurso() {
       } = await supabase.auth.getUser()
       if (!user || cancelado) return
 
-      // RLS ya limita a los propios; el filtro es solo por estado.
+      /**
+       * El filtro por usuario hace falta aunque haya RLS.
+       *
+       * Para un cliente la política ya limita a los suyos, pero a admin y dev
+       * les deja ver todos los pedidos -- es lo que usa el panel. Sin esto, a
+       * ellos el inicio les mostraba "tu pedido" con el pedido de otra persona.
+       */
       const { data } = await supabase
         .from("orders")
-        .select("code, status, shopper_id")
+        .select("code, status, shopper_id, payment_required, payment_verified_at, payment_reference")
+        .eq("user_id", user.id)
         .in("status", EN_CURSO)
         .order("created_at", { ascending: false })
         .limit(1)
@@ -67,7 +81,11 @@ export function PedidoEnCurso() {
         </span>
         <span className="min-w-0 flex-1">
           <span className="block text-sm font-semibold text-emerald-900">
-            {statusLabel(pedido.status, pedido.shopper_id)}
+            {pedido.payment_required !== false && pedido.payment_verified_at == null
+              ? pedido.payment_reference
+                ? "Verificando tu pago"
+                : "Falta tu pago"
+              : statusLabel(pedido.status, pedido.shopper_id)}
           </span>
           <span className="block truncate text-sm text-emerald-800">
             Tu pedido {pedido.code} · toca para seguirlo
