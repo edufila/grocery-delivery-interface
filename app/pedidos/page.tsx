@@ -27,6 +27,7 @@ type Fila = Pick<
   | "payment_required"
   | "payment_verified_at"
   | "payment_reference"
+  | "store_id"
 >
 
 /**
@@ -53,7 +54,15 @@ function etiqueta(o: Fila): { texto: string; clase: string; vivo: boolean } {
   return { texto: statusLabel(o.status, o.shopper_id), clase: "bg-emerald-50 text-emerald-700", vivo: true }
 }
 
-function Grupo({ titulo, pedidos }: { titulo: string; pedidos: Fila[] }) {
+function Grupo({
+  titulo,
+  pedidos,
+  tiendas,
+}: {
+  titulo: string
+  pedidos: Fila[]
+  tiendas: Map<string, string>
+}) {
   return (
     <section>
       <h2 className="mb-2 px-1 text-sm font-semibold text-gray-500">{titulo}</h2>
@@ -68,8 +77,8 @@ function Grupo({ titulo, pedidos }: { titulo: string; pedidos: Fila[] }) {
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-mono text-sm font-semibold text-gray-900">
-                      {order.code}
+                    <span className="text-sm font-semibold text-gray-900">
+                      {(order.store_id && tiendas.get(order.store_id)) || `Pedido ${order.code}`}
                     </span>
                     <span
                       className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-semibold ${clase}`}
@@ -84,8 +93,8 @@ function Grupo({ titulo, pedidos }: { titulo: string; pedidos: Fila[] }) {
                     </span>
                   </div>
                   <p className="mt-1 truncate text-sm text-gray-500">
+                    <span className="font-mono">{order.code}</span> ·{" "}
                     {formatOrderDate(order.created_at)}
-                    {order.address_label ? ` · ${order.address_label}` : ""}
                   </p>
                 </div>
                 <span className="shrink-0 text-base font-semibold tabular-nums text-gray-900">
@@ -111,15 +120,21 @@ export default async function PedidosPage() {
 
   if (!user) redirect("/login?next=/pedidos")
 
-  const { data: orders } = await supabase
-    .from("orders")
-    .select(
-      "id, code, status, total, final_total, created_at, address_label, shopper_id, payment_required, payment_verified_at, payment_reference",
-    )
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
-    .returns<Fila[]>()
+  // Los abastos junto con los pedidos: cada renglón dice de dónde es, que es lo
+  // primero que uno recuerda de un pedido, antes que el código o la fecha.
+  const [{ data: orders }, { data: locales }] = await Promise.all([
+    supabase
+      .from("orders")
+      .select(
+        "id, code, status, total, final_total, created_at, address_label, shopper_id, payment_required, payment_verified_at, payment_reference, store_id",
+      )
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .returns<Fila[]>(),
+    supabase.from("stores").select("id, name").returns<{ id: string; name: string }[]>(),
+  ])
 
+  const tiendas = new Map((locales ?? []).map((t) => [t.id, t.name]))
   const list = orders ?? []
   const enCurso = list.filter((o) => o.status !== "entregado" && o.status !== "cancelado")
   const anteriores = list.filter((o) => o.status === "entregado" || o.status === "cancelado")
@@ -155,8 +170,8 @@ export default async function PedidosPage() {
           </section>
         ) : (
           <>
-            {enCurso.length > 0 && <Grupo titulo="En curso" pedidos={enCurso} />}
-            {anteriores.length > 0 && <Grupo titulo="Anteriores" pedidos={anteriores} />}
+            {enCurso.length > 0 && <Grupo titulo="En curso" pedidos={enCurso} tiendas={tiendas} />}
+            {anteriores.length > 0 && <Grupo titulo="Anteriores" pedidos={anteriores} tiendas={tiendas} />}
           </>
         )}
       </div>
