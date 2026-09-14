@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import { Search } from "lucide-react"
 
 import { CambiarAbasto } from "./cambiar-abasto"
@@ -58,6 +58,24 @@ export function ProductCatalog({
   }
 
   const [category, setCategory] = useState<Category>(initialCategory)
+  const listaRef = useRef<HTMLElement>(null)
+
+  /**
+   * Al cambiar de categoría con la lista ya bajada, se vuelve a su comienzo.
+   *
+   * Si no, la grilla nueva -- casi siempre más corta -- quedaba arriba, fuera
+   * de la vista, y lo que se veía era un hueco: parecía que la categoría estaba
+   * vacía. Solo sube si hace falta; arriba de todo no mueve nada.
+   */
+  const elegirCategoria = (nueva: Category) => {
+    setCategory(nueva)
+    const lista = listaRef.current
+    // "Bajada" es que el comienzo de la lista quedó detrás de la barra fija.
+    const bordeBarra = document.querySelector("header")?.getBoundingClientRect().bottom ?? 0
+    if (lista && lista.getBoundingClientRect().top < bordeBarra) {
+      lista.scrollIntoView({ behavior: "smooth", block: "start" })
+    }
+  }
   const [query, setQuery] = useState(initialQuery)
   const [wholesaleOnly, setWholesaleOnly] = useState(initialWholesaleOnly)
 
@@ -99,12 +117,17 @@ export function ProductCatalog({
       <CatalogHeader
         storeName={storeName}
         active={category}
-        onCategoryChange={setCategory}
+        onCategoryChange={elegirCategoria}
         query={query}
         onQueryChange={setQuery}
       />
 
-      <main className="mx-auto max-w-3xl px-4 py-4">
+      {/* El margen de arriba es lo que tapa la barra fija, para que al subir
+          el título no quede debajo de ella. */}
+      <main
+        ref={listaRef}
+        className="mx-auto max-w-3xl scroll-mt-[calc(env(safe-area-inset-top)+7.5rem)] px-4 py-4"
+      >
         <div className="mb-3 flex items-baseline justify-between gap-3">
           <h2 className="text-lg font-bold text-gray-900">
             {category === "Todos" ? "Catálogo" : category}
