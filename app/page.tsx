@@ -4,6 +4,7 @@ import { CategoryShortcuts } from "@/components/category-shortcuts"
 import { SaludoInicio } from "@/components/saludo-inicio"
 import { NearbyStores } from "@/components/nearby-stores"
 import { PedidoEnCurso } from "@/components/pedido-en-curso"
+import { UltimaCompra } from "@/components/ultima-compra"
 import { BottomNav } from "@/components/bottom-nav"
 import { InstalarApp } from "@/components/pwa/instalar-app"
 import type { Store } from "@/lib/admin"
@@ -58,6 +59,7 @@ export default async function HomePage() {
       <div className="pb-28">
         {/* Quien espera un pedido abre la app justo por eso: va primero. */}
         <PedidoEnCurso />
+        <UltimaCompra />
         <NearbyStores stores={stores} tasaVes={settings?.rate_ves ?? null} />
         {/* Después de los abastos y no antes: no le gana a lo que se viene a
             hacer. Se puede cerrar; en Perfil sigue estando. */}
