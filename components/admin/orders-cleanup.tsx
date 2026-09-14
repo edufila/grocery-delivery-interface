@@ -147,7 +147,7 @@ export function OrdersCleanup({ orders }: { orders: Row[] }) {
         onChange={(event) => setQuery(event.target.value)}
         placeholder="Buscar por código: GA-4822"
         aria-label="Buscar pedido por código"
-        className="h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500"
+        className="h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none placeholder:text-gray-500 focus:border-emerald-500"
       />
 
       <div className="flex items-center justify-between gap-3">
@@ -185,13 +185,13 @@ export function OrdersCleanup({ orders }: { orders: Row[] }) {
               }`}
             >
               {sePuedeBorrar(order) ? (
-                <label className="flex h-11 w-6 shrink-0 items-center justify-center">
+                <label className="-mx-2 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center">
                   <span className="sr-only">Seleccionar {order.code} para borrar</span>
                   <input
                     type="checkbox"
                     checked={selected.has(order.id)}
                     onChange={() => toggle(order.id)}
-                    className="h-4 w-4 accent-rose-600"
+                    className="h-5 w-5 accent-rose-600"
                   />
                 </label>
               ) : (
@@ -199,7 +199,7 @@ export function OrdersCleanup({ orders }: { orders: Row[] }) {
                    falta seleccionar algo antes; el candado dice que está
                    protegido, y al tocarlo dice por qué. */
                 <span
-                  className="flex h-11 w-6 shrink-0 items-center justify-center text-gray-400"
+                  className="-mx-2 flex h-11 w-11 shrink-0 items-center justify-center text-gray-500"
                   title={
                     order.status === "entregado"
                       ? "Entregado: el pedido es el comprobante y no se borra."
