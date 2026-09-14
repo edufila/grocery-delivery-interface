@@ -57,7 +57,7 @@ export default async function ShopperOrderPage({
   if (!order) notFound()
 
   /**
-   * Las tres a la vez: dependen del pedido, pero no entre sí.
+   * Todas a la vez: dependen del pedido, pero no entre sí.
    *
    * Encadenadas eran tres viajes de ida y vuelta a Supabase seguidos, y esta es
    * la pantalla que el shopper tiene abierta mientras compra y mientras maneja,
@@ -69,7 +69,7 @@ export default async function ShopperOrderPage({
    * no recorte nada, para que la pantalla siga siendo correcta contra una base
    * donde esa migración todavía no se corrió.
    */
-  const [{ data: items }, { data: customerRows }, { data: store }] = await Promise.all([
+  const [{ data: items }, { data: customerRows }, { data: store }, { data: fotos }] = await Promise.all([
     supabase.from("order_items").select("*").eq("order_id", order.id).returns<OrderItem[]>(),
     supabase.rpc("order_customer", { p_order_id: order.id }),
     supabase
@@ -77,7 +77,16 @@ export default async function ShopperOrderPage({
       .select("name, lat, lng")
       .eq("id", order.store_id ?? "girasol")
       .maybeSingle<{ name: string; lat: number | null; lng: number | null }>(),
+    // Las fotos del catálogo del abasto, para reconocer cada cosa en el anaquel.
+    // El renglón del pedido guarda nombre y precio, pero no la foto.
+    supabase
+      .from("products")
+      .select("id, image")
+      .eq("store_id", order.store_id ?? "girasol")
+      .returns<{ id: string; image: string | null }[]>(),
   ])
+
+  const imagenes = Object.fromEntries((fotos ?? []).map((f) => [f.id, f.image]))
 
   const lines = items ?? []
   const mine = order.shopper_id === user.id
@@ -155,6 +164,7 @@ export default async function ShopperOrderPage({
 
         <ShoppingList
           items={lines}
+          imagenes={imagenes}
           substitutionPolicy={SUBSTITUTION_LABEL[order.substitution_policy]}
           editable={mine && (order.status === "confirmado" || order.status === "preparando")}
         />
