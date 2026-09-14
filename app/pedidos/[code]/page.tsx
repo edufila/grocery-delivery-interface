@@ -176,7 +176,8 @@ export default async function PedidoPage({
         {/* Mientras hay algo por pasar: con el pedido cerrado no queda qué avisar. */}
         {!cancelled && order.status !== "entregado" && <AvisamePedido />}
 
-        {!cancelled && (
+        {/* Entregado, el mapa ya no dice nada: se va y lo de arriba sube. */}
+        {!cancelled && order.status !== "entregado" && (
           <MapaSeguimiento
             orderId={order.id}
             destino={
