@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { BadgeCheck, Loader2, Phone, X } from "lucide-react"
+import { BadgeCheck, Loader2, MessageCircle, Phone, X } from "lucide-react"
 
 import {
   formatMoney,
@@ -13,6 +13,8 @@ import {
   type Order,
   type OrderItem,
 } from "@/lib/orders"
+import { formatBolivares } from "@/lib/pagos"
+import { enlaceWhatsApp, firstName } from "@/lib/profile"
 import { avisarAlEquipo } from "@/lib/push-cliente"
 import { createClient } from "@/lib/supabase/client"
 
@@ -182,13 +184,34 @@ export function DetallePedido({ orderId, onClose }: { orderId: string; onClose: 
                   {cliente?.full_name || cliente?.email || "Sin nombre cargado"}
                 </p>
                 {cliente?.phone && (
-                  <a
-                    href={`tel:${cliente.phone.replace(/\s/g, "")}`}
-                    className="mt-1 inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-emerald-600"
-                  >
-                    <Phone className="h-4 w-4" aria-hidden="true" />
-                    {cliente.phone}
-                  </a>
+                  <div className="mt-1 flex flex-wrap items-center gap-x-4">
+                    <a
+                      href={`tel:${cliente.phone.replace(/\s/g, "")}`}
+                      className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-emerald-600"
+                    >
+                      <Phone className="h-4 w-4" aria-hidden="true" />
+                      {cliente.phone}
+                    </a>
+                    {/**
+                     * WhatsApp con el mensaje ya escrito, según lo que le falta
+                     * al pedido. El caso típico es el que no ha pagado: casi
+                     * siempre pagó y no supo dónde poner la referencia, y
+                     * preguntarle por WhatsApp lo resuelve en un minuto.
+                     */}
+                    {enlaceWhatsApp(cliente.phone) && (
+                      <a
+                        href={`${enlaceWhatsApp(cliente.phone)}?text=${encodeURIComponent(
+                          mensajeAlCliente(orden, cliente.full_name),
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-emerald-600"
+                      >
+                        <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                        Escribirle por WhatsApp
+                      </a>
+                    )}
+                  </div>
                 )}
               </Bloque>
 
@@ -338,4 +361,20 @@ function Renglon({ label, valor }: { label: string; valor: string }) {
       <dd className="tabular-nums text-gray-900">{valor}</dd>
     </div>
   )
+}
+
+/** El primer mensaje, según en qué está el pedido. Se puede editar antes de mandarlo. */
+function mensajeAlCliente(orden: Order, nombre: string | null) {
+  const hola = firstName(nombre) ? `Hola, ${firstName(nombre)}. ` : "Hola. "
+  const pedido = `tu pedido ${orden.code}`
+
+  if (orden.payment_required !== false && orden.payment_verified_at == null) {
+    if (orden.payment_reference) {
+      return `${hola}Estamos verificando el pago de ${pedido} con la referencia ${orden.payment_reference}. ¿Nos confirmas desde qué banco lo hiciste?`
+    }
+    const monto = orden.amount_ves != null ? ` por Bs. ${formatBolivares(Number(orden.amount_ves))}` : ""
+    return `${hola}Vimos ${pedido}${monto} y todavía no nos llega el pago. Si ya pagaste, mándanos la referencia por aquí y lo sacamos enseguida.`
+  }
+
+  return `${hola}Te escribimos por ${pedido}.`
 }
