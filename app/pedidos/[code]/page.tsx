@@ -7,7 +7,7 @@ import { OrderLiveRefresh } from "@/components/live-refresh"
 import { FestejoPedido } from "@/components/tracking/festejo-pedido"
 import { EstadoHero } from "@/components/tracking/estado-hero"
 import { DeliveryCodeCard } from "@/components/tracking/delivery-code-card"
-import { OrderMap } from "@/components/tracking/order-map"
+import { MapaSeguimiento } from "@/components/tracking/mapa-seguimiento"
 import { CancelOrder } from "@/components/tracking/cancel-order"
 import { PagarPedido } from "@/components/tracking/pagar-pedido"
 import { RepetirPedido } from "@/components/tracking/repetir-pedido"
@@ -164,9 +164,9 @@ export default async function PedidoPage({
         <EstadoHero order={order} esperaPago={hayQuePagar && order.payment_verified_at == null} />
 
         {!cancelled && (
-          <OrderMap
+          <MapaSeguimiento
             orderId={order.id}
-            destination={
+            destino={
               order.address_lat != null && order.address_lng != null
                 ? { lat: order.address_lat, lng: order.address_lng }
                 : null
@@ -176,8 +176,8 @@ export default async function PedidoPage({
                 ? { lat: order.shopper_lat, lng: order.shopper_lng }
                 : null
             }
-            live={order.status !== "entregado"}
-            route={order.status === "en_camino"}
+            enVivo={order.status !== "entregado"}
+            enCamino={order.status === "en_camino"}
           />
         )}
 
