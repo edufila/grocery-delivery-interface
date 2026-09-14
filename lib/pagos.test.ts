@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
   bsEquivalent,
   formatBolivares,
+  leerMonto,
   montoParaBanco,
   sePuedeOfrecer,
   ultimosDigitos,
@@ -121,5 +122,29 @@ describe("montoParaBanco", () => {
   it("siempre lleva los dos céntimos", () => {
     expect(montoParaBanco(1540.1)).toBe("1540,10")
     expect(montoParaBanco(12)).toBe("12,00")
+  })
+})
+
+describe("leerMonto", () => {
+  it("entiende el formato del banco, con puntos de miles y coma", () => {
+    expect(leerMonto("27.388,87")).toBe(27388.87)
+    expect(leerMonto("Bs. 27.388,87")).toBe(27388.87)
+  })
+
+  it("entiende coma sola y punto decimal", () => {
+    expect(leerMonto("27388,87")).toBe(27388.87)
+    expect(leerMonto("27388.87")).toBe(27388.87)
+    expect(leerMonto("Bs. 27388.87")).toBe(27388.87)
+  })
+
+  it("un punto con tres dígitos detrás son miles, no decimales", () => {
+    expect(leerMonto("27.388")).toBe(27388)
+    expect(leerMonto("1.234.567")).toBe(1234567)
+  })
+
+  it("lo que no es un monto da null", () => {
+    expect(leerMonto("")).toBeNull()
+    expect(leerMonto("abc")).toBeNull()
+    expect(leerMonto("0")).toBeNull()
   })
 })

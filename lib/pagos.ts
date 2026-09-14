@@ -81,6 +81,31 @@ export function formatBolivares(monto: number) {
 }
 
 /**
+ * Lee un monto escrito o pegado a la venezolana: "27.388,87", "27388,87",
+ * "27388.87" o "Bs. 27.388,87". Devuelve null si no es un número.
+ *
+ * El campo era `type="number"`, y ahí "27.388,87" -- que es como lo muestra el
+ * banco y como se copia -- no entra, y con coma el teclado a veces ni la deja
+ * escribir. Con coma, el punto se toma como separador de miles; sin coma, un
+ * punto seguido de exactamente tres dígitos también (27.388 son veintisiete mil,
+ * no veintisiete).
+ */
+export function leerMonto(texto: string): number | null {
+  // Lo que no es dígito ni separador se va, y con él el punto de "Bs.".
+  let limpio = texto.replace(/[^\d.,]/g, "").replace(/^[.,]+/, "")
+  if (!limpio) return null
+
+  if (limpio.includes(",")) {
+    limpio = limpio.replace(/\./g, "").replace(",", ".")
+  } else if (/^\d{1,3}(\.\d{3})+$/.test(limpio)) {
+    limpio = limpio.replace(/\./g, "")
+  }
+
+  const numero = Number(limpio)
+  return Number.isFinite(numero) && numero > 0 ? numero : null
+}
+
+/**
  * "27388.87" -> "27388,87": el monto para pegar en la app del banco.
  *
  * Sin puntos de miles, a diferencia de `formatBolivares`: en el campo de monto
