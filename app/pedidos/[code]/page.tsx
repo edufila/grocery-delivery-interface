@@ -396,7 +396,10 @@ const [
         </section>
 
         {order.status === "confirmado" && !order.shopper_id && (
-          <CancelOrder orderId={order.id} />
+          <CancelOrder
+            orderId={order.id}
+            pagoEncima={order.payment_reported_at != null || order.payment_verified_at != null}
+          />
         )}
 
 

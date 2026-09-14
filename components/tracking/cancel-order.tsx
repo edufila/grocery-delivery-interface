@@ -11,7 +11,14 @@ import { createClient } from "@/lib/supabase/client"
  * comprar, cancelar deja mercadería pagada en la calle. Eso se resuelve
  * hablando por el chat, no con un botón.
  */
-export function CancelOrder({ orderId }: { orderId: string }) {
+export function CancelOrder({
+  orderId,
+  pagoEncima = false,
+}: {
+  orderId: string
+  /** Si ya reportó o le confirmaron el pago: cancelar implica que se lo devuelvan. */
+  pagoEncima?: boolean
+}) {
   const router = useRouter()
   const [confirming, setConfirming] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -58,8 +65,16 @@ export function CancelOrder({ orderId }: { orderId: string }) {
   return (
     <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4">
       <p className="text-sm leading-relaxed text-rose-900">
-        ¿Seguro? El pedido queda cancelado y no se puede reabrir. Si ya te asignaron shopper, mejor
-        escríbele por el chat.
+        ¿Seguro? El pedido queda cancelado y no se puede reabrir.
+        {/* Dicho antes de tocar, no después: quien pagó y cancela tiene que
+            saber que el dinero no vuelve solo, y el abasto ve el pedido en su
+            lista de pagos a devolver. */}
+        {pagoEncima && (
+          <span className="mt-2 block font-semibold">
+            Ya pagaste este pedido: el abasto lo verá como pago a devolver y te contactará para
+            reintegrarlo.
+          </span>
+        )}
       </p>
 
       {error && (

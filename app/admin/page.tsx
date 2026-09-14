@@ -110,7 +110,19 @@ export default async function AdminPage() {
   }
 
   const porVerificar = (orders ?? []).filter(
-    (o) => o.payment_reported_at != null && o.payment_verified_at == null,
+    (o) => o.payment_reported_at != null && o.payment_verified_at == null && o.status !== "cancelado",
+  )
+  /**
+   * Cancelados con un pago encima: hay que devolverlo.
+   *
+   * Un cliente puede cancelar mientras nadie tomó el pedido, aunque ya haya
+   * pagado. Antes ese pedido salía de todas las listas -- "por verificar" es de
+   * pedidos vivos -- y el dinero quedaba en la cuenta sin que nadie se acordara
+   * de que no era de nadie.
+   */
+  const aDevolver = (orders ?? []).filter(
+    (o) =>
+      o.status === "cancelado" && (o.payment_reported_at != null || o.payment_verified_at != null),
   )
   const sinPagar = (orders ?? []).filter(
     (o) =>
@@ -154,7 +166,7 @@ export default async function AdminPage() {
         >
           <ul className="mx-auto flex max-w-3xl gap-2 overflow-x-auto px-4 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {[
-              { id: "pagos", nombre: "Pagos", cuenta: porVerificar.length },
+              { id: "pagos", nombre: "Pagos", cuenta: porVerificar.length + aDevolver.length },
               { id: "pedidos", nombre: "Pedidos", cuenta: 0 },
               { id: "usuarios", nombre: "Usuarios", cuenta: 0 },
               { id: "tiendas", nombre: "Tiendas", cuenta: 0 },
@@ -188,7 +200,7 @@ export default async function AdminPage() {
           title="Pagos por verificar"
           hint="La app no entra a tu banco: nadie le puso tus claves y nadie se las va a poner. El cruce entre lo que reporta el cliente y lo que registras aquí sí es automático."
         >
-          <ConciliacionPagos pedidos={porVerificar} sinPagar={sinPagar} />
+          <ConciliacionPagos pedidos={porVerificar} sinPagar={sinPagar} aDevolver={aDevolver} />
         </Section>
 
         <Section

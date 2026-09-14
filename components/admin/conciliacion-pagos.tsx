@@ -46,10 +46,13 @@ export type PedidoPorCobrar = Pick<
 export function ConciliacionPagos({
   pedidos,
   sinPagar = [],
+  aDevolver = [],
 }: {
   pedidos: PedidoPorCobrar[]
   /** Detenidos porque el cliente todavía no dice haber pagado. */
   sinPagar?: PedidoPorCobrar[]
+  /** Cancelados que tienen un pago reportado o confirmado: hay que devolverlo. */
+  aDevolver?: PedidoPorCobrar[]
 }) {
   const router = useRouter()
   const [referencia, setReferencia] = useState("")
@@ -292,6 +295,43 @@ export function ConciliacionPagos({
                   type="button"
                   onClick={() => setDetalle(pedido.id)}
                   className="flex min-h-11 shrink-0 items-center rounded-lg px-3 text-sm font-medium text-emerald-600 active:bg-emerald-50"
+                >
+                  Ver y escribirle
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {aDevolver.length > 0 && (
+        <section className="rounded-2xl border border-rose-200 bg-rose-50 p-3">
+          <h3 className="text-sm font-semibold text-rose-900">
+            Cancelados con pago encima ({aDevolver.length})
+          </h3>
+          <p className="mb-2 mt-0.5 text-xs leading-relaxed text-rose-800">
+            El cliente canceló después de pagar o de reportar el pago. Revisa si el dinero llegó y
+            devuélveselo.
+          </p>
+          <ul className="flex flex-col gap-2">
+            {aDevolver.map((pedido) => (
+              <li
+                key={pedido.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white p-3"
+              >
+                <div className="min-w-0">
+                  <p className="font-mono text-sm font-semibold text-gray-900">{pedido.code}</p>
+                  <p className="truncate text-xs text-gray-500">
+                    {pedido.amount_ves != null
+                      ? `Bs. ${formatBolivares(Number(pedido.amount_ves))}`
+                      : formatMoney(pedido.final_total ?? pedido.total)}
+                    {pedido.payment_reference ? ` · ref. ${ultimosDigitos(pedido.payment_reference)}` : ""}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setDetalle(pedido.id)}
+                  className="flex min-h-11 shrink-0 items-center rounded-lg px-3 text-sm font-medium text-rose-700 active:bg-rose-50"
                 >
                   Ver y escribirle
                 </button>
