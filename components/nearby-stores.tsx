@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { Clock, Bike, BadgePercent, Star } from "lucide-react"
+import { ArrowRight, Clock, Bike, BadgePercent, Star } from "lucide-react"
 
 import type { Store } from "@/lib/admin"
 import { bsEquivalent, formatBolivares } from "@/lib/pagos"
@@ -110,7 +110,21 @@ export function NearbyStores({ stores, tasaVes }: { stores: Store[]; tasaVes?: n
               key={store.id}
               className="relative overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm shadow-gray-900/[0.06] transition active:scale-[0.995]"
             >
-              <div className="relative h-36 w-full">
+              {/**
+               * Toda la tarjeta lleva al catálogo, sin anidar la estrella dentro
+               * de un <a>. Es una capa aparte debajo de la estrella y del botón.
+               *
+               * Fuera del orden de tabulación y del lector: el botón "Comprar en"
+               * ya es el mismo enlace con nombre, y anunciarlo dos veces por
+               * tarjeta sería ruido.
+               */}
+              <Link
+                href={href}
+                tabIndex={-1}
+                aria-hidden="true"
+                className="absolute inset-0 z-10"
+              />
+              <div className="relative h-40 w-full">
                 {/**
                  * Etiqueta suelta y no `next/image`, a propósito.
                  *
@@ -137,12 +151,22 @@ export function NearbyStores({ stores, tasaVes }: { stores: Store[]; tasaVes?: n
                   loading={indice === 0 ? "eager" : "lazy"}
                   decoding="async"
                 />
+                {/* Oscurece desde abajo para que el nombre se lea encima de la
+                    foto, igual que en la portada del catálogo: se reconoce el
+                    mismo abasto al entrar. */}
+                <div
+                  className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-black/0"
+                  aria-hidden="true"
+                />
                 {store.tag && (
                   <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white shadow-sm">
                     <BadgePercent className="h-3.5 w-3.5" aria-hidden="true" />
                     {store.tag}
                   </span>
                 )}
+                <h3 className="absolute inset-x-0 bottom-0 truncate px-4 pb-3 text-xl font-bold tracking-tight text-white">
+                  {store.name}
+                </h3>
                 <button
                   type="button"
                   onClick={() => toggleFavorite(store.id)}
@@ -164,15 +188,7 @@ export function NearbyStores({ stores, tasaVes }: { stores: Store[]; tasaVes?: n
               </div>
 
               <div className="p-4">
-                {/* Enlace estirado: cubre toda la tarjeta sin anidar botones
-                    dentro de un <a>, así el corazón sigue siendo clicable. */}
-                <h3 className="text-base font-semibold text-gray-900">
-                  <Link href={href} className="after:absolute after:inset-0 after:content-['']">
-                    {store.name}
-                  </Link>
-                </h3>
-
-                <div className="mt-3 flex items-center gap-4 text-sm text-gray-600">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-600">
                   {store.eta && (
                     <>
                       <span className="flex items-center gap-1.5">
@@ -196,9 +212,11 @@ export function NearbyStores({ stores, tasaVes }: { stores: Store[]; tasaVes?: n
 
                 <Link
                   href={href}
-                  className="relative z-20 mt-4 flex h-12 w-full items-center justify-center rounded-2xl bg-emerald-600 text-sm font-semibold text-white transition active:scale-[0.99]"
+                  aria-label={`Comprar en ${store.name}`}
+                  className="group relative z-20 mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 text-sm font-semibold text-white shadow-md shadow-emerald-900/15 transition active:scale-[0.99]"
                 >
                   Comprar ahora
+                  <ArrowRight className="h-4 w-4 transition group-active:translate-x-0.5" aria-hidden="true" />
                 </Link>
               </div>
             </article>
