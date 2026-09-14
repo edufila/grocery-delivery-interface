@@ -307,7 +307,8 @@ export default async function PedidoPage({
           <h2 className="mb-3 text-base font-semibold text-gray-900">
             Tu pedido{" "}
             <span className="text-sm font-normal text-gray-500">
-              ({lines.reduce((n, i) => n + i.qty, 0)} artículos)
+              ({lines.reduce((n, i) => n + i.qty, 0)}{" "}
+              {lines.reduce((n, i) => n + i.qty, 0) === 1 ? "artículo" : "artículos"})
             </span>
           </h2>
           <ul className="flex flex-col gap-3">

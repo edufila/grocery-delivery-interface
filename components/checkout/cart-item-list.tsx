@@ -1,6 +1,7 @@
 "use client"
 
 import Image from "next/image"
+import Link from "next/link"
 import { Minus, Plus, Trash2 } from "lucide-react"
 
 import { bsEquivalent, formatBolivares } from "@/lib/pagos"
@@ -15,6 +16,8 @@ export type CartLine = {
 }
 
 type Props = {
+  /** El abasto del pedido, para decirlo y para volver a agregar más. */
+  abasto?: { id: string; name: string } | null
   items: CartLine[]
   onInc: (id: string) => void
   onDec: (id: string) => void
@@ -22,15 +25,32 @@ type Props = {
   tasaVes?: number | null
 }
 
-export function CartItemList({ items, onInc, onDec, onRemove, tasaVes }: Props) {
+export function CartItemList({ abasto, items, onInc, onDec, onRemove, tasaVes }: Props) {
   return (
     <section aria-labelledby="cart-items-heading" className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-      <h2 id="cart-items-heading" className="mb-4 text-base font-semibold text-gray-900">
-        Tu pedido{" "}
-        <span className="text-sm font-normal text-gray-500">
-          ({items.reduce((n, i) => n + i.qty, 0)} artículos)
-        </span>
-      </h2>
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 id="cart-items-heading" className="text-base font-semibold text-gray-900">
+            Tu pedido{" "}
+            <span className="text-sm font-normal text-gray-500">
+              ({items.reduce((n, i) => n + i.qty, 0)}{" "}
+              {items.reduce((n, i) => n + i.qty, 0) === 1 ? "artículo" : "artículos"})
+            </span>
+          </h2>
+          {abasto && <p className="truncate text-sm text-gray-500">De {abasto.name}</p>}
+        </div>
+        {/* Volver al mismo abasto: casi siempre falta algo, y el botón de atrás
+            no siempre lleva ahí (si se llegó desde el inicio o un enlace). */}
+        {abasto && (
+          <Link
+            href={`/catalogo?tienda=${abasto.id}`}
+            className="-mr-2 -mt-2 flex min-h-11 shrink-0 items-center gap-1 rounded-full px-3 text-sm font-semibold text-emerald-600 active:bg-emerald-50"
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            Agregar más
+          </Link>
+        )}
+      </div>
 
       <ul className="divide-y divide-gray-100">
         {items.map((item) => (

@@ -140,11 +140,19 @@ export function CheckoutView() {
       const supabase = createClient()
       // Igual que con los métodos: si la base todavía no tiene la tasa, se pide
       // sin ella en vez de perder también la tarifa de servicio.
-      const ajustesCon = await supabase
-        .from("settings")
-        .select("service_fee, rate_ves")
-        .eq("id", "global")
-        .maybeSingle<{ service_fee: number; rate_ves: number | null }>()
+      // Tarifas y abastos a la vez: no dependen entre sí.
+      const [ajustesCon, { data: filas }] = await Promise.all([
+        supabase
+          .from("settings")
+          .select("service_fee, rate_ves")
+          .eq("id", "global")
+          .maybeSingle<{ service_fee: number; rate_ves: number | null }>(),
+        supabase
+          .from("stores")
+          .select("id, name, delivery_fee")
+          .in("id", storeIds)
+          .returns<Tienda[]>(),
+      ])
 
       const ajustes = ajustesCon.error
         ? (
@@ -155,12 +163,6 @@ export function CheckoutView() {
               .maybeSingle<{ service_fee: number }>()
           ).data
         : ajustesCon.data
-
-      const { data: filas } = await supabase
-        .from("stores")
-        .select("id, name, delivery_fee")
-        .in("id", storeIds)
-        .returns<Tienda[]>()
 
       if (cancelled) return
       if (filas) setTiendas(filas.map((t) => ({ ...t, delivery_fee: Number(t.delivery_fee) })))
@@ -402,6 +404,7 @@ export function CheckoutView() {
 
             <DeliveryCard session={session} />
             <CartItemList
+              abasto={tiendas.length === 1 ? tiendas[0] : null}
               items={items}
               onInc={add}
               onDec={removeOne}
