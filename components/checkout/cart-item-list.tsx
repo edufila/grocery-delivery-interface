@@ -34,56 +34,88 @@ export function CartItemList({ items, onInc, onDec, onRemove, tasaVes }: Props) 
 
       <ul className="divide-y divide-gray-100">
         {items.map((item) => (
-          <li key={item.id} className="flex items-center gap-3 py-3">
+          /**
+           * El nombre arriba a lo ancho y los controles abajo.
+           *
+           * Antes el nombre compartía renglón con el basurero y la pastilla de
+           * cantidad, y en un teléfono quedaba en catorce letras: "Aceite
+           * Comesti...". Ahora tiene dos renglones enteros, y abajo va el total
+           * de la línea -- que es lo que cambia al tocar más o menos -- con el
+           * precio por unidad cuando hay más de una.
+           */
+          <li key={item.id} className="flex items-start gap-3 py-3">
             <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-gray-50">
               <Image
                 src={item.image || "/placeholder.svg"}
-                alt={item.name}
+                alt=""
                 fill
                 sizes="64px"
-                className="object-contain p-1.5"
+                className="object-cover"
               />
             </div>
 
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-gray-900">{item.name}</p>
-              <p className="truncate text-xs text-gray-500">{item.presentation}</p>
-              <p className="mt-0.5 text-sm font-semibold text-emerald-600">${item.price.toFixed(2)}</p>
-              {bsEquivalent(item.price, tasaVes ?? null) != null && (
-                <p className="text-xs text-gray-500">
-                  Bs {formatBolivares(bsEquivalent(item.price, tasaVes ?? null)!)}
-                </p>
-              )}
-            </div>
-
-            <div className="flex flex-col items-end gap-2">
-              <button
-                type="button"
-                onClick={() => onRemove(item.id)}
-                aria-label={`Eliminar ${item.name}`}
-                className="-mr-2 flex h-11 w-11 items-center justify-center rounded-full text-gray-500 transition-colors hover:text-rose-600 active:bg-gray-100"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-
-              <div className="flex items-center gap-1 rounded-full border border-gray-200 p-0.5">
+              <div className="flex items-start gap-1">
+                <div className="min-w-0 flex-1">
+                  <p className="line-clamp-2 text-sm font-medium leading-snug text-gray-900">
+                    {item.name}
+                  </p>
+                  <p className="truncate text-xs text-gray-500">{item.presentation}</p>
+                </div>
                 <button
                   type="button"
-                  onClick={() => onDec(item.id)}
-                  aria-label={`Disminuir cantidad de ${item.name}`}
-                  className="relative flex h-9 w-9 items-center justify-center rounded-full text-gray-600 transition-colors before:absolute before:-inset-y-1 before:-left-2 before:right-0 before:content-[''] hover:bg-gray-100"
+                  onClick={() => onRemove(item.id)}
+                  aria-label={`Eliminar ${item.name}`}
+                  className="-mr-2 -mt-2.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-gray-500 transition-colors hover:text-rose-600 active:bg-gray-100"
                 >
-                  <Minus className="h-4 w-4" />
+                  <Trash2 className="h-4 w-4" aria-hidden="true" />
                 </button>
-                <span className="w-6 text-center text-sm font-semibold tabular-nums text-gray-900">{item.qty}</span>
-                <button
-                  type="button"
-                  onClick={() => onInc(item.id)}
-                  aria-label={`Aumentar cantidad de ${item.name}`}
-                  className="relative flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 text-white transition-colors before:absolute before:-inset-y-1 before:left-0 before:-right-2 before:content-[''] hover:bg-emerald-700"
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
+              </div>
+
+              <div className="mt-2 flex items-end justify-between gap-2">
+                <div className="min-w-0">
+                  <p
+                    key={item.qty}
+                    className="animate-[sube-numero_0.2s_ease-out] text-base font-bold tabular-nums text-gray-900"
+                  >
+                    ${(item.price * item.qty).toFixed(2)}
+                  </p>
+                  {bsEquivalent(item.price * item.qty, tasaVes ?? null) != null && (
+                    <p className="whitespace-nowrap text-xs tabular-nums text-gray-500">
+                      Bs {formatBolivares(bsEquivalent(item.price * item.qty, tasaVes ?? null)!)}
+                    </p>
+                  )}
+                  {item.qty > 1 && (
+                    <p className="whitespace-nowrap text-xs tabular-nums text-gray-500">
+                      ${item.price.toFixed(2)} c/u
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex shrink-0 items-center gap-1 rounded-full border border-gray-200 p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => onDec(item.id)}
+                    aria-label={`Disminuir cantidad de ${item.name}`}
+                    className="relative flex h-9 w-9 items-center justify-center rounded-full text-gray-600 transition before:absolute before:-inset-y-1 before:-left-2 before:right-0 before:content-[''] hover:bg-gray-100 active:scale-90"
+                  >
+                    <Minus className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                  <span
+                    className="w-6 text-center text-sm font-semibold tabular-nums text-gray-900"
+                    aria-live="polite"
+                  >
+                    {item.qty}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => onInc(item.id)}
+                    aria-label={`Aumentar cantidad de ${item.name}`}
+                    className="relative flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 text-white transition before:absolute before:-inset-y-1 before:left-0 before:-right-2 before:content-[''] hover:bg-emerald-700 active:scale-90"
+                  >
+                    <Plus className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                </div>
               </div>
             </div>
           </li>
