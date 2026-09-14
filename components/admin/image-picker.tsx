@@ -197,13 +197,13 @@ export function ImagePicker({
         >
           <button
             type="button"
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 animate-[aparece_0.2s_ease-out] bg-black/40"
             onClick={() => setOpen(false)}
             aria-label="Cerrar"
           />
           {/* max-w-lg: en escritorio la hoja ocupaba el ancho entero de la
               pantalla y todo adentro quedaba desproporcionado. */}
-          <div className="relative flex max-h-[85dvh] w-full max-w-lg flex-col rounded-t-3xl bg-white">
+          <div className="relative flex max-h-[85dvh] w-full max-w-lg animate-[sube-hoja_0.28s_cubic-bezier(0.2,0.9,0.3,1)] flex-col rounded-t-3xl bg-white">
             <div className="flex shrink-0 items-center justify-between px-5 py-4">
               <h2 className="text-base font-semibold text-gray-900">Fotos de {folder}</h2>
               <button

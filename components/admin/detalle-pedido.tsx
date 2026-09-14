@@ -138,12 +138,12 @@ export function DetallePedido({ orderId, onClose }: { orderId: string; onClose: 
     <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true">
       <button
         type="button"
-        className="absolute inset-0 bg-black/40"
+        className="absolute inset-0 animate-[aparece_0.2s_ease-out] bg-black/40"
         onClick={onClose}
         aria-label="Cerrar"
       />
 
-      <div className="relative flex max-h-[88dvh] w-full max-w-lg flex-col rounded-t-3xl bg-white">
+      <div className="relative flex max-h-[88dvh] w-full max-w-lg animate-[sube-hoja_0.28s_cubic-bezier(0.2,0.9,0.3,1)] flex-col rounded-t-3xl bg-white">
         <header className="flex shrink-0 items-center gap-3 border-b border-gray-100 px-5 py-4">
           <div className="min-w-0 flex-1">
             <p className="font-mono text-sm font-semibold text-gray-900">

@@ -58,12 +58,12 @@ export function RepetirPedido({
         >
           <button
             type="button"
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 animate-[aparece_0.2s_ease-out] bg-black/40"
             onClick={() => setConfirmando(false)}
             aria-label="Cerrar"
           />
 
-          <div className="relative w-full max-w-lg rounded-t-3xl bg-white px-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] pt-6">
+          <div className="relative w-full max-w-lg animate-[sube-hoja_0.28s_cubic-bezier(0.2,0.9,0.3,1)] rounded-t-3xl bg-white px-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] pt-6">
             <h2 className="text-center text-lg font-semibold text-gray-900">
               Ya tienes un carrito armado
             </h2>
