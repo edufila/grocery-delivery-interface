@@ -79,6 +79,8 @@ export function ProductCatalog({
   const [query, setQuery] = useState(initialQuery)
   const [wholesaleOnly, setWholesaleOnly] = useState(initialWholesaleOnly)
 
+  const conProductos = useMemo(() => new Set(products.map((p) => p.category)), [products])
+
   const visibleProducts = useMemo(() => {
     const term = query.trim().toLowerCase()
     return products
@@ -116,6 +118,7 @@ export function ProductCatalog({
       />
       <CatalogHeader
         storeName={storeName}
+        conProductos={conProductos}
         active={category}
         onCategoryChange={elegirCategoria}
         query={query}

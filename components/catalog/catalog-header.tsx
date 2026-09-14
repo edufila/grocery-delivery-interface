@@ -7,6 +7,11 @@ import { categories, type Category } from "@/lib/categories"
 
 type Props = {
   storeName: string
+  /**
+   * Las categorías en las que este abasto tiene algo. Las demás no se ofrecen:
+   * tocar "Lácteos" en un local sin lácteos era llegar a una pantalla vacía.
+   */
+  conProductos: ReadonlySet<string>
   active: Category
   onCategoryChange: (category: Category) => void
   query: string
@@ -25,7 +30,10 @@ type Props = {
  * portada de arriba ya se come ese margen, y si esta lo repitiera quedaría un
  * hueco blanco entre las dos.
  */
-export function CatalogHeader({ storeName, active, onCategoryChange, query, onQueryChange }: Props) {
+export function CatalogHeader({
+  storeName,
+  conProductos,
+  active, onCategoryChange, query, onQueryChange }: Props) {
   return (
     <>
       {/* Tapa la franja de la hora y la señal cuando el catálogo pasa por
@@ -74,25 +82,29 @@ export function CatalogHeader({ storeName, active, onCategoryChange, query, onQu
 
         <nav aria-label="Categorías">
           <ul className="mx-auto flex max-w-3xl gap-2 overflow-x-auto px-4 pb-2.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {categories.map((cat) => {
-              const isActive = active === cat
-              return (
-                <li key={cat}>
-                  <button
-                    type="button"
-                    onClick={() => onCategoryChange(cat)}
-                    aria-current={isActive ? "true" : undefined}
-                    className={`min-h-11 whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition active:scale-95 ${
-                      isActive
-                        ? "bg-emerald-600 text-white shadow-sm shadow-emerald-900/20"
-                        : "bg-gray-100 text-gray-700 active:bg-gray-200"
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                </li>
-              )
-            })}
+            {categories
+              // "Todos" siempre; la activa también, aunque venga vacía desde un
+              // enlace, para que se vea qué filtro está puesto.
+              .filter((cat) => cat === "Todos" || cat === active || conProductos.has(cat))
+              .map((cat) => {
+                const isActive = active === cat
+                return (
+                  <li key={cat}>
+                    <button
+                      type="button"
+                      onClick={() => onCategoryChange(cat)}
+                      aria-current={isActive ? "true" : undefined}
+                      className={`min-h-11 whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition active:scale-95 ${
+                        isActive
+                          ? "bg-emerald-600 text-white shadow-sm shadow-emerald-900/20"
+                          : "bg-gray-100 text-gray-700 active:bg-gray-200"
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  </li>
+                )
+              })}
           </ul>
         </nav>
       </header>
