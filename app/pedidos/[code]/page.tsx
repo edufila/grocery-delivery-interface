@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation"
 import { ArrowLeft, Check, MapPin } from "lucide-react"
 
 import { OrderLiveRefresh } from "@/components/live-refresh"
+import { FestejoPedido } from "@/components/tracking/festejo-pedido"
 import { EstadoHero } from "@/components/tracking/estado-hero"
 import { DeliveryCodeCard } from "@/components/tracking/delivery-code-card"
 import { OrderMap } from "@/components/tracking/order-map"
@@ -31,10 +32,17 @@ export const metadata: Metadata = {
   title: pageTitle("Seguimiento del pedido"),
 }
 
-export default async function PedidoPage({ params }: { params: Promise<{ code: string }> }) {
+export default async function PedidoPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ code: string }>
+  searchParams: Promise<{ nuevo?: string }>
+}) {
   if (!isSupabaseConfigured) redirect("/login")
 
   const { code } = await params
+  const { nuevo } = await searchParams
   const supabase = await createClient()
   const {
     data: { user },
@@ -117,6 +125,8 @@ export default async function PedidoPage({ params }: { params: Promise<{ code: s
           </div>
         </div>
       </header>
+
+      <FestejoPedido nuevo={nuevo === "1"} />
 
       <OrderLiveRefresh
         orderId={order.id}

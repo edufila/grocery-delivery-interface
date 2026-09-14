@@ -305,6 +305,22 @@
   }
 }
 
+/* Cada papelito cae girando y se desvía un poco hacia un lado. Los valores
+   vienen de cada uno (festejo-pedido.tsx) para que no caigan todos igual. */
+@keyframes confeti {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(var(--deriva, 0px), 105dvh, 0) rotate(var(--giro, 360deg));
+    opacity: 0;
+  }
+}
+
 /**
  * Quien pidió al sistema menos movimiento no recibe ninguna de estas. Hay gente
  * a la que el movimiento en pantalla le da mareo de verdad.

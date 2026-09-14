@@ -270,7 +270,8 @@ export function CheckoutView() {
     }
 
     clear()
-    router.push(`/pedidos/${code as string}`)
+    // `nuevo` dispara el festejo una sola vez; el seguimiento lo borra al llegar.
+    router.push(`/pedidos/${code as string}?nuevo=1`)
   }
 
   return (
