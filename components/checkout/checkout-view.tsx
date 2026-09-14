@@ -15,6 +15,7 @@ import { useCart } from "@/lib/cart"
 import { nombreDesdeId } from "@/lib/carrito"
 import { bsEquivalent, fetchMetodosPago, formatBolivares, sePuedeOfrecer, type MetodoPago } from "@/lib/pagos"
 import type { Address } from "@/lib/orders"
+import { avisarAlEquipo } from "@/lib/push-cliente"
 import { createClient } from "@/lib/supabase/client"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 
@@ -292,6 +293,14 @@ export function CheckoutView() {
       setError(mensajeDeError(rpcError?.message))
       return
     }
+
+    /**
+     * Si el pedido no espera pago -- efectivo contra entrega --, ya está a la
+     * vista de los shoppers y hay que despertarlos. Si espera pago, el servidor
+     * no encuentra nada que avisar y no hace nada: el aviso sale después, cuando
+     * se confirme el pago. Esta pantalla no necesita saber cuál de los dos es.
+     */
+    void avisarAlEquipo("pedido-nuevo")
 
     clear()
     // `nuevo` dispara el festejo una sola vez; el seguimiento lo borra al llegar.

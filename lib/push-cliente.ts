@@ -136,7 +136,9 @@ export async function borrarPush() {
  * Quién es "quien corresponda" lo decide el servidor mirando qué tiene esta
  * persona, no lo que diga este llamado: ver `/api/avisar`.
  */
-export async function avisarAlEquipo(motivo: "pago-reportado" | "pedido-listo") {
+export async function avisarAlEquipo(
+  motivo: "pago-reportado" | "pedido-listo" | "pedido-nuevo",
+) {
   try {
     await fetch("/api/avisar", {
       method: "POST",

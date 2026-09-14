@@ -15,10 +15,16 @@ import { hayVapid, mandarPush, type Suscripcion } from "@/lib/push-servidor"
  *                   porque hasta que uno confirme, el pedido no sale.
  *   pedido-listo    el pago quedó confirmado -> se despierta a los shoppers,
  *                   que recién ahora pueden tomarlo.
+ *   pedido-nuevo    entró un pedido que no espera pago (efectivo contra
+ *                   entrega) -> se despierta a los shoppers. Sin este, esos
+ *                   pedidos salían disponibles en silencio: el cliente no
+ *                   podía pedir `pedido-listo`, que es solo de admin y dev.
  *
  * QUIÉN PUEDE DISPARAR CADA UNO no sale del cuerpo de la petición sino de lo
  * que la persona realmente tiene: para el primero hay que tener un pedido
- * propio con pago reportado y sin verificar; para el segundo, ser admin o dev.
+ * propio con pago reportado y sin verificar; para el segundo, ser admin o dev;
+ * para el tercero, un pedido propio de los últimos minutos, sin shopper y que
+ * no espera pago.
  * Si dependiera de lo que dice el cuerpo, cualquiera con sesión podría hacer
  * sonar todos los teléfonos del equipo cuando quisiera.
  *
@@ -29,12 +35,13 @@ import { hayVapid, mandarPush, type Suscripcion } from "@/lib/push-servidor"
 // Node y no Edge: la firma del JWT usa node:crypto.
 export const runtime = "nodejs"
 
-type Motivo = "pago-reportado" | "pedido-listo"
+type Motivo = "pago-reportado" | "pedido-listo" | "pedido-nuevo"
 
 const ROLES_DESTINO: Record<Motivo, string[]> = {
   "pago-reportado": ["admin", "dev"],
   // admin y dev también toman pedidos, así que también les llega.
   "pedido-listo": ["shopper", "admin", "dev"],
+  "pedido-nuevo": ["shopper", "admin", "dev"],
 }
 
 /**
@@ -78,7 +85,11 @@ export async function POST(request: Request) {
   let motivo: Motivo
   try {
     const cuerpo = (await request.json()) as { motivo?: string }
-    if (cuerpo.motivo !== "pago-reportado" && cuerpo.motivo !== "pedido-listo") {
+    if (
+      cuerpo.motivo !== "pago-reportado" &&
+      cuerpo.motivo !== "pedido-listo" &&
+      cuerpo.motivo !== "pedido-nuevo"
+    ) {
       return Response.json({ error: "Motivo desconocido" }, { status: 400 })
     }
     motivo = cuerpo.motivo
@@ -104,6 +115,24 @@ export async function POST(request: Request) {
       .eq("user_id", user.id)
       .not("payment_reported_at", "is", null)
       .is("payment_verified_at", null)
+      .limit(1)
+
+    if (!data?.length) {
+      return Response.json({ enviados: 0, nota: "no hay nada que avisar" }, { status: 200 })
+    }
+  } else if (motivo === "pedido-nuevo") {
+    // Un pedido propio recién hecho, que ya está a la vista de los shoppers:
+    // sin shopper, confirmado y sin pago que esperar. Los que esperan pago
+    // avisan después, cuando alguien lo confirma.
+    const haceUnRato = new Date(Date.now() - 10 * 60_000).toISOString()
+    const { data } = await supabase
+      .from("orders")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("status", "confirmado")
+      .is("shopper_id", null)
+      .eq("payment_required", false)
+      .gte("created_at", haceUnRato)
       .limit(1)
 
     if (!data?.length) {
