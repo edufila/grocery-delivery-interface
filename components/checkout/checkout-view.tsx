@@ -302,7 +302,12 @@ export function CheckoutView() {
     <div className="min-h-dvh bg-gray-50 pb-28">
       <header className="pt-barra-estado sticky top-0 z-20 border-b border-gray-100 bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-lg items-center gap-2 px-4 py-3">
-          <BackButton fallback="/catalogo" label="Volver" />
+          {/* Sin historial (abrieron el enlace directo) vuelve al abasto del
+              carrito, no al primero de la lista. */}
+          <BackButton
+            fallback={storeIds.length === 1 ? `/catalogo?tienda=${storeIds[0]}` : "/"}
+            label="Volver"
+          />
           <h1 className="text-lg font-semibold text-gray-900">Carrito y pago</h1>
         </div>
       </header>
