@@ -179,7 +179,7 @@ export function OrderChat({
 
             <div className="flex-1 space-y-3 overflow-y-auto overscroll-contain px-5 py-4">
               {messages.length === 0 && (
-                <p className="py-8 text-center text-sm leading-relaxed text-gray-400">
+                <p className="py-8 text-center text-sm leading-relaxed text-gray-500">
                   Todavía no hay mensajes. Escribe aquí si hace falta coordinar algo del pedido.
                 </p>
               )}

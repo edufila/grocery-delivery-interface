@@ -156,7 +156,7 @@ export function DetallePedido({ orderId, onClose }: { orderId: string; onClose: 
 
         <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4">
           {cargando ? (
-            <p className="flex items-center justify-center gap-2 py-12 text-sm text-gray-400">
+            <p className="flex items-center justify-center gap-2 py-12 text-sm text-gray-500">
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
               Cargando...
             </p>
@@ -226,7 +226,7 @@ export function DetallePedido({ orderId, onClose }: { orderId: string; onClose: 
                           <span className="shrink-0 text-sm tabular-nums text-gray-600">
                             {cambio ? (
                               <>
-                                <span className="text-gray-400 line-through">{item.qty}</span>{" "}
+                                <span className="text-gray-500 line-through">{item.qty}</span>{" "}
                                 <span className="font-semibold text-gray-900">{llevadas}</span>
                               </>
                             ) : (
@@ -310,7 +310,7 @@ export function DetallePedido({ orderId, onClose }: { orderId: string; onClose: 
 function Bloque({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
     <section>
-      <h3 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+      <h3 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
         {titulo}
       </h3>
       {children}

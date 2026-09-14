@@ -154,7 +154,7 @@ export function UseMyLocation({
       </button>
 
       {coords && (
-        <p className="text-center font-mono text-xs text-gray-400">
+        <p className="text-center font-mono text-xs text-gray-500">
           {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}
         </p>
       )}

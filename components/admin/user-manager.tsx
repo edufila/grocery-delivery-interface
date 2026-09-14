@@ -174,7 +174,7 @@ export function UserManager({
                   <span className="block truncate text-sm font-semibold text-gray-900">
                     {user.full_name || user.email || "Sin nombre"}
                     {user.id === meId && (
-                      <span className="ml-2 text-xs font-normal text-gray-400">(tú)</span>
+                      <span className="ml-2 text-xs font-normal text-gray-500">(tú)</span>
                     )}
                   </span>
                   <span className="block truncate text-xs text-gray-500">

@@ -491,7 +491,7 @@ export function CheckoutView() {
 function DeliveryCard({ session }: { session: Session }) {
   if (session.loading) {
     return (
-      <section className="rounded-2xl border border-gray-100 bg-white p-4 text-sm text-gray-400">
+      <section className="rounded-2xl border border-gray-100 bg-white p-4 text-sm text-gray-500">
         Buscando tu dirección...
       </section>
     )

@@ -118,7 +118,7 @@ export function NewProduct({
             placeholder="Harina de Maíz PAN"
             className="mt-1 h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500"
           />
-          {id && <span className="mt-1 block font-mono text-xs text-gray-400">{id}</span>}
+          {id && <span className="mt-1 block font-mono text-xs text-gray-500">{id}</span>}
         </label>
 
         <label className="block">

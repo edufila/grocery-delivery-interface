@@ -158,7 +158,7 @@ export function ImagePicker({
             </span>
           </button>
         ) : (
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-[10px] text-gray-400">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-[10px] text-gray-500">
             sin foto
           </span>
         )}
@@ -233,7 +233,7 @@ export function ImagePicker({
                   )}
                 </div>
               ) : loading ? (
-                <p className="py-8 text-center text-sm text-gray-400">Cargando...</p>
+                <p className="py-8 text-center text-sm text-gray-500">Cargando...</p>
               ) : files.length === 0 ? (
                 <p className="py-8 text-center text-sm text-gray-500">
                   Todavía no hay fotos aquí. Sube la primera.

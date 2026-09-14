@@ -98,7 +98,7 @@ export function PaymentMethods({ value, onChange, metodos, sinSesion, tasaVes, t
           dónde antes de confirmar, no después. */}
       {elegido?.instructions && (
         <div className="mt-3 rounded-xl bg-gray-50 px-3 py-2.5">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
             A dónde pagar
           </p>
           <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-gray-700">

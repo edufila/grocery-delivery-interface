@@ -73,7 +73,7 @@ export function Buscador({
             type="button"
             onClick={() => setTexto("")}
             aria-label="Borrar la búsqueda"
-            className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 active:bg-gray-100"
+            className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-gray-500 active:bg-gray-100"
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </button>

@@ -61,7 +61,7 @@ export function CartItemList({ items, onInc, onDec, onRemove, tasaVes }: Props) 
                 type="button"
                 onClick={() => onRemove(item.id)}
                 aria-label={`Eliminar ${item.name}`}
-                className="-mr-2 flex h-11 w-11 items-center justify-center rounded-full text-gray-400 transition-colors hover:text-rose-600 active:bg-gray-100"
+                className="-mr-2 flex h-11 w-11 items-center justify-center rounded-full text-gray-500 transition-colors hover:text-rose-600 active:bg-gray-100"
               >
                 <Trash2 className="h-4 w-4" />
               </button>

@@ -93,7 +93,7 @@ export function ShoppingList({
                   <div className="min-w-0">
                     <p
                       className={`text-sm font-medium ${
-                        faltante ? "text-gray-400 line-through" : "text-gray-900"
+                        faltante ? "text-gray-500 line-through" : "text-gray-900"
                       }`}
                     >
                       {item.name}

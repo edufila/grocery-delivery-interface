@@ -40,11 +40,11 @@ export function DeliveryCodeCard({
 
   return (
     <section className="rounded-2xl border border-gray-900 bg-gray-900 p-5 text-center">
-      <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
         Código de entrega
       </p>
       <p className="mt-2 font-mono text-4xl font-bold tracking-[0.3em] text-white">{code}</p>
-      <p className="mt-3 text-sm leading-relaxed text-gray-400">
+      <p className="mt-3 text-sm leading-relaxed text-gray-500">
         Dáselo al shopper cuando te entregue el pedido. Solo tú lo ves: sirve para confirmar que la
         entrega fue a la persona correcta.
       </p>

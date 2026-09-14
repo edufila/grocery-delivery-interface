@@ -71,7 +71,7 @@ export function StoreEditor({ store }: { store: Store }) {
             <span aria-hidden="true">·</span>
             <span className="tabular-nums">${Number(draft.delivery_fee).toFixed(2)}</span>
             {!coords && <span className="text-amber-600">sin ubicar</span>}
-            {!draft.active && <span className="text-gray-400">oculta</span>}
+            {!draft.active && <span className="text-gray-500">oculta</span>}
           </span>
         </span>
         <ChevronDown

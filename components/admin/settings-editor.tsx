@@ -92,7 +92,7 @@ export function SettingsEditor({ settings }: { settings: Settings }) {
       </p>
 
       {settings.rate_ves_updated_at && (
-        <p className="mt-1 text-xs leading-relaxed text-gray-400">
+        <p className="mt-1 text-xs leading-relaxed text-gray-500">
           Cargada {settings.rate_ves_source === "manual" ? "a mano" : "por el BCV"} el{" "}
           {formatOrderDate(settings.rate_ves_updated_at)}.
         </p>

@@ -70,7 +70,7 @@ export function ProductCard({
                 ? `Quitar ${product.name} de mis habituales`
                 : `Guardar ${product.name} en mis habituales`
             }
-            className="absolute right-0 top-0 flex h-11 w-11 items-center justify-center rounded-full text-gray-400 transition active:scale-90"
+            className="absolute right-0 top-0 flex h-11 w-11 items-center justify-center rounded-full text-gray-500 transition active:scale-90"
           >
             <Star
               className={`h-5 w-5 transition ${
@@ -99,7 +99,7 @@ export function ProductCard({
             envolverse, cuando no caben la pastilla baja a su propio renglón y
             los dos se leen enteros. */}
         <div className="mt-auto flex flex-wrap items-end justify-between gap-x-2 gap-y-2 pt-3">
-          <p className={`shrink-0 ${agotado ? "text-gray-400" : "text-gray-900"}`}>
+          <p className={`shrink-0 ${agotado ? "text-gray-500" : "text-gray-900"}`}>
             <span className="block text-xl font-bold leading-tight">
               ${product.price.toFixed(2)}
             </span>

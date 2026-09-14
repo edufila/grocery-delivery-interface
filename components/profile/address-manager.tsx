@@ -180,7 +180,7 @@ export function AddressManager({ userId, addresses }: { userId: string; addresse
                   type="button"
                   onClick={() => void remove(address.id)}
                   disabled={busy}
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-gray-400 active:bg-gray-100 disabled:opacity-50"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-gray-500 active:bg-gray-100 disabled:opacity-50"
                   aria-label={`Eliminar ${address.label}`}
                 >
                   <Trash2 className="h-4 w-4" aria-hidden="true" />
