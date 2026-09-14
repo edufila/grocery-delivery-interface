@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useCallback, useMemo, useRef, useState } from "react"
-import { Search } from "lucide-react"
+import { ChevronDown, Search } from "lucide-react"
 
 import { CambiarAbasto } from "./cambiar-abasto"
 import { CatalogHeader } from "./catalog-header"
@@ -15,6 +15,8 @@ import { useCart } from "@/lib/cart"
 import { useFavoritos } from "@/lib/favoritos"
 import type { Product } from "@/lib/products"
 import { contieneTexto } from "@/lib/texto"
+
+type Orden = "recomendado" | "barato" | "caro" | "nombre"
 
 type Props = {
   products: Product[]
@@ -83,6 +85,7 @@ export function ProductCatalog({
   }
   const [query, setQuery] = useState(initialQuery)
   const [wholesaleOnly, setWholesaleOnly] = useState(initialWholesaleOnly)
+  const [orden, setOrden] = useState<Orden>("recomendado")
 
   const conProductos = useMemo(() => new Set(products.map((p) => p.category)), [products])
 
@@ -96,10 +99,17 @@ export function ProductCatalog({
         if (term && !contieneTexto(p.name, term)) return false
         return true
       })
-      // Lo agotado al final: sigue a la vista, pero no le estorba a lo que sí
-      // se puede comprar hoy.
-      .sort((a, b) => Number(b.in_stock) - Number(a.in_stock))
-  }, [products, category, query, wholesaleOnly])
+      .sort((a, b) => {
+        // Lo agotado al final siempre, ordene como ordene: sigue a la vista,
+        // pero no le estorba a lo que sí se puede comprar hoy.
+        const existencia = Number(b.in_stock) - Number(a.in_stock)
+        if (existencia !== 0) return existencia
+        if (orden === "barato") return a.price - b.price
+        if (orden === "caro") return b.price - a.price
+        if (orden === "nombre") return a.name.localeCompare(b.name, "es")
+        return 0
+      })
+  }, [products, category, query, wholesaleOnly, orden])
 
   const sinResultados =
     query.trim().length > 0
@@ -146,18 +156,40 @@ export function ProductCatalog({
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setWholesaleOnly((v) => !v)}
-          aria-pressed={wholesaleOnly}
-          className={`mb-4 min-h-11 rounded-full px-4 py-1.5 text-sm font-medium transition ${
-            wholesaleOnly
-              ? "bg-emerald-600 text-white"
-              : "border border-gray-200 bg-white text-gray-600 active:bg-gray-100"
-          }`}
-        >
-          Solo al mayor
-        </button>
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <button
+            type="button"
+            onClick={() => setWholesaleOnly((v) => !v)}
+            aria-pressed={wholesaleOnly}
+            className={`min-h-11 rounded-full px-4 py-1.5 text-sm font-medium transition ${
+              wholesaleOnly
+                ? "bg-emerald-600 text-white"
+                : "border border-gray-200 bg-white text-gray-600 active:bg-gray-100"
+            }`}
+          >
+            Solo al mayor
+          </button>
+
+          {/* Un select nativo y no un menú propio: en el teléfono abre la rueda
+              del sistema, que todo el mundo sabe usar y no pesa nada. */}
+          <label className="relative flex min-h-11 items-center">
+            <span className="sr-only">Ordenar productos</span>
+            <select
+              value={orden}
+              onChange={(event) => setOrden(event.target.value as Orden)}
+              className="min-h-11 appearance-none rounded-full border border-gray-200 bg-white py-1.5 pl-4 pr-9 text-sm font-medium text-gray-700 outline-none focus:border-emerald-500"
+            >
+              <option value="recomendado">Recomendado</option>
+              <option value="barato">Menor precio</option>
+              <option value="caro">Mayor precio</option>
+              <option value="nombre">De la A a la Z</option>
+            </select>
+            <ChevronDown
+              className="pointer-events-none absolute right-3 h-4 w-4 text-gray-500"
+              aria-hidden="true"
+            />
+          </label>
+        </div>
 
         {visibleProducts.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-gray-200 bg-white px-4 py-10 text-center">
