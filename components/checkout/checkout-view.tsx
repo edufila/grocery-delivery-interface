@@ -44,6 +44,7 @@ type Tienda = { id: string; name: string; delivery_fee: number }
  */
 function mensajeDeError(mensaje: string | undefined) {
   if (!mensaje) return "No pudimos registrar el pedido. Intenta de nuevo."
+  if (/fetch|network/i.test(mensaje)) return "Sin conexión. Tu carrito sigue aquí: vuelve a intentar."
   if (mensaje.includes("does not exist")) return "Falta correr la migración del catálogo en Supabase."
 
   for (const conocido of [
@@ -439,11 +440,6 @@ export function CheckoutView() {
               deliveryFee={deliveryFee}
               tasaVes={tasaVes}
             />
-            {error && (
-              <p role="alert" className="text-sm text-rose-600">
-                {error}
-              </p>
-            )}
           </>
         )}
       </main>
@@ -451,10 +447,18 @@ export function CheckoutView() {
       {hasItems && (
         <div className="fixed inset-x-0 bottom-0 z-20 border-t border-gray-100 bg-white/95 p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] backdrop-blur">
           <div className="mx-auto max-w-lg">
-            {motivoBloqueo && (
-              <p className="mb-2 text-center text-sm font-medium text-amber-800" role="status">
-                {motivoBloqueo}
+            {/* El error va aquí, pegado al botón, y no al final de la página:
+                allá quedaba detrás de esta misma barra y nadie lo veía. */}
+            {error ? (
+              <p role="alert" className="mb-2 text-center text-sm font-medium text-rose-700">
+                {error}
               </p>
+            ) : (
+              motivoBloqueo && (
+                <p className="mb-2 text-center text-sm font-medium text-amber-800" role="status">
+                  {motivoBloqueo}
+                </p>
+              )
             )}
             <button
               type="button"
