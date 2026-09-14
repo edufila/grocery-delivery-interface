@@ -51,11 +51,43 @@ export default async function AdminPage() {
 
   if (!user) redirect("/login?next=/admin")
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle<{ role: Role }>()
+  /**
+   * Todo de una vez, el rol incluido.
+   *
+   * Antes eran tres tandas: el rol, después los métodos de pago, después lo
+   * demás. Esperar el rol para pedir los datos no protege nada -- a quien no es
+   * admin la RLS no le da lo ajeno, y además la página no se lo muestra --, y
+   * cada tanda era un viaje entero a Supabase en la pantalla donde se abre el
+   * aviso de un pago que alguien está esperando.
+   */
+  const [
+    { data: profile },
+    metodos,
+    { data: stores },
+    { data: products },
+    { data: settings },
+    { data: orders },
+    { data: users },
+  ] = await Promise.all([
+    supabase.from("profiles").select("role").eq("id", user.id).maybeSingle<{ role: Role }>(),
+    fetchMetodosPago(supabase),
+    supabase.from("stores").select("*").order("sort_order").returns<Store[]>(),
+    supabase.from("products").select("*").order("name").returns<AdminProduct[]>(),
+    supabase.from("settings").select("*").eq("id", "global").maybeSingle<Settings>(),
+    supabase
+      .from("orders")
+      .select(
+        "id, code, status, total, final_total, created_at, address_label, shopper_id, payment_method, payment_reference, payment_reported_at, payment_verified_at, amount_ves, payment_required",
+      )
+      .order("created_at", { ascending: false })
+      .limit(100)
+      .returns<PedidoAdmin[]>(),
+    supabase
+      .from("profiles")
+      .select("id, email, full_name, avatar_url, handle, role")
+      .order("role")
+      .returns<AdminUser[]>(),
+  ])
 
   if (!profile || !ADMIN_ROLES.includes(profile.role)) {
     return (
@@ -77,48 +109,98 @@ export default async function AdminPage() {
     )
   }
 
-  const metodos = await fetchMetodosPago(supabase)
-
-  const [{ data: stores }, { data: products }, { data: settings }, { data: orders }, { data: users }] =
-    await Promise.all([
-      supabase.from("stores").select("*").order("sort_order").returns<Store[]>(),
-      supabase.from("products").select("*").order("name").returns<AdminProduct[]>(),
-      supabase.from("settings").select("*").eq("id", "global").maybeSingle<Settings>(),
-      supabase
-        .from("orders")
-        .select(
-          "id, code, status, total, final_total, created_at, address_label, shopper_id, payment_method, payment_reference, payment_reported_at, payment_verified_at, amount_ves, payment_required",
-        )
-        .order("created_at", { ascending: false })
-        .limit(100)
-        .returns<PedidoAdmin[]>(),
-      supabase
-        .from("profiles")
-        .select("id, email, full_name, avatar_url, handle, role")
-        .order("role")
-        .returns<AdminUser[]>(),
-    ])
+  const porVerificar = (orders ?? []).filter(
+    (o) => o.payment_reported_at != null && o.payment_verified_at == null,
+  )
+  const sinPagar = (orders ?? []).filter(
+    (o) =>
+      o.payment_required !== false &&
+      o.payment_reported_at == null &&
+      o.payment_verified_at == null &&
+      o.status !== "cancelado" &&
+      o.status !== "entregado",
+  )
 
   return (
     <main className="min-h-dvh bg-gray-50">
-      <header className="pt-barra-estado border-b border-gray-100 bg-white">
-        <div className="mx-auto flex max-w-3xl items-center gap-2 px-4 py-4">
-          <Link
-            href="/perfil"
-            aria-label="Volver al perfil"
-            className="-ml-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-gray-600 active:bg-gray-100"
-          >
-            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
-          </Link>
-          <div>
-            <h1 className="text-lg font-semibold text-gray-900">Administración</h1>
-            <p className="text-sm text-gray-500">Entras como {profile.role}</p>
+      {/* Cabecera y atajos pegados juntos: así la barra de estado del teléfono
+          queda cubierta por la cabecera y no hace falta repetir su margen. */}
+      <div className="sticky top-0 z-20">
+        <header className="pt-barra-estado border-b border-gray-100 bg-white">
+          <div className="mx-auto flex max-w-3xl items-center gap-2 px-4 py-4">
+            <Link
+              href="/perfil"
+              aria-label="Volver al perfil"
+              className="-ml-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-gray-600 active:bg-gray-100"
+            >
+              <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+            </Link>
+            <div>
+              <h1 className="text-lg font-semibold text-gray-900">Administración</h1>
+              <p className="text-sm text-gray-500">Entras como {profile.role}</p>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
+
+        {/**
+         * Atajos a cada sección. La página es larga -- el catálogo entero de cada
+         * abasto está en medio -- y lo que se viene a hacer casi siempre es una
+         * sola cosa. El número de pagos va a la vista para saber sin bajar si hay
+         * alguien esperando.
+         */}
+        <nav
+          aria-label="Secciones"
+          className="border-b border-gray-100 bg-white/95 backdrop-blur-md"
+        >
+          <ul className="mx-auto flex max-w-3xl gap-2 overflow-x-auto px-4 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {[
+              { id: "pagos", nombre: "Pagos", cuenta: porVerificar.length },
+              { id: "pedidos", nombre: "Pedidos", cuenta: 0 },
+              { id: "usuarios", nombre: "Usuarios", cuenta: 0 },
+              { id: "tiendas", nombre: "Tiendas", cuenta: 0 },
+              { id: "productos", nombre: "Productos", cuenta: 0 },
+              { id: "tarifas", nombre: "Tarifas", cuenta: 0 },
+              { id: "cobros", nombre: "Cobros", cuenta: 0 },
+            ].map(({ id, nombre, cuenta }) => (
+              <li key={id}>
+                <a
+                  href={`#${id}`}
+                  className="flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-full bg-gray-100 px-4 text-sm font-medium text-gray-700 active:bg-gray-200"
+                >
+                  {nombre}
+                  {cuenta > 0 && (
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 px-1.5 text-xs font-bold tabular-nums text-white">
+                      {cuenta}
+                    </span>
+                  )}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
 
       <div className="mx-auto flex max-w-3xl flex-col gap-8 px-4 pb-16 pt-6">
+        {/* Lo urgente primero: es a donde lleva el aviso de un pago reportado, y
+            antes quedaba sexto, debajo del catálogo entero. */}
         <Section
+          id="pagos"
+          title="Pagos por verificar"
+          hint="La app no entra a tu banco: nadie le puso tus claves y nadie se las va a poner. El cruce entre lo que reporta el cliente y lo que registras aquí sí es automático."
+        >
+          <ConciliacionPagos pedidos={porVerificar} sinPagar={sinPagar} />
+        </Section>
+
+        <Section
+          id="pedidos"
+          title="Pedidos"
+          hint="Toca uno para ver qué pidió y a quién. Las casillas son para borrar los de prueba: se va el pedido con sus productos y su código."
+        >
+          <OrdersCleanup orders={orders ?? []} />
+        </Section>
+
+        <Section
+          id="usuarios"
           title="Usuarios"
           hint={
             profile.role === "dev"
@@ -130,6 +212,7 @@ export default async function AdminPage() {
         </Section>
 
         <Section
+          id="tiendas"
           title="Tiendas"
           hint="Lo que se ve en el inicio, y el punto al que se le traza la ruta al shopper."
         >
@@ -141,6 +224,7 @@ export default async function AdminPage() {
         </Section>
 
         <Section
+          id="productos"
           title="Productos"
           hint="Cada local tiene su propio catálogo y sus propios precios. Para cargar muchos de una sigue conviniendo el SQL."
         >
@@ -155,7 +239,7 @@ export default async function AdminPage() {
           </div>
         </Section>
 
-        <Section title="Tarifas" hint="Se aplican a los pedidos nuevos.">
+        <Section id="tarifas" title="Tarifas" hint="Se aplican a los pedidos nuevos.">
           {settings ? (
             <SettingsEditor settings={settings} />
           ) : (
@@ -164,53 +248,33 @@ export default async function AdminPage() {
         </Section>
 
         <Section
+          id="cobros"
           title="Cobros"
           hint="A dónde paga el cliente. Lo ve tal cual, con los saltos de línea. Sin datos cargados, el método no se le ofrece aunque esté activo."
         >
           <PaymentEditor metodos={metodos} tasaVes={settings?.rate_ves ?? null} />
         </Section>
 
-        <Section
-          title="Pagos por verificar"
-          hint="La app no entra a tu banco: nadie le puso tus claves y nadie se las va a poner. El cruce entre lo que reporta el cliente y lo que registras aquí sí es automático."
-        >
-          <ConciliacionPagos
-            pedidos={(orders ?? []).filter(
-              (o) => o.payment_reported_at != null && o.payment_verified_at == null,
-            )}
-            sinPagar={(orders ?? []).filter(
-              (o) =>
-                o.payment_required !== false &&
-                o.payment_reported_at == null &&
-                o.payment_verified_at == null &&
-                o.status !== "cancelado" &&
-                o.status !== "entregado",
-            )}
-          />
-        </Section>
 
-        <Section
-          title="Pedidos"
-          hint="Toca uno para ver qué pidió y a quién. Las casillas son para borrar los de prueba: se va el pedido con sus productos y su código."
-        >
-          <OrdersCleanup orders={orders ?? []} />
-        </Section>
       </div>
     </main>
   )
 }
 
 function Section({
+  id,
   title,
   hint,
   children,
 }: {
+  id: string
   title: string
   hint: string
   children: React.ReactNode
 }) {
+  // El margen deja el título a la vista debajo de la cabecera y los atajos.
   return (
-    <section>
+    <section id={id} className="scroll-mt-[calc(env(safe-area-inset-top)+8.5rem)]">
       <h2 className="text-base font-semibold text-gray-900">{title}</h2>
       <p className="mb-3 mt-0.5 text-sm leading-relaxed text-gray-500">{hint}</p>
       {children}
