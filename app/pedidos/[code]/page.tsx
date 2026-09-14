@@ -45,20 +45,31 @@ export default async function PedidoPage({
   const { code } = await params
   const { nuevo } = await searchParams
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+
+  // La sesión y el pedido a la vez: esta es la pantalla que se rearma sola con
+  // cada cambio en vivo, y esperar una para pedir la otra se pagaba cada vez.
+  const [
+    {
+      data: { user },
+    },
+    { data: order },
+  ] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase.from("orders").select("*").eq("code", code.toUpperCase()).maybeSingle<Order>(),
+  ])
 
   if (!user) redirect(`/login?next=/pedidos/${code}`)
 
-  const { data: order } = await supabase
-    .from("orders")
-    .select("*")
-    .eq("code", code.toUpperCase())
-    .maybeSingle<Order>()
-
-  // RLS ya limita a los pedidos propios: si no vuelve nada, no es suyo o no existe.
-  if (!order) notFound()
+  /**
+   * Tiene que ser suyo, y eso se mira aquí y no se le deja a la RLS.
+   *
+   * Para un cliente la política ya limita a sus pedidos. Pero a admin y dev les
+   * deja leer todos, y a un shopper los disponibles: abriendo el enlace de un
+   * pedido ajeno veían el seguimiento como si fuera suyo, con el chat del
+   * cliente y la pantalla de pagar. Para mirar un pedido de otro está el
+   * detalle en Administración.
+   */
+  if (!order || order.user_id !== user.id) notFound()
 
   /**
    * Lo que falta, todo junto.
