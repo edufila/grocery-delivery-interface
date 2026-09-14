@@ -93,6 +93,11 @@ Para medirlo hay que resolver el color con un canvas, no leyendo la cadena:
 Chrome devuelve `oklch(...)` y parsearlo como si fuera RGB da números que
 parecen reales y no lo son.
 
+**Blanco translúcido sobre verde tampoco pasa.** `text-white/90` u
+`opacity-90` sobre `emerald-600` da 4,49 a 1. Sobre verde, el texto va en blanco
+pleno y la jerarquía se marca con tamaño y peso. Con texto blanco encima, el
+ámbar va en 700 o más (el 600 da 3,3) y el rojo en 600 o más.
+
 ### Las fotos, que es donde se va el peso
 
 **`next/image` no funciona hoy en este proyecto.** Se probó: el endpoint que
@@ -111,8 +116,9 @@ Mientras tanto:
   en el tamaño correcto. Si una foto pesa de más, lo más rápido es volver a
   subirla desde Administración.
 - **Las que llegan al repo se achican a mano** con `pnpm achicar-fotos` (sin
-  argumentos dice qué haría; con `--hacerlo` lo hace). Las tres que trajo la
-  plantilla eran 6,5 MB y quedaron en 2,7 MB.
+  argumentos dice qué haría; con `--hacerlo` lo hace). Mira `public/images`
+  (tiendas a 640) y `public/products` (a 400: se ven a unos 200 px). Las de
+  productos eran 4,6 MB y quedaron en 1 MB.
 
 ## La base de datos
 
@@ -124,6 +130,15 @@ despliega solo al hacer push, las migraciones no.** Entre una cosa y la otra hay
 un rato en el que la columna nueva no existe, y PostgREST rechaza la consulta
 ENTERA, no solo esa columna. Toda consulta que pida una columna recién agregada
 tiene que reintentar sin ella. Ver `fetchProducts` y `fetchMetodosPago`.
+
+## RLS no reemplaza el filtro por usuario
+
+A admin y dev las políticas les dejan leer **todos** los pedidos (lo necesita el
+panel), y a shopper los disponibles de otros. Una consulta de cliente que diga
+"RLS ya limita a los propios" es cierta para un cliente y falsa para ellos: el
+aviso de pedido en curso del inicio les mostraba "tu pedido" con el de otra
+persona. **Lo que es "mío" en pantalla lleva `.eq("user_id", user.id)`**, aunque
+la política ya lo cubra para el cliente.
 
 ## Medir contra la base, no leer el SQL
 
