@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Loader2, MailCheck, ShoppingBasket } from "lucide-react"
+import { ArrowLeft, Bike, Loader2, MailCheck, MapPin, Smartphone } from "lucide-react"
+
+import { APP_NAME } from "@/lib/brand"
 
 import { cn } from "@/lib/utils"
 import { createClient } from "@/lib/supabase/client"
@@ -154,25 +156,50 @@ export function LoginView({ next, initialError }: { next: string; initialError?:
           >
             <ArrowLeft className="h-5 w-5" aria-hidden="true" />
           </button>
-        ) : (
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50">
-            <ShoppingBasket className="h-5 w-5 text-emerald-600" aria-hidden="true" />
-          </span>
-        )}
+        ) : null}
 
         {step === "email" ? (
           <>
-            <header className="pt-6">
-              <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
-                Ingresa a tu cuenta
+            {/* El ícono de la app tal cual, sin retocar: es lo que la persona
+                va a ver en su pantalla de inicio si la instala. */}
+            <header className="animate-[entra_0.4s_ease-out] pt-6">
+              <div className="flex items-center gap-3">
+                <img
+                  src="/icon-192.png"
+                  alt=""
+                  width={56}
+                  height={56}
+                  className="h-14 w-14 rounded-2xl shadow-lg shadow-emerald-900/15"
+                />
+                <span className="text-xl font-bold tracking-tight text-gray-900">{APP_NAME}</span>
+              </div>
+              <h1 className="mt-7 text-3xl font-bold leading-tight tracking-tight text-balance text-gray-900">
+                Tu mercado, sin salir de casa
               </h1>
-              <p className="mt-2 text-sm leading-relaxed text-gray-500">
-                Te mandamos un código a tu correo. Sin contraseñas.
+              <p className="mt-2 text-base leading-relaxed text-gray-500">
+                Entra con tu correo: te mandamos un código. Sin contraseñas.
               </p>
+
+              {/* Solo lo que hoy es cierto: nada de "entrega gratis" ni tiempos
+                  que no se pueden prometer. */}
+              <ul className="mt-5 flex flex-wrap gap-2 text-sm font-medium text-emerald-800">
+                <li className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5">
+                  <MapPin className="h-4 w-4" aria-hidden="true" />
+                  Acarigua y Araure
+                </li>
+                <li className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5">
+                  <Smartphone className="h-4 w-4" aria-hidden="true" />
+                  Pago Móvil
+                </li>
+                <li className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5">
+                  <Bike className="h-4 w-4" aria-hidden="true" />
+                  Seguimiento en vivo
+                </li>
+              </ul>
             </header>
 
             <form
-              className="pt-8"
+              className="pt-7"
               onSubmit={(event) => {
                 event.preventDefault()
                 void sendLink()
@@ -315,11 +342,10 @@ export function LoginView({ next, initialError }: { next: string; initialError?:
         )}
       </div>
 
-      <footer className="mx-auto w-full max-w-md px-5 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] pt-8">
-        <p className="text-center text-xs leading-relaxed text-gray-500">
-          Al continuar aceptas los Términos y la Política de Privacidad.
-        </p>
-      </footer>
+      {/* Aquí decía "Al continuar aceptas los Términos y la Política de
+          Privacidad", y ninguno de los dos existe: se hacía aceptar algo que no
+          se puede leer. Vuelve cuando estén escritos y enlazados. */}
+      <div className="pb-[calc(env(safe-area-inset-bottom)+1.5rem)]" />
     </main>
   )
 }
