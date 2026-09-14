@@ -98,6 +98,11 @@ parecen reales y no lo son.
 pleno y la jerarquía se marca con tamaño y peso. Con texto blanco encima, el
 ámbar va en 700 o más (el 600 da 3,3) y el rojo en 600 o más.
 
+**Sobre fondo oscuro la escala se invierte.** En `bg-gray-900` el `gray-500` da
+3,5 a 1 y el `gray-400` 6,8: ahí el texto secundario va en 300 o 400. Un
+reemplazo en bloque de 400 por 500 lo empeoró una vez en la tarjeta del código
+de entrega. Antes de cambiar un color, mirar sobre qué fondo está.
+
 ### Las fotos, que es donde se va el peso
 
 **`next/image` no funciona hoy en este proyecto.** Se probó: el endpoint que
