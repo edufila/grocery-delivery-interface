@@ -421,8 +421,47 @@ export function CheckoutView() {
                 onChange={(event) => setNote(event.target.value)}
                 maxLength={200}
                 placeholder="Tocar el timbre dos veces, preguntar por Ana"
-                className="mt-3 h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-emerald-500"
+                className="mt-3 h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none transition placeholder:text-gray-500 focus:border-emerald-500"
               />
+              {/**
+               * Lo que casi todo el mundo escribe, a un toque. Escribir en el
+               * teléfono cuesta, y por eso la mayoría dejaba esto vacío: el
+               * shopper llegaba sin saber si tocar, llamar o preguntar al
+               * vigilante. Se suman a lo escrito, no lo reemplazan.
+               */}
+              <div className="mt-2 flex flex-wrap gap-2">
+                {["Llamar al llegar", "Tocar el timbre", "Dejar con el vigilante", "Hay perro"].map(
+                  (frase) => {
+                    const puesta = note.includes(frase)
+                    return (
+                      <button
+                        key={frase}
+                        type="button"
+                        onClick={() =>
+                          setNote((actual) =>
+                            puesta
+                              ? actual
+                                  .split(". ")
+                                  .filter((parte) => parte !== frase)
+                                  .join(". ")
+                              : actual.trim()
+                                ? `${actual.trim().replace(/\.$/, "")}. ${frase}`.slice(0, 200)
+                                : frase,
+                          )
+                        }
+                        aria-pressed={puesta}
+                        className={`min-h-11 rounded-full px-3.5 text-sm font-medium transition active:scale-95 ${
+                          puesta
+                            ? "bg-emerald-600 text-white"
+                            : "border border-gray-200 bg-white text-gray-700"
+                        }`}
+                      >
+                        {frase}
+                      </button>
+                    )
+                  },
+                )}
+              </div>
             </section>
 
             <SubstitutionOptions value={substitution} onChange={setSubstitution} />
