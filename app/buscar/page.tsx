@@ -11,6 +11,7 @@ import { bsEquivalent, formatBolivares } from "@/lib/pagos"
 import { fetchSettings } from "@/lib/settings"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/server"
+import { normalizarTexto } from "@/lib/texto"
 
 export const metadata: Metadata = {
   title: pageTitle("Explorar"),
@@ -77,17 +78,39 @@ export default async function BuscarPage({
       .eq("active", true)
       .returns<{ id: string; name: string }[]>()
 
-    let lista = supabase
-      .from("products")
-      .select("id, name, unit, price, image, store_id")
-      .eq("active", true)
+    /**
+     * El texto se busca en `nombre_busqueda`, el nombre sin acentos que
+     * mantiene la base (0046): así "cafe" encuentra "Café". Si esa migración
+     * todavía no corrió, la columna no existe y PostgREST rechaza la consulta
+     * entera; entonces se vuelve a pedir contra `name`, como antes.
+     */
+    const pedirLista = (columna: "nombre_busqueda" | "name") => {
+      let consulta = supabase
+        .from("products")
+        .select("id, name, unit, price, image, store_id")
+        .eq("active", true)
 
-    if (hayFiltro) {
-      // El % a los dos lados: la gente escribe "pan" buscando "Harina PAN".
-      if (filtraTexto) lista = lista.ilike("name", `%${termino}%`)
-      if (filtraCategoria) lista = lista.eq("category", categoria)
-      if (soloMayorista) lista = lista.eq("wholesale", true)
+      if (hayFiltro) {
+        // El % a los dos lados: la gente escribe "pan" buscando "Harina PAN".
+        if (filtraTexto) {
+          const buscado = columna === "nombre_busqueda" ? normalizarTexto(termino) : termino
+          consulta = consulta.ilike(columna, `%${buscado}%`)
+        }
+        if (filtraCategoria) consulta = consulta.eq("category", categoria)
+        if (soloMayorista) consulta = consulta.eq("wholesale", true)
+      }
+
+      return consulta
+        .order("name")
+        .limit(hayFiltro ? 90 : 30)
+        .returns<Fila[]>()
     }
+
+    const lista = (async () => {
+      if (!filtraTexto) return pedirLista("name")
+      const sinAcentos = await pedirLista("nombre_busqueda")
+      return sinAcentos.error ? pedirLista("name") : sinAcentos
+    })()
 
     /**
      * Sin filtro, esta pantalla solo decía "elige una categoría". Ese es el
@@ -109,10 +132,7 @@ export default async function BuscarPage({
       await Promise.all([
         fetchSettings(supabase),
         locales,
-        lista
-          .order("name")
-          .limit(hayFiltro ? 90 : 30)
-          .returns<Fila[]>(),
+        lista,
         marcados,
       ])
 
