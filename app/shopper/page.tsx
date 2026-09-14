@@ -9,6 +9,7 @@ import { pageTitle } from "@/lib/brand"
 import {
   formatMoney,
   formatOrderDate,
+  haceCuanto,
   SHOPPER_ROLES,
   STATUS_LABEL,
   type Order,
@@ -222,7 +223,9 @@ function Grupo({
                     </span>
                   </div>
                   <p className="mt-0.5 truncate text-sm text-gray-500">
-                    {formatOrderDate(order.created_at)}
+                    {/* Para lo que se puede tomar, cuánto lleva esperando dice más
+                        que la hora: un pedido de hace cuarenta minutos va primero. */}
+                    {destacado ? `Entró ${haceCuanto(order.created_at)}` : formatOrderDate(order.created_at)}
                     {order.address_label ? ` · ${order.address_label}` : ""}
                   </p>
                 </div>
