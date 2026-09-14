@@ -23,7 +23,15 @@ export const metadata: Metadata = {
 
 type ShopperOrder = Pick<
   Order,
-  "id" | "code" | "status" | "total" | "created_at" | "address_label" | "shopper_id"
+  | "id"
+  | "code"
+  | "status"
+  | "total"
+  | "created_at"
+  | "address_label"
+  | "shopper_id"
+  | "payment_required"
+  | "payment_verified_at"
 >
 
 export default async function ShopperPage() {
@@ -36,26 +44,42 @@ export default async function ShopperPage() {
 
   if (!user) redirect("/login?next=/shopper")
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle<{ role: Role }>()
+  /**
+   * El rol y los pedidos a la vez. Los pedidos no hace falta esperarlos al rol:
+   * si no es shopper se descartan sin mostrarse, y la RLS igual no le habría
+   * dado nada que no pueda ver.
+   */
+  const [{ data: profile }, { data: orders }] = await Promise.all([
+    supabase.from("profiles").select("role").eq("id", user.id).maybeSingle<{ role: Role }>(),
+    supabase
+      .from("orders")
+      .select(
+        "id, code, status, total, created_at, address_label, shopper_id, payment_required, payment_verified_at",
+      )
+      .order("created_at", { ascending: false })
+      .returns<ShopperOrder[]>(),
+  ])
 
   if (!profile || !SHOPPER_ROLES.includes(profile.role)) {
     return <SinPermiso rol={profile?.role ?? "cliente"} />
   }
 
-  // RLS ya limita a disponibles + propios; aquí solo los separamos.
-  const { data: orders } = await supabase
-    .from("orders")
-    .select("id, code, status, total, created_at, address_label, shopper_id")
-    .order("created_at", { ascending: false })
-    .returns<ShopperOrder[]>()
-
   const todos = orders ?? []
   const mios = todos.filter((o) => o.shopper_id === user.id && o.status !== "entregado")
-  const disponibles = todos.filter((o) => o.shopper_id === null && o.status !== "cancelado")
+  /**
+   * Disponible es sin shopper, sin cancelar y con el pago resuelto.
+   *
+   * A un shopper la RLS ya le esconde lo que no está pagado. Pero a admin y dev
+   * les deja leer todos los pedidos -- lo necesita el panel --, y aquí les
+   * aparecían como disponibles pedidos que esperan pago, que la base no les
+   * deja tomar: tocaban y no pasaba nada.
+   */
+  const disponibles = todos.filter(
+    (o) =>
+      o.shopper_id === null &&
+      o.status === "confirmado" &&
+      (o.payment_required === false || o.payment_verified_at != null),
+  )
   const entregados = todos.filter((o) => o.shopper_id === user.id && o.status === "entregado")
 
   /**

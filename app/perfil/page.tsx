@@ -33,41 +33,45 @@ export default async function PerfilPage() {
   // El proxy ya redirige, pero no confiamos solo en él para datos de sesión.
   if (!user) redirect("/login?next=/perfil")
 
-  // Si la migración todavía no corrió, `error` viene con la tabla faltante:
-  // el formulario lo avisa en vez de romper la página.
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .maybeSingle<Profile & { role?: Role }>()
+  /**
+   * Las tres juntas. Encadenadas eran tres viajes a Supabase uno tras otro.
+   *
+   * El conteo de pagos se pide siempre, aunque solo se muestre a admin y dev:
+   * saber el rol obligaba a esperar el perfil antes de preguntar, y eso es lo
+   * que hacía la cadena. A quien no es admin, la RLS le devuelve como mucho sus
+   * propios pedidos, un número que nunca se pinta.
+   *
+   * Si la migración de perfiles todavía no corrió, `profile` viene vacío y el
+   * formulario lo avisa en vez de romper la página.
+   */
+  const [{ data: profile }, { data: addresses }, { count: pagosReportados }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .maybeSingle<Profile & { role?: Role }>(),
+    supabase
+      .from("addresses")
+      .select("id, label, detail, is_default, lat, lng")
+      .eq("user_id", user.id)
+      .order("is_default", { ascending: false })
+      .order("created_at", { ascending: true })
+      .returns<Address[]>(),
+    supabase
+      .from("orders")
+      .select("id", { count: "exact", head: true })
+      .not("payment_reported_at", "is", null)
+      .is("payment_verified_at", null),
+  ])
 
   const esShopper = !!profile?.role && SHOPPER_ROLES.includes(profile.role)
   const esAdmin = profile?.role === "admin" || profile?.role === "dev"
 
-  const { data: addresses } = await supabase
-    .from("addresses")
-    .select("id, label, detail, is_default, lat, lng")
-    .eq("user_id", user.id)
-    .order("is_default", { ascending: false })
-    .order("created_at", { ascending: true })
-    .returns<Address[]>()
-
   const displayName = profile?.full_name || user.email || "Mi cuenta"
   const avatarUrl = user.user_metadata?.avatar_url as string | undefined
 
-  /**
-   * Cuántos pagos esperan revisión, para verlo sin entrar al panel. Solo el
-   * conteo: la fila entera no hace falta aquí, y RLS ya limita a quien puede.
-   */
-  let pagosPendientes = 0
-  if (esAdmin) {
-    const { count } = await supabase
-      .from("orders")
-      .select("id", { count: "exact", head: true })
-      .not("payment_reported_at", "is", null)
-      .is("payment_verified_at", null)
-    pagosPendientes = count ?? 0
-  }
+  // Cuántos pagos esperan revisión, para verlo sin entrar al panel.
+  const pagosPendientes = esAdmin ? (pagosReportados ?? 0) : 0
 
   return (
     <main className="min-h-dvh bg-gray-50">
