@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { BadgeCheck, Loader2, Phone, X } from "lucide-react"
 
 import {
@@ -12,6 +13,7 @@ import {
   type Order,
   type OrderItem,
 } from "@/lib/orders"
+import { avisarAlEquipo } from "@/lib/push-cliente"
 import { createClient } from "@/lib/supabase/client"
 
 type Persona = { id: string; full_name: string | null; phone: string | null; email: string | null }
@@ -31,6 +33,7 @@ export function DetallePedido({ orderId, onClose }: { orderId: string; onClose: 
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState("")
   const [verificando, setVerificando] = useState(false)
+  const router = useRouter()
 
   async function verificar() {
     setVerificando(true)
@@ -44,13 +47,22 @@ export function DetallePedido({ orderId, onClose }: { orderId: string; onClose: 
       setError(
         rpcError.message.includes("does not exist")
           ? "Falta correr la migración de pagos en Supabase."
-          : rpcError.message,
+          : `No se pudo confirmar: ${rpcError.message}`,
       )
       return
     }
     setOrden((previa) =>
       previa ? { ...previa, payment_verified_at: new Date().toISOString() } : previa,
     )
+
+    /**
+     * Lo mismo que hace el botón de la lista de pagos. Antes, confirmar desde
+     * aquí no avisaba a los shoppers ni refrescaba la lista de atrás: el pedido
+     * quedaba liberado sin que nadie se enterara, y al cerrar el detalle seguía
+     * figurando como pendiente.
+     */
+    void avisarAlEquipo("pedido-listo")
+    router.refresh()
   }
 
   useEffect(() => {
