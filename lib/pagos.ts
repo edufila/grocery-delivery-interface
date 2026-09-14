@@ -81,6 +81,17 @@ export function formatBolivares(monto: number) {
 }
 
 /**
+ * "27388.87" -> "27388,87": el monto para pegar en la app del banco.
+ *
+ * Sin puntos de miles, a diferencia de `formatBolivares`: en el campo de monto
+ * de un Pago Móvil los puntos se leen como decimales o se rechazan, y pagar
+ * 27,388 en vez de 27.388,87 es el error más caro que se puede copiar.
+ */
+export function montoParaBanco(monto: number) {
+  return monto.toFixed(2).replace(".", ",")
+}
+
+/**
  * El equivalente en bolívares de un precio en dólares, o null sin tasa
  * cargada. Los precios de catálogo siguen en dólares -- esto es solo la
  * referencia que se muestra al lado, no cambia cómo se cobra.

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
   bsEquivalent,
   formatBolivares,
+  montoParaBanco,
   sePuedeOfrecer,
   ultimosDigitos,
   type MetodoPago,
@@ -109,5 +110,16 @@ describe("ultimosDigitos", () => {
   it("no revienta sin referencia", () => {
     expect(ultimosDigitos(null)).toBe("")
     expect(ultimosDigitos("sin numeros")).toBe("")
+  })
+})
+
+describe("montoParaBanco", () => {
+  it("va sin puntos de miles y con coma decimal", () => {
+    expect(montoParaBanco(27388.87)).toBe("27388,87")
+  })
+
+  it("siempre lleva los dos céntimos", () => {
+    expect(montoParaBanco(1540.1)).toBe("1540,10")
+    expect(montoParaBanco(12)).toBe("12,00")
   })
 })
