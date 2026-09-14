@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { Loader2, MapPin, MapPinOff } from "lucide-react"
 
+import { ZONA_HORARIA } from "@/lib/orders"
 import { createClient } from "@/lib/supabase/client"
 
 /** Cada cuánto se manda la posición. Más seguido no aporta y gasta batería. */
@@ -197,6 +198,7 @@ export function LocationShare({
             <p className="mt-1 text-xs text-gray-500">
               Última posición enviada a las{" "}
               {estado.lastSent.toLocaleTimeString("es-VE", {
+                  timeZone: ZONA_HORARIA,
                 hour: "numeric",
                 minute: "2-digit",
                 second: "2-digit",

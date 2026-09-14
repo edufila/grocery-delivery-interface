@@ -149,11 +149,21 @@ export function formatMoney(value: number) {
   return `$${Number(value).toFixed(2)}`
 }
 
+/**
+ * La zona de todas las fechas y horas que se muestran.
+ *
+ * Sin ella, cada una sale en la zona del equipo que la dibuja. En el teléfono
+ * eso es Venezuela, pero la mayoría de las pantallas se arman en el servidor, y
+ * Vercel corre en UTC: un pedido hecho a la 1:57 de la tarde decía 5:57.
+ */
+export const ZONA_HORARIA = "America/Caracas"
+
 export function formatOrderDate(iso: string) {
   return new Date(iso).toLocaleDateString("es-VE", {
     day: "numeric",
     month: "long",
     hour: "numeric",
     minute: "2-digit",
+    timeZone: ZONA_HORARIA,
   })
 }

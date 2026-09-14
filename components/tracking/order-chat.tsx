@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { MessageCircle, Send, X } from "lucide-react"
 
+import { ZONA_HORARIA } from "@/lib/orders"
 import { createClient } from "@/lib/supabase/client"
 
 type Message = {
@@ -200,6 +201,7 @@ export function OrderChat({
                       </p>
                       <p className={`mt-1 text-[11px] ${mine ? "text-emerald-100" : "text-gray-400"}`}>
                         {new Date(message.created_at).toLocaleTimeString("es-VE", {
+                  timeZone: ZONA_HORARIA,
                           hour: "numeric",
                           minute: "2-digit",
                         })}

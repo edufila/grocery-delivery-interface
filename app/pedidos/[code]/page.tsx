@@ -23,6 +23,7 @@ import {
   SUBSTITUTION_LABEL,
   type Order,
   type OrderItem,
+  ZONA_HORARIA,
 } from "@/lib/orders"
 import { pageTitle } from "@/lib/brand"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
@@ -189,6 +190,7 @@ export default async function PedidoPage({
               <p className="mt-0.5 text-sm text-emerald-800">
                 Última señal a las{" "}
                 {new Date(order.shopper_located_at).toLocaleTimeString("es-VE", {
+                  timeZone: ZONA_HORARIA,
                   hour: "numeric",
                   minute: "2-digit",
                 })}

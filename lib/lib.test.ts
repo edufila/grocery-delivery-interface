@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { toCategory } from "./categories"
-import { formatMoney, nextStatus, statusLabel, type OrderStatus } from "./orders"
+import { formatMoney, formatOrderDate, nextStatus, statusLabel, type OrderStatus } from "./orders"
 import { firstName, formatBirthDate, isProfileComplete } from "./profile"
 import { safeNextPath } from "./safe-path"
 import { slugify } from "./slug"
@@ -104,5 +104,21 @@ describe("slugify", () => {
   it("no deja guiones colgando en los bordes", () => {
     expect(slugify("  Azúcar!  ")).toBe("azucar")
     expect(slugify("¿Qué?")).toBe("que")
+  })
+})
+
+describe("formatOrderDate", () => {
+  // En Vercel el proceso corre en UTC. La hora tiene que salir en la de
+  // Venezuela igual: 17:57 UTC son las 1:57 de la tarde en Acarigua.
+  it("muestra la hora de Venezuela, no la del servidor", () => {
+    const texto = formatOrderDate("2026-09-12T17:57:00Z")
+    expect(texto).toContain("12 de septiembre")
+    expect(texto).toMatch(/1:57/)
+    expect(texto).not.toMatch(/5:57/)
+  })
+
+  it("cambia de día según Venezuela, no según UTC", () => {
+    // 02:00 UTC del 14 son las 10 de la noche del 13 en Venezuela.
+    expect(formatOrderDate("2026-09-14T02:00:00Z")).toContain("13 de septiembre")
   })
 })
