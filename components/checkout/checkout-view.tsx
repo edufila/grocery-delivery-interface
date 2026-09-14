@@ -245,6 +245,30 @@ export function CheckoutView() {
     payment.length > 0 &&
     !placing
 
+  /**
+   * Por qué el botón está apagado, dicho encima de él.
+   *
+   * Antes solo se ponía gris. Con cinco condiciones distintas y la pantalla más
+   * larga de la app, la persona tocaba, no pasaba nada, y le tocaba adivinar
+   * cuál de todas le faltaba. Se dice la primera que falte, en el orden en que
+   * aparecen en la pantalla.
+   */
+  const motivoBloqueo = !hasItems || placing
+    ? null
+    : !session.loading && !session.userId
+      ? "Entra a tu cuenta para hacer el pedido"
+      : session.userId && !session.address
+        ? "Falta tu dirección de entrega"
+        : session.userId && !addressPinned
+        ? "Falta marcar tu dirección en el mapa"
+        : mezclado
+          ? "Elige con qué abasto te quedas"
+          : noPedibles.length > 0
+            ? "Quita lo que ya no se puede pedir"
+            : payment.length === 0
+              ? "Elige cómo vas a pagar"
+              : null
+
   async function placeOrder() {
     if (!session.userId || !session.address || placing) return
 
@@ -285,7 +309,7 @@ export function CheckoutView() {
 
       <main className="mx-auto max-w-lg space-y-4 px-4 py-4">
         {!ready ? (
-          <p className="py-16 text-center text-sm text-gray-400">Cargando tu carrito...</p>
+          <p className="py-16 text-center text-sm text-gray-500">Cargando tu carrito...</p>
         ) : !hasItems ? (
           <section className="rounded-3xl border border-gray-100 bg-white p-8 text-center">
             <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-50">
@@ -296,10 +320,10 @@ export function CheckoutView() {
               Agrega productos del catálogo y vuelve aquí para confirmar el pedido.
             </p>
             <Link
-              href="/catalogo"
+              href="/"
               className="mt-6 flex h-14 w-full items-center justify-center rounded-2xl bg-emerald-600 text-base font-semibold text-white transition active:scale-[0.99]"
             >
-              Ir al catálogo
+              Elegir un abasto
             </Link>
           </section>
         ) : (
@@ -330,7 +354,7 @@ export function CheckoutView() {
                 <button
                   type="button"
                   onClick={descartarPerdidos}
-                  className="mt-3 flex h-11 items-center justify-center rounded-xl bg-amber-600 px-4 text-sm font-semibold text-white"
+                  className="mt-3 flex h-11 items-center justify-center rounded-xl bg-amber-700 px-4 text-sm font-semibold text-white"
                 >
                   Entendido, quitarlos
                 </button>
@@ -352,7 +376,7 @@ export function CheckoutView() {
                       key={tienda.id}
                       type="button"
                       onClick={() => keepOnly(tienda.id)}
-                      className="flex h-12 w-full items-center justify-center rounded-xl bg-amber-600 px-4 text-sm font-semibold text-white"
+                      className="flex h-12 w-full items-center justify-center rounded-xl bg-amber-700 px-4 text-sm font-semibold text-white"
                     >
                       Dejar solo lo de {tienda.name}
                     </button>
@@ -413,11 +437,16 @@ export function CheckoutView() {
       {hasItems && (
         <div className="fixed inset-x-0 bottom-0 z-20 border-t border-gray-100 bg-white/95 p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] backdrop-blur">
           <div className="mx-auto max-w-lg">
+            {motivoBloqueo && (
+              <p className="mb-2 text-center text-sm font-medium text-amber-800" role="status">
+                {motivoBloqueo}
+              </p>
+            )}
             <button
               type="button"
               onClick={() => void placeOrder()}
               disabled={!canPlace}
-              className="flex h-14 w-full items-center justify-between gap-3 rounded-2xl bg-emerald-600 px-5 text-base font-semibold text-white shadow-lg shadow-emerald-600/25 transition active:scale-[0.99] disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none"
+              className="flex h-14 w-full items-center justify-between gap-3 rounded-2xl bg-emerald-600 px-5 text-base font-semibold text-white shadow-lg shadow-emerald-600/25 transition active:scale-[0.99] disabled:bg-gray-200 disabled:text-gray-500 disabled:shadow-none"
             >
               {/**
                * La acción a un lado y el monto al otro, y no todo seguido.
