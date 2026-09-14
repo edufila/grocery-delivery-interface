@@ -57,107 +57,80 @@ export default async function BuscarPage({
   let resultados: Fila[] = []
   let tiendas = new Map<string, string>()
   let habituales: Fila[] = []
+  let tasaVes: number | null = null
 
-  const tasaVes = isSupabaseConfigured
-    ? ((await fetchSettings(await createClient()))?.rate_ves ?? null)
-    : null
-
-  if (isSupabaseConfigured && hayFiltro) {
+  if (isSupabaseConfigured) {
     const supabase = await createClient()
 
-    let consulta = supabase
+    /**
+     * Todo lo que no depende de nada, junto.
+     *
+     * Antes iba en cadena: la tasa, después los habituales, después sus
+     * productos, después la muestra -- hasta cuatro viajes a Supabase uno
+     * detrás de otro en la segunda pestaña de la barra. Ahora la tasa, los
+     * abastos, los marcados y la lista salen a la vez, y solo los productos de
+     * los marcados esperan, porque necesitan saber cuáles son.
+     */
+    const locales = supabase
+      .from("stores")
+      .select("id, name")
+      .eq("active", true)
+      .returns<{ id: string; name: string }[]>()
+
+    let lista = supabase
       .from("products")
       .select("id, name, unit, price, image, store_id")
       .eq("active", true)
 
-    // El % a los dos lados: la gente escribe "pan" buscando "Harina PAN".
-    if (filtraTexto) consulta = consulta.ilike("name", `%${termino}%`)
-    if (filtraCategoria) consulta = consulta.eq("category", categoria)
-    if (soloMayorista) consulta = consulta.eq("wholesale", true)
-
-    const [{ data: productos }, { data: locales }] = await Promise.all([
-      consulta.order("name").limit(90).returns<Fila[]>(),
-      supabase
-        .from("stores")
-        .select("id, name")
-        .eq("active", true)
-        .returns<{ id: string; name: string }[]>(),
-    ])
-
-    tiendas = new Map((locales ?? []).map((t) => [t.id, t.name]))
-    // Un producto de un abasto apagado no debe aparecer.
-    resultados = (productos ?? []).filter((p) => tiendas.has(p.store_id))
-  }
-
-  /**
-   * Sin filtro, esta pantalla solo decía "elige una categoría". Ese es el lugar
-   * natural para lo que la persona compra siempre: llega aquí a buscar algo, y
-   * lo que busca casi siempre es lo mismo de la semana pasada.
-   */
-  if (isSupabaseConfigured && !hayFiltro) {
-    const supabase = await createClient()
-
-    // RLS limita a los propios, así que no hace falta filtrar por usuario.
-    const { data: marcados } = await supabase
-      .from("product_favorites")
-      .select("product_id")
-      .order("created_at", { ascending: false })
-      .limit(30)
-      .returns<{ product_id: string }[]>()
-
-    const ids = (marcados ?? []).map((f) => f.product_id)
-
-    if (ids.length > 0) {
-      const [{ data: productos }, { data: locales }] = await Promise.all([
-        supabase
-          .from("products")
-          .select("id, name, unit, price, image, store_id")
-          .in("id", ids)
-          .eq("active", true)
-          .returns<Fila[]>(),
-        supabase
-          .from("stores")
-          .select("id, name")
-          .eq("active", true)
-          .returns<{ id: string; name: string }[]>(),
-      ])
-
-      tiendas = new Map((locales ?? []).map((t) => [t.id, t.name]))
-      habituales = (productos ?? []).filter((p) => tiendas.has(p.store_id))
+    if (hayFiltro) {
+      // El % a los dos lados: la gente escribe "pan" buscando "Harina PAN".
+      if (filtraTexto) lista = lista.ilike("name", `%${termino}%`)
+      if (filtraCategoria) lista = lista.eq("category", categoria)
+      if (soloMayorista) lista = lista.eq("wholesale", true)
     }
 
     /**
-     * Y además, lo que hay para comprar.
-     *
-     * Sin esto la pantalla era una frase gris en el medio de nada para todo el
-     * que entra por primera vez -- que es justamente quien menos sabe qué
-     * escribir en un buscador. Y es la segunda pestaña de la barra: mucha gente
-     * cae aquí antes que en ningún otro lado.
-     *
-     * Ahora se ve sin filtro, y buscar lo que hace es achicar la lista, que es
-     * como uno espera que se comporte algo llamado Explorar.
+     * Sin filtro, esta pantalla solo decía "elige una categoría". Ese es el
+     * lugar natural para lo que la persona compra siempre, y además para lo que
+     * hay: quien entra por primera vez es quien menos sabe qué escribir.
+     * Treinta alcanza para que se vea llena y no pesa en datos móviles.
      */
-    const [{ data: muestra }, { data: locales }] = await Promise.all([
-      supabase
+    const marcados = hayFiltro
+      ? Promise.resolve({ data: [] as { product_id: string }[] })
+      : // RLS limita a los propios, así que no hace falta filtrar por usuario.
+        supabase
+          .from("product_favorites")
+          .select("product_id")
+          .order("created_at", { ascending: false })
+          .limit(30)
+          .returns<{ product_id: string }[]>()
+
+    const [settings, { data: abastos }, { data: productos }, { data: favoritos }] =
+      await Promise.all([
+        fetchSettings(supabase),
+        locales,
+        lista
+          .order("name")
+          .limit(hayFiltro ? 90 : 30)
+          .returns<Fila[]>(),
+        marcados,
+      ])
+
+    tasaVes = settings?.rate_ves ?? null
+    tiendas = new Map((abastos ?? []).map((t) => [t.id, t.name]))
+    // Un producto de un abasto apagado no debe aparecer.
+    resultados = (productos ?? []).filter((p) => tiendas.has(p.store_id))
+
+    const ids = (favoritos ?? []).map((f) => f.product_id)
+    if (ids.length > 0) {
+      const { data: suyos } = await supabase
         .from("products")
         .select("id, name, unit, price, image, store_id")
+        .in("id", ids)
         .eq("active", true)
-        .order("name")
-        // Treinta alcanza para que se vea llena y no pesa en datos móviles.
-        .limit(30)
-        .returns<Fila[]>(),
-      supabase
-        .from("stores")
-        .select("id, name")
-        .eq("active", true)
-        .returns<{ id: string; name: string }[]>(),
-    ])
-
-    if (tiendas.size === 0) {
-      tiendas = new Map((locales ?? []).map((t) => [t.id, t.name]))
+        .returns<Fila[]>()
+      habituales = (suyos ?? []).filter((p) => tiendas.has(p.store_id))
     }
-
-    resultados = (muestra ?? []).filter((p) => tiendas.has(p.store_id))
   }
 
   // Agrupados por abasto, porque el mismo producto cuesta distinto en cada uno.
