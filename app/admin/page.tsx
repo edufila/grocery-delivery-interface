@@ -76,9 +76,9 @@ export default async function AdminPage() {
     supabase.from("settings").select("*").eq("id", "global").maybeSingle<Settings>(),
     supabase
       .from("orders")
-      .select(
-        "id, code, status, total, final_total, created_at, address_label, shopper_id, payment_method, payment_reference, payment_reported_at, payment_verified_at, amount_ves, payment_required",
-      )
+      // Con * y no con la lista de columnas: así la de devoluciones (0048) llega
+      // si existe y no rompe la consulta entera si todavía no se corrió.
+      .select("*")
       .order("created_at", { ascending: false })
       .limit(100)
       .returns<PedidoAdmin[]>(),
@@ -122,7 +122,11 @@ export default async function AdminPage() {
    */
   const aDevolver = (orders ?? []).filter(
     (o) =>
-      o.status === "cancelado" && (o.payment_reported_at != null || o.payment_verified_at != null),
+      o.status === "cancelado" &&
+      (o.payment_reported_at != null || o.payment_verified_at != null) &&
+      // Viene con select("*"): antes de la 0048 la columna no existe y queda
+      // undefined, que aquí cuenta como "sin devolver".
+      !(o as { payment_refunded_at?: string | null }).payment_refunded_at,
   )
   const sinPagar = (orders ?? []).filter(
     (o) =>

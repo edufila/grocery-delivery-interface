@@ -44,6 +44,7 @@ const FUNCIONES = [
   ["avisos_pendientes", {}],
   ["pago_resuelto", { p_required: true, p_verified: null }],
   ["sin_acentos", { p_texto: "Café" }],
+  ["marcar_devuelto", { p_order_id: CERO }],
 ]
 
 function leerEnv() {

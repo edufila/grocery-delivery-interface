@@ -65,7 +65,26 @@ export function ConciliacionPagos({
   /** Qué pedido se está mirando en el modal, si hay alguno. */
   const [detalle, setDetalle] = useState<string | null>(null)
 
+  const [devolviendo, setDevolviendo] = useState<string | null>(null)
   const ahora = useAhora()
+
+  async function marcarDevuelto(pedido: PedidoPorCobrar) {
+    setDevolviendo(pedido.id)
+    setError("")
+    const { error: rpcError } = await createClient().rpc("marcar_devuelto", {
+      p_order_id: pedido.id,
+    })
+    setDevolviendo(null)
+    if (rpcError) {
+      setError(
+        rpcError.message.includes("does not exist") || rpcError.message.includes("Could not find")
+          ? "Falta correr la migración 0048 en Supabase."
+          : rpcError.message,
+      )
+      return
+    }
+    router.refresh()
+  }
   const digitos = referencia.replace(/\D/g, "")
 
   async function registrar() {
@@ -328,13 +347,26 @@ export function ConciliacionPagos({
                     {pedido.payment_reference ? ` · ref. ${ultimosDigitos(pedido.payment_reference)}` : ""}
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setDetalle(pedido.id)}
-                  className="flex min-h-11 shrink-0 items-center rounded-lg px-3 text-sm font-medium text-rose-700 active:bg-rose-50"
-                >
-                  Ver y escribirle
-                </button>
+                <div className="flex shrink-0 items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setDetalle(pedido.id)}
+                    className="flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-rose-700 active:bg-rose-50"
+                  >
+                    Ver
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void marcarDevuelto(pedido)}
+                    disabled={devolviendo === pedido.id}
+                    className="flex min-h-11 items-center gap-1.5 rounded-lg bg-rose-700 px-3 text-sm font-semibold text-white disabled:opacity-60"
+                  >
+                    {devolviendo === pedido.id && (
+                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                    )}
+                    Ya lo devolví
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
