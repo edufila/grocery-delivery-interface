@@ -5,6 +5,7 @@ import { Minus, Plus, X } from "lucide-react"
 
 import { bsEquivalent, formatBolivares } from "@/lib/pagos"
 import type { Product } from "@/lib/products"
+import { precioPorUnidad } from "@/lib/unidades"
 
 /**
  * El producto en grande, al tocar su foto.
@@ -90,7 +91,14 @@ export function FichaProducto({
             {product.category}
           </p>
           <h2 className="mt-0.5 text-xl font-bold leading-tight text-gray-900">{product.name}</h2>
-          <p className="mt-0.5 text-sm text-gray-500">{product.unit}</p>
+          <p className="mt-0.5 text-sm text-gray-500">
+            {product.unit}
+            {precioPorUnidad(product.price, product.unit) != null && (
+              <span className="font-semibold text-emerald-800">
+                {" · "}${precioPorUnidad(product.price, product.unit)!.toFixed(2)} c/u
+              </span>
+            )}
+          </p>
 
           <div className="mt-4 flex items-end justify-between gap-3">
             <p>

@@ -4,6 +4,7 @@ import { Plus, Minus, Star } from "lucide-react"
 
 import { bsEquivalent, formatBolivares } from "@/lib/pagos"
 import type { Product } from "@/lib/products"
+import { precioPorUnidad } from "@/lib/unidades"
 
 type Props = {
   product: Product
@@ -30,6 +31,7 @@ export function ProductCard({
   tasaVes,
 }: Props) {
   const bs = bsEquivalent(product.price, tasaVes ?? null)
+  const porUnidad = precioPorUnidad(product.price, product.unit)
   const inCart = quantity > 0
   // Agotado no es lo mismo que quitado: sigue en la grilla, apagado, para que
   // se sepa que el abasto lo vende y valga la pena volver.
@@ -102,6 +104,13 @@ export function ProductCard({
           {product.name}
         </h3>
         <p className="mt-0.5 text-xs text-gray-500">{product.unit}</p>
+        {/* Al mayor, lo que cuesta cada una: es la cuenta que se hace de cabeza
+            para saber si conviene frente a comprarlo suelto. */}
+        {porUnidad != null && !agotado && (
+          <p className="mt-1 w-fit rounded-md bg-emerald-50 px-1.5 py-0.5 text-xs font-semibold tabular-nums text-emerald-800">
+            ${porUnidad.toFixed(2)} c/u
+          </p>
+        )}
 
         {/* Se envuelve en vez de apretarse.
             
