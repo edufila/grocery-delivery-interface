@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { ChevronRight, PackageSearch } from "lucide-react"
 
-import { statusLabel, type OrderStatus } from "@/lib/orders"
+import { STATUS_FLOW, statusLabel, type OrderStatus } from "@/lib/orders"
 import { createClient } from "@/lib/supabase/client"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 
@@ -70,28 +70,64 @@ export function PedidoEnCurso() {
 
   if (!pedido) return null
 
+  const esperaPago = pedido.payment_required !== false && pedido.payment_verified_at == null
+  const titulo = esperaPago
+    ? pedido.payment_reference
+      ? "Verificando tu pago"
+      : "Falta tu pago"
+    : statusLabel(pedido.status, pedido.shopper_id)
+  // Esperando pago la barra no avanza: el pedido todavía no arrancó.
+  const paso = esperaPago ? -1 : STATUS_FLOW.indexOf(pedido.status)
+
   return (
     <section className="mx-auto max-w-md px-4 pt-4">
       <Link
         href={`/pedidos/${pedido.code}`}
-        className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 transition active:scale-[0.99]"
+        className={`block animate-[entra_0.35s_ease-out] rounded-2xl border p-4 shadow-sm transition active:scale-[0.99] ${
+          esperaPago ? "border-amber-200 bg-amber-50" : "border-emerald-200 bg-emerald-50"
+        }`}
       >
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white">
-          <PackageSearch className="h-5 w-5 text-emerald-600" aria-hidden="true" />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-sm font-semibold text-emerald-900">
-            {pedido.payment_required !== false && pedido.payment_verified_at == null
-              ? pedido.payment_reference
-                ? "Verificando tu pago"
-                : "Falta tu pago"
-              : statusLabel(pedido.status, pedido.shopper_id)}
+        <span className="flex items-center gap-3">
+          <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white">
+            {!esperaPago && (
+              <span
+                className="absolute inset-0 animate-ping rounded-full bg-emerald-300/40 [animation-duration:2s]"
+                aria-hidden="true"
+              />
+            )}
+            <PackageSearch
+              className={`relative h-5 w-5 ${esperaPago ? "text-amber-700" : "text-emerald-600"}`}
+              aria-hidden="true"
+            />
           </span>
-          <span className="block truncate text-sm text-emerald-800">
-            Tu pedido {pedido.code} · toca para seguirlo
+          <span className="min-w-0 flex-1">
+            <span
+              className={`block text-sm font-semibold ${esperaPago ? "text-amber-900" : "text-emerald-900"}`}
+            >
+              {titulo}
+            </span>
+            <span
+              className={`block truncate text-sm ${esperaPago ? "text-amber-800" : "text-emerald-800"}`}
+            >
+              Tu pedido {pedido.code} · toca para {esperaPago ? "pagarlo" : "seguirlo"}
+            </span>
           </span>
+          <ChevronRight
+            className={`h-5 w-5 shrink-0 ${esperaPago ? "text-amber-700" : "text-emerald-600"}`}
+            aria-hidden="true"
+          />
         </span>
-        <ChevronRight className="h-5 w-5 shrink-0 text-emerald-600" aria-hidden="true" />
+
+        {!esperaPago && (
+          <span className="mt-3 flex gap-1" aria-hidden="true">
+            {STATUS_FLOW.map((estado, indice) => (
+              <span
+                key={estado}
+                className={`h-1 flex-1 rounded-full ${indice <= paso ? "bg-emerald-600" : "bg-emerald-200"}`}
+              />
+            ))}
+          </span>
+        )}
       </Link>
     </section>
   )
