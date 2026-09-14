@@ -88,12 +88,11 @@ export default async function ShopperPage() {
    *
    * Por qué la semana y no el total: es el período con el que se le paga a
    * alguien, y es lo que un shopper quiere saber sin ponerse a contar.
+   *
+   * El lunes es el de Venezuela: el servidor corre en UTC, y contado allá la
+   * semana empezaba el domingo a las 8 de la noche.
    */
-  const lunes = new Date()
-  lunes.setHours(0, 0, 0, 0)
-  // getDay() da 0 el domingo; así el domingo cierra la semana en vez de abrirla.
-  lunes.setDate(lunes.getDate() - ((lunes.getDay() + 6) % 7))
-
+  const lunes = lunesEnVenezuela(new Date())
   const deLaSemana = entregados.filter((o) => new Date(o.created_at) >= lunes)
   const vendidoEnLaSemana = deLaSemana.reduce((suma, o) => suma + Number(o.total ?? 0), 0)
 
@@ -134,9 +133,17 @@ export default async function ShopperPage() {
           titulo="Disponibles"
           vacio="No hay pedidos esperando. Cuando alguien compre, aparece aquí."
           pedidos={disponibles}
+          destacado
         />
+        {/* Los últimos diez: la lista entera crecía para siempre, y lo que se
+            necesita aquí es lo reciente. El total ya está en el resumen. */}
         {entregados.length > 0 && (
-          <Grupo titulo="Entregados" vacio="" pedidos={entregados} apagado />
+          <Grupo
+            titulo="Entregados"
+            vacio=""
+            pedidos={entregados.slice(0, 10)}
+            apagado
+          />
         )}
       </div>
     </main>
@@ -161,16 +168,30 @@ function Grupo({
   vacio,
   pedidos,
   apagado,
+  destacado,
 }: {
   titulo: string
   vacio: string
   pedidos: ShopperOrder[]
   apagado?: boolean
+  /** Lo que se puede tomar ya: se marca para que salte a la vista. */
+  destacado?: boolean
 }) {
+  const hayParaTomar = destacado && pedidos.length > 0
+
   return (
     <section>
-      <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">
+      <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-gray-500">
         {titulo}
+        {hayParaTomar && (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 px-2 py-0.5 text-xs font-bold normal-case tracking-normal text-white">
+            <span className="relative flex h-1.5 w-1.5" aria-hidden="true">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-white" />
+            </span>
+            {pedidos.length}
+          </span>
+        )}
       </h2>
 
       {pedidos.length === 0 ? (
@@ -183,8 +204,8 @@ function Grupo({
             <li key={order.id}>
               <Link
                 href={`/shopper/${order.code}`}
-                className={`flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm shadow-gray-900/[0.06] transition active:scale-[0.99] ${
-                  apagado ? "opacity-60" : ""
+                className={`flex items-center gap-3 rounded-2xl border bg-white p-4 shadow-sm shadow-gray-900/[0.06] transition active:scale-[0.99] ${
+                  apagado ? "border-gray-100 opacity-60" : destacado ? "border-emerald-200 ring-1 ring-emerald-100" : "border-gray-100"
                 }`}
               >
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50">
@@ -196,7 +217,8 @@ function Grupo({
                       {order.code}
                     </span>
                     <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-600">
-                      {STATUS_LABEL[order.status]}
+                      {/* "Confirmado" no le dice nada a quien busca qué tomar. */}
+                      {destacado ? "Nuevo" : STATUS_LABEL[order.status]}
                     </span>
                   </div>
                   <p className="mt-0.5 truncate text-sm text-gray-500">
@@ -207,7 +229,7 @@ function Grupo({
                 <span className="shrink-0 text-sm font-semibold tabular-nums text-gray-900">
                   {formatMoney(order.total)}
                 </span>
-                <ChevronRight className="h-5 w-5 shrink-0 text-gray-300" aria-hidden="true" />
+                <ChevronRight className="h-5 w-5 shrink-0 text-gray-400" aria-hidden="true" />
               </Link>
             </li>
           ))}
@@ -215,6 +237,19 @@ function Grupo({
       )}
     </section>
   )
+}
+
+/** El lunes de esta semana a medianoche, en hora de Venezuela (UTC-4, sin horario de verano). */
+function lunesEnVenezuela(ahora: Date) {
+  const OFFSET_MS = 4 * 60 * 60 * 1000
+  const local = new Date(ahora.getTime() - OFFSET_MS)
+  const diasDesdeLunes = (local.getUTCDay() + 6) % 7
+  const lunesLocal = Date.UTC(
+    local.getUTCFullYear(),
+    local.getUTCMonth(),
+    local.getUTCDate() - diasDesdeLunes,
+  )
+  return new Date(lunesLocal + OFFSET_MS)
 }
 
 function SinPermiso({ rol }: { rol: string }) {
@@ -226,8 +261,11 @@ function SinPermiso({ rol }: { rol: string }) {
           Tu cuenta figura como <span className="font-semibold">{rol}</span>. Para entrar aquí hace
           falta el rol shopper, admin o dev.
         </p>
+        {/* Antes decía que se cambiaba en la tabla profiles de Supabase: una
+            instrucción para programadores, vista por clientes que llegaban aquí
+            por un enlace. Los roles ya se reparten desde Administración. */}
         <p className="mt-3 text-sm leading-relaxed text-gray-500">
-          Se cambia desde Supabase, en la tabla <code className="text-xs">profiles</code>.
+          Si trabajas con nosotros, pídele a un administrador que te dé acceso.
         </p>
         <Link
           href="/"
