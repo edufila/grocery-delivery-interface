@@ -7,6 +7,7 @@ import { Check, Loader2 } from "lucide-react"
 import { ImagePicker } from "@/components/admin/image-picker"
 import type { AdminProduct } from "@/lib/admin"
 import { createClient } from "@/lib/supabase/client"
+import { contieneTexto } from "@/lib/texto"
 
 /**
  * Precio y disponibilidad, que es lo que cambia a diario. El alta de productos
@@ -18,6 +19,16 @@ export function ProductEditor({ products }: { products: AdminProduct[] }) {
   const [busyId, setBusyId] = useState<string | null>(null)
   const [savedId, setSavedId] = useState<string | null>(null)
   const [error, setError] = useState("")
+  /** De qué producto es el error: se muestra en su tarjeta, no arriba de todo. */
+  const [errorId, setErrorId] = useState<string | null>(null)
+  const [busca, setBusca] = useState("")
+
+  /**
+   * Con muchos productos, cambiar un precio era bajar por la lista entera
+   * buscándolo en el teléfono. Sin acentos ni mayúsculas: "cafe" encuentra
+   * "Café Molido".
+   */
+  const visibles = busca.trim() ? rows.filter((p) => contieneTexto(p.name, busca)) : rows
 
   function edit(id: string, patch: Partial<AdminProduct>) {
     setRows((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)))
@@ -34,12 +45,14 @@ export function ProductEditor({ products }: { products: AdminProduct[] }) {
      * marcarlo agotado.
      */
     if (!(Number(product.price) > 0)) {
-      setError(`${product.name} quedó sin precio. Escríbelo antes de guardar, o márcalo agotado.`)
+      setErrorId(product.id)
+      setError("Quedó sin precio. Escríbelo antes de guardar, o márcalo sin existencia.")
       return
     }
 
     setBusyId(product.id)
     setError("")
+    setErrorId(null)
 
     const { error: saveError } = await createClient()
       .from("products")
@@ -53,6 +66,7 @@ export function ProductEditor({ products }: { products: AdminProduct[] }) {
 
     setBusyId(null)
     if (saveError) {
+      setErrorId(product.id)
       setError("No pudimos guardar. ¿Tu rol sigue siendo admin o dev?")
       return
     }
@@ -62,13 +76,22 @@ export function ProductEditor({ products }: { products: AdminProduct[] }) {
 
   return (
     <div className="flex flex-col gap-2">
-      {error && (
-        <p role="alert" className="text-sm text-rose-600">
-          {error}
-        </p>
+      {rows.length > 6 && (
+        <input
+          type="search"
+          value={busca}
+          onChange={(event) => setBusca(event.target.value)}
+          placeholder={`Buscar entre ${rows.length} productos`}
+          aria-label="Buscar producto"
+          className="h-11 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 text-base text-gray-900 outline-none placeholder:text-gray-500 focus:border-emerald-500 focus:bg-white"
+        />
       )}
 
-      {rows.map((product) => (
+      {busca.trim() && visibles.length === 0 && (
+        <p className="py-4 text-center text-sm text-gray-500">Ningún producto se llama así.</p>
+      )}
+
+      {visibles.map((product) => (
         <article
           key={product.id}
           className={`rounded-2xl border p-3 ${
@@ -134,6 +157,15 @@ export function ProductEditor({ products }: { products: AdminProduct[] }) {
             {savedId === product.id ? "Listo" : "Guardar"}
           </button>
           </div>
+
+          {/* En su tarjeta y no arriba de la lista: con la lista larga, el
+              aviso quedaba fuera de la pantalla y el botón parecía no hacer
+              nada. */}
+          {error && errorId === product.id && (
+            <p role="alert" className="mt-2 text-sm text-rose-600">
+              {error}
+            </p>
+          )}
 
           <div className="mt-2">
             <ImagePicker

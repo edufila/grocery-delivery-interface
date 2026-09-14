@@ -14,6 +14,7 @@ import type { Category } from "@/lib/categories"
 import { useCart } from "@/lib/cart"
 import { useFavoritos } from "@/lib/favoritos"
 import type { Product } from "@/lib/products"
+import { contieneTexto } from "@/lib/texto"
 
 type Props = {
   products: Product[]
@@ -86,12 +87,13 @@ export function ProductCatalog({
   const conProductos = useMemo(() => new Set(products.map((p) => p.category)), [products])
 
   const visibleProducts = useMemo(() => {
-    const term = query.trim().toLowerCase()
+    const term = query.trim()
     return products
       .filter((p) => {
         if (category !== "Todos" && p.category !== category) return false
         if (wholesaleOnly && !p.wholesale) return false
-        if (term && !p.name.toLowerCase().includes(term)) return false
+        // Sin acentos: en el teléfono nadie escribe "café".
+        if (term && !contieneTexto(p.name, term)) return false
         return true
       })
       // Lo agotado al final: sigue a la vista, pero no le estorba a lo que sí
