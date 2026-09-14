@@ -26,7 +26,17 @@ import { fileURLToPath } from "node:url"
 import { leerPng, redimensionar, png } from "./png.mjs"
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..")
-const CARPETA = join(REPO, "public", "images")
+/**
+ * Dos carpetas, cada una con el tamaño al que se ve lo suyo.
+ *
+ * Las de productos se muestran en una tarjeta de dos columnas: unos 200 px en el
+ * teléfono más ancho, 400 en pantallas que duplican. Venían de 1024 y medio
+ * mega cada una -- 4,6 MB las ocho -- en la pantalla donde se arma el pedido.
+ */
+const CARPETAS = [
+  { carpeta: join(REPO, "public", "images"), lado: 640 },
+  { carpeta: join(REPO, "public", "products"), lado: 400 },
+]
 
 /**
  * El ancho máximo al que se ve una foto de abasto: la tarjeta tiene 448 px de
@@ -34,7 +44,6 @@ const CARPETA = join(REPO, "public", "images")
  * 640 -- entre los dos -- porque el salto de calidad de 640 a 896 no se nota en
  * una foto de fondo y el de peso sí.
  */
-const LADO = 640
 
 /**
  * Las fotos de los abastos se recortan a la forma con la que se ven.
@@ -92,23 +101,18 @@ const hacerlo = process.argv.includes("--hacerlo")
 
 const kb = (n) => `${Math.round(n / 1024)} KB`
 
-let archivos
-try {
-  archivos = readdirSync(CARPETA).filter((f) => f.toLowerCase().endsWith(".png"))
-} catch {
-  console.log(`\nNo hay carpeta ${CARPETA}. Nada que hacer.\n`)
-  process.exit(0)
-}
-
-if (archivos.length === 0) {
-  console.log("\nNo hay PNG en public/images. Nada que hacer.\n")
-  process.exit(0)
-}
-
 console.log(hacerlo ? "\nAchicando\n" : "\nEsto es lo que haría (--hacerlo para hacerlo)\n")
 
 let antes = 0
 let despues = 0
+
+for (const { carpeta: CARPETA, lado: LADO } of CARPETAS) {
+let archivos = []
+try {
+  archivos = readdirSync(CARPETA).filter((f) => f.toLowerCase().endsWith(".png"))
+} catch {
+  continue
+}
 
 for (const nombre of archivos) {
   const ruta = join(CARPETA, nombre)
@@ -172,6 +176,7 @@ for (const nombre of archivos) {
   )
 
   if (hacerlo) writeFileSync(ruta, nueva)
+}
 }
 
 console.log("")

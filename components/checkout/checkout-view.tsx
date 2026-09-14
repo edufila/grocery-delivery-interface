@@ -439,10 +439,11 @@ export function CheckoutView() {
                 <span className="text-right leading-tight">
                   <span className="block tabular-nums">${total.toFixed(2)}</span>
                   {bsEquivalent(total, tasaVes) != null && (
-                    /* Opacidad y no `text-white/90`: cuando el botón está
-                       deshabilitado se pone gris claro, y un blanco fijo encima
-                       quedaba invisible. Así hereda el color que toque. */
-                    <span className="block text-xs font-medium tabular-nums opacity-90">
+                    /* Hereda el color del botón en vez de fijar blanco: cuando
+                       está deshabilitado se pone gris claro, y un blanco fijo
+                       encima quedaba invisible. Sin opacidad: al 90% sobre el
+                       verde daba 4,49 a 1, justo debajo del mínimo. */
+                    <span className="block text-xs font-medium tabular-nums">
                       Bs {formatBolivares(bsEquivalent(total, tasaVes)!)}
                     </span>
                   )}

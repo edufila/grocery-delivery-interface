@@ -34,14 +34,17 @@ export function ProductCard({
 
   return (
     <article className="relative flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm shadow-gray-900/[0.06] transition hover:shadow-md">
-      <div className="relative aspect-square w-full bg-gray-50 p-3">
+      {/* La foto a sangre, sin margen. Las de producto ya traen su propio
+          fondo claro de estudio, y metidas con relleno dentro de otro gris se
+          veía un cuadro dentro de un cuadro, con dos grises que no casaban. */}
+      <div className="relative aspect-square w-full overflow-hidden bg-gray-50">
         <img
           src={product.image || "/placeholder.svg"}
           alt={product.name}
           // En una grilla larga, la mayoría empieza fuera de la pantalla.
           loading="lazy"
           decoding="async"
-          className={`h-full w-full object-contain ${agotado ? "opacity-40 grayscale" : ""}`}
+          className={`h-full w-full object-cover ${agotado ? "opacity-40 grayscale" : ""}`}
         />
         {agotado ? (
           <span className="absolute left-2 top-2 rounded-full bg-gray-900/80 px-2 py-0.5 text-[10px] font-semibold text-white">
@@ -114,7 +117,7 @@ export function ProductCard({
           ) : inCart ? (
             /* p-1 con botones de 36 deja la pastilla en 44 de alto, que es
                el minimo del proyecto. Antes eran de 28 y la pastilla de 36. */
-            <div className="ml-auto flex items-center gap-1 rounded-full bg-emerald-600 p-1 text-white shadow-sm">
+            <div className="ml-auto flex animate-[cart-pop_0.25s_ease-out] items-center gap-1 rounded-full bg-emerald-600 p-1 text-white shadow-sm">
               <button
                 type="button"
                 onClick={() => onRemove(product.id)}
@@ -135,10 +138,12 @@ export function ProductCard({
                 <Minus className="h-4 w-4" aria-hidden="true" />
               </button>
               <span
-                className="min-w-4 text-center text-sm font-bold tabular-nums"
+                className="min-w-4 overflow-hidden text-center text-sm font-bold tabular-nums"
                 aria-live="polite"
               >
-                {quantity}
+                <span key={quantity} className="block animate-[sube-numero_0.2s_ease-out]">
+                  {quantity}
+                </span>
               </span>
               <button
                 type="button"

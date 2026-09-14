@@ -34,6 +34,19 @@ export function ProductCatalog({
   const { quantities, count, subtotal, add, removeOne } = useCart()
   const favoritos = useFavoritos()
 
+  /**
+   * Un toque corto al agregar, para sentir que entró sin mirar la barra.
+   * Solo en Android: Safari no implementa la vibración y ahí no pasa nada.
+   */
+  const agregar = (id: string) => {
+    try {
+      navigator.vibrate?.(12)
+    } catch {
+      // Algunos navegadores la bloquean dentro de un iframe.
+    }
+    add(id)
+  }
+
   const [category, setCategory] = useState<Category>(initialCategory)
   const [query, setQuery] = useState(initialQuery)
   const [searchOpen, setSearchOpen] = useState(initialQuery.length > 0)
@@ -110,7 +123,7 @@ export function ProductCatalog({
                 key={product.id}
                 product={product}
                 quantity={quantities[product.id] ?? 0}
-                onAdd={add}
+                onAdd={agregar}
                 onRemove={removeOne}
                 esFavorito={favoritos.ids.has(product.id)}
                 onFavorito={favoritos.haySesion ? favoritos.alternar : undefined}

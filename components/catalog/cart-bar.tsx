@@ -42,13 +42,15 @@ export function CartBar({ count, total, tasaVes }: Props) {
 
         <span className="flex flex-col items-end gap-0.5">
           <span className="flex items-center gap-2 text-sm font-bold">
-            Ver Carrito
-            <span className="rounded-lg bg-white/20 px-2 py-1 tabular-nums">
-              ${total.toFixed(2)}
+            Ver carrito
+            <span className="overflow-hidden rounded-lg bg-white/20 px-2 py-1 tabular-nums">
+              <span key={total} className="block animate-[sube-numero_0.25s_ease-out]">
+                ${total.toFixed(2)}
+              </span>
             </span>
           </span>
           {bs != null && (
-            <span className="text-xs font-medium text-white/80">Bs {formatBolivares(bs)}</span>
+            <span className="text-xs font-medium text-white">Bs {formatBolivares(bs)}</span>
           )}
         </span>
       </Link>

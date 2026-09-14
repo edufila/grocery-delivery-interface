@@ -278,3 +278,43 @@
     transform: scale(1) rotate(0deg);
   }
 }
+
+/* El total del carrito cambia con un pequeño salto hacia arriba: se nota que
+   sumó sin tener que leer el número. */
+@keyframes sube-numero {
+  0% {
+    transform: translateY(40%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Lo que aparece en pantalla -- una tarjeta, un paso nuevo -- entra subiendo
+   un poco en vez de aparecer de golpe. */
+@keyframes entra {
+  0% {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/**
+ * Quien pidió al sistema menos movimiento no recibe ninguna de estas. Hay gente
+ * a la que el movimiento en pantalla le da mareo de verdad.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
