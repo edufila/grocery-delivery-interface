@@ -36,9 +36,8 @@ function saludo(hora: number) {
  *
  * La tasa antes vivía sola en una franja verde clara debajo de las categorías.
  * Aquí gana dos cosas: se ve sin bajar, y deja de ser un renglón suelto que
- * parecía un aviso. Si la corrida automática falló y lo que hay es la última
- * tasa que sí se pudo traer, lo dice con la fecha en vez de llamarla "de hoy"
- * sin serlo.
+ * parecía un aviso. Si no es de hoy, dice de cuándo es en vez de llamarla
+ * "de hoy" sin serlo.
  */
 export function SaludoInicio({
   tasaVes,
@@ -86,8 +85,12 @@ export function SaludoInicio({
 
           {tasaVes && actualizada && !vigente ? (
             <p className="mt-2 text-xs leading-relaxed text-white">
-              {/* Sin punto final: la fecha ya termina en "p. m." y quedaba doble. */}
-              Es la última que se pudo traer, del {formatOrderDate(actualizada)}
+              {/* "Actualizada" y no "la última que se pudo traer": el BCV no
+                  publica los fines de semana ni los feriados, así que un domingo
+                  la del viernes es la vigente, no una falla. La alerta de tasa
+                  vieja (0041) es la que avisa cuando de verdad algo no corrió.
+                  Sin punto final: la fecha ya termina en "p. m." y quedaba doble. */}
+              Actualizada el {formatOrderDate(actualizada)}
             </p>
           ) : null}
         </div>
