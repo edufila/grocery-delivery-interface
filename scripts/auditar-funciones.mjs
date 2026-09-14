@@ -43,6 +43,7 @@ const FUNCIONES = [
   ["referencias_coinciden", { p_reportada: "1234", p_recibida: "1234" }],
   ["avisos_pendientes", {}],
   ["pago_resuelto", { p_required: true, p_verified: null }],
+  ["sin_acentos", { p_texto: "Café" }],
 ]
 
 function leerEnv() {
