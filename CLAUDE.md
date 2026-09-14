@@ -136,6 +136,22 @@ un rato en el que la columna nueva no existe, y PostgREST rechaza la consulta
 ENTERA, no solo esa columna. Toda consulta que pida una columna recién agregada
 tiene que reintentar sin ella. Ver `fetchProducts` y `fetchMetodosPago`.
 
+## Fechas y búsquedas
+
+**Toda hora que se muestre lleva `timeZone: ZONA_HORARIA`** (de `lib/orders.ts`).
+Casi todas las pantallas se arman en Vercel, que corre en UTC: sin la zona, un
+pedido de la 1:57 p. m. decía 5:57. Lo mismo para calcular "hoy" o "esta
+semana": se calcula en hora de Venezuela, no con `new Date().getDay()`.
+
+**Buscar es sin acentos.** En el teléfono nadie escribe "café". En pantalla se
+compara con `contieneTexto` (`lib/texto.ts`), que conserva la ñ; en la base,
+contra `products.nombre_busqueda` (0046), con respaldo a `name` si la columna
+no existe.
+
+**Los montos se leen a la venezolana.** Un campo donde se escribe o pega un
+monto en bolívares no es `type="number"`: "27.388,87" no entra. Va como texto
+con `inputMode="decimal"` y se lee con `leerMonto` (`lib/pagos.ts`).
+
 ## RLS no reemplaza el filtro por usuario
 
 A admin y dev las políticas les dejan leer **todos** los pedidos (lo necesita el
