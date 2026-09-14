@@ -147,12 +147,12 @@ export function AddressManager({ userId, addresses }: { userId: string; addresse
                     </p>
                   )}
 
-                  <div className="mt-1.5 flex flex-wrap items-center gap-x-4">
+                  <div className="mt-0.5 flex flex-wrap items-center gap-x-4">
                     <button
                       type="button"
                       onClick={() => startEdit(address)}
                       disabled={busy}
-                      className="flex min-h-9 items-center gap-1.5 text-sm font-medium text-emerald-600 disabled:text-gray-400"
+                      className="flex min-h-11 items-center gap-1.5 text-sm font-medium text-emerald-600 disabled:text-gray-400"
                     >
                       <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
                       Editar
@@ -163,13 +163,13 @@ export function AddressManager({ userId, addresses }: { userId: string; addresse
                         type="button"
                         onClick={() => void makeDefault(address.id)}
                         disabled={busy}
-                        className="min-h-9 text-sm font-medium text-emerald-600 disabled:text-gray-400"
+                        className="min-h-11 text-sm font-medium text-emerald-600 disabled:text-gray-400"
                       >
                         Usar como principal
                       </button>
                     )}
                     {address.is_default && (
-                      <span className="flex min-h-9 items-center gap-1 text-xs font-medium text-emerald-700">
+                      <span className="flex min-h-11 items-center gap-1 text-xs font-medium text-emerald-700">
                         <Check className="h-3.5 w-3.5" aria-hidden="true" /> Principal
                       </span>
                     )}
