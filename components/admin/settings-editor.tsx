@@ -6,17 +6,53 @@ import { Check, Loader2 } from "lucide-react"
 
 import type { Settings } from "@/lib/admin"
 import { formatOrderDate } from "@/lib/orders"
+import { leerMonto } from "@/lib/pagos"
 import { createClient } from "@/lib/supabase/client"
 
 export function SettingsEditor({ settings }: { settings: Settings }) {
   const router = useRouter()
   const [serviceFee, setServiceFee] = useState(settings.service_fee)
-  const [tasa, setTasa] = useState(settings.rate_ves ?? 0)
+  // Como texto y no como número: así se puede escribir "832,49", que es como
+  // se lee la tasa aquí. Con type="number" la coma no entraba.
+  const [tasaTexto, setTasaTexto] = useState(
+    settings.rate_ves ? String(settings.rate_ves).replace(".", ",") : "",
+  )
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState("")
 
+  const tasaNueva = tasaTexto.trim() ? leerMonto(tasaTexto) : null
+  const tasaParaMostrar = tasaNueva ?? settings.rate_ves ?? 0
+
   async function save() {
+    if (tasaTexto.trim() && tasaNueva == null) {
+      setError("No entendimos la tasa. Escríbela como 832,49.")
+      return
+    }
+
+    /**
+     * La tasa se escribe solo si cambió.
+     *
+     * Antes, guardar la tarifa de servicio volvía a guardar también la tasa,
+     * marcada "a mano" y con la hora de ese momento, aunque nadie la hubiera
+     * tocado. Una tasa de hace cuatro días quedaba con cara de recién puesta, y
+     * la alerta de tasa vieja (0041) dejaba de sonar justo cuando hacía falta.
+     * Y con el campo vacío la borraba, y el Pago Móvil desaparecía para todos.
+     *
+     * Vaciar el campo ahora no borra nada: la deja como estaba.
+     */
+    const cambioTasa = tasaNueva != null && tasaNueva !== Number(settings.rate_ves ?? 0)
+
+    // El mismo freno que la corrida automática: un salto de más del doble casi
+    // siempre es un dedo de más o de menos, no la economía.
+    const anterior = Number(settings.rate_ves ?? 0)
+    if (cambioTasa && anterior > 0 && (tasaNueva! > anterior * 2 || tasaNueva! < anterior / 2)) {
+      setError(
+        `Eso es más del doble o menos de la mitad de la tasa actual (Bs. ${anterior.toLocaleString("es-VE", { minimumFractionDigits: 2 })}). Revísala.`,
+      )
+      return
+    }
+
     setBusy(true)
     setError("")
     setSaved(false)
@@ -27,9 +63,13 @@ export function SettingsEditor({ settings }: { settings: Settings }) {
       .from("settings")
       .update({
         service_fee: serviceFee,
-        rate_ves: tasa > 0 ? tasa : null,
-        rate_ves_updated_at: tasa > 0 ? new Date().toISOString() : null,
-        rate_ves_source: tasa > 0 ? "manual" : null,
+        ...(cambioTasa
+          ? {
+              rate_ves: tasaNueva,
+              rate_ves_updated_at: new Date().toISOString(),
+              rate_ves_source: "manual",
+            }
+          : {}),
       })
       .eq("id", "global")
 
@@ -72,16 +112,15 @@ export function SettingsEditor({ settings }: { settings: Settings }) {
           Tasa del día (Bs. por dólar)
         </span>
         <input
-          type="number"
-          step="0.0001"
-          min="0"
-          value={tasa || ""}
+          inputMode="decimal"
+          value={tasaTexto}
           onChange={(event) => {
-            setTasa(Number(event.target.value) || 0)
+            setTasaTexto(event.target.value)
             setSaved(false)
+            if (error) setError("")
           }}
           placeholder="Sin cargar"
-          className="mt-1 h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base tabular-nums text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500 sm:w-48"
+          className="mt-1 h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base tabular-nums text-gray-900 outline-none placeholder:text-gray-500 focus:border-emerald-500 sm:w-48"
         />
       </label>
 
@@ -98,11 +137,11 @@ export function SettingsEditor({ settings }: { settings: Settings }) {
         </p>
       )}
 
-      {tasa > 0 && (
+      {tasaParaMostrar > 0 && (
         <p className="mt-2 text-xs leading-relaxed text-gray-500">
           Un pedido de $10 se cotizaría en{" "}
           <span className="font-semibold tabular-nums text-gray-700">
-            Bs. {(10 * tasa).toLocaleString("es-VE", { minimumFractionDigits: 2 })}
+            Bs. {(10 * tasaParaMostrar).toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </span>
           .
         </p>
