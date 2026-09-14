@@ -55,62 +55,62 @@ export default async function PedidoPage({
     },
     { data: order },
   ] = await Promise.all([
-    supabase.auth.getUser(),
-    supabase.from("orders").select("*").eq("code", code.toUpperCase()).maybeSingle<Order>(),
+  supabase.auth.getUser(),
+  supabase.from("orders").select("*").eq("code", code.toUpperCase()).maybeSingle<Order>(),
+])
+
+if (!user) redirect(`/login?next=/pedidos/${code}`)
+
+/**
+ * Tiene que ser suyo, y eso se mira aquí y no se le deja a la RLS.
+ *
+ * Para un cliente la política ya limita a sus pedidos. Pero a admin y dev les
+ * deja leer todos, y a un shopper los disponibles: abriendo el enlace de un
+ * pedido ajeno veían el seguimiento como si fuera suyo, con el chat del
+ * cliente y la pantalla de pagar. Para mirar un pedido de otro está el
+ * detalle en Administración.
+ */
+if (!order || order.user_id !== user.id) notFound()
+
+/**
+ * Lo que falta, todo junto.
+ *
+ * Dependen del pedido pero no entre sí, y encadenadas eran
+ * viajes de ida y vuelta a Supabase uno detrás de otro. Esta es la pantalla
+ * que el cliente deja abierta mirando por dónde viene su pedido, y que se
+ * rearma sola cada vez que algo cambia: cada viaje de más se paga muchas
+ * veces. Juntas cuestan lo que la más lenta.
+ */
+const [
+  { data: items },
+  { data: shopperRows },
+  { data: deliveryCode },
+  { data: metodo },
+  { data: fotos },
+] = await Promise.all([
+    supabase.from("order_items").select("*").eq("order_id", order.id).returns<OrderItem[]>(),
+    // Solo nombre, foto y @: no expone teléfono ni correo del shopper.
+    supabase.rpc("order_shopper", { p_order_id: order.id }),
+    // Solo el dueño del pedido puede leerlo: el shopper no tiene política aquí.
+    supabase
+      .from("order_delivery_codes")
+      .select("code, attempts")
+      .eq("order_id", order.id)
+      .maybeSingle<{ code: string; attempts: number }>(),
+    // Solo a dónde pagar. Si el pedido espera pago o no, lo dice el pedido:
+    // ver `hayQuePagar` abajo.
+    supabase
+      .from("payment_methods")
+      .select("instructions")
+      .eq("id", order.payment_method)
+      .maybeSingle<{ instructions: string | null }>(),
+    // Las fotos del catálogo del abasto: el renglón del pedido no la guarda.
+    supabase
+      .from("products")
+      .select("id, image")
+      .eq("store_id", order.store_id ?? "girasol")
+      .returns<{ id: string; image: string | null }[]>(),
   ])
-
-  if (!user) redirect(`/login?next=/pedidos/${code}`)
-
-  /**
-   * Tiene que ser suyo, y eso se mira aquí y no se le deja a la RLS.
-   *
-   * Para un cliente la política ya limita a sus pedidos. Pero a admin y dev les
-   * deja leer todos, y a un shopper los disponibles: abriendo el enlace de un
-   * pedido ajeno veían el seguimiento como si fuera suyo, con el chat del
-   * cliente y la pantalla de pagar. Para mirar un pedido de otro está el
-   * detalle en Administración.
-   */
-  if (!order || order.user_id !== user.id) notFound()
-
-  /**
-   * Lo que falta, todo junto.
-   *
-   * Dependen del pedido pero no entre sí, y encadenadas eran
-   * viajes de ida y vuelta a Supabase uno detrás de otro. Esta es la pantalla
-   * que el cliente deja abierta mirando por dónde viene su pedido, y que se
-   * rearma sola cada vez que algo cambia: cada viaje de más se paga muchas
-   * veces. Juntas cuestan lo que la más lenta.
-   */
-  const [
-    { data: items },
-    { data: shopperRows },
-    { data: deliveryCode },
-    { data: metodo },
-    { data: fotos },
-  ] = await Promise.all([
-      supabase.from("order_items").select("*").eq("order_id", order.id).returns<OrderItem[]>(),
-      // Solo nombre, foto y @: no expone teléfono ni correo del shopper.
-      supabase.rpc("order_shopper", { p_order_id: order.id }),
-      // Solo el dueño del pedido puede leerlo: el shopper no tiene política aquí.
-      supabase
-        .from("order_delivery_codes")
-        .select("code, attempts")
-        .eq("order_id", order.id)
-        .maybeSingle<{ code: string; attempts: number }>(),
-      // Solo a dónde pagar. Si el pedido espera pago o no, lo dice el pedido:
-      // ver `hayQuePagar` abajo.
-      supabase
-        .from("payment_methods")
-        .select("instructions")
-        .eq("id", order.payment_method)
-        .maybeSingle<{ instructions: string | null }>(),
-      // Las fotos del catálogo del abasto: el renglón del pedido no la guarda.
-      supabase
-        .from("products")
-        .select("id, image")
-        .eq("store_id", order.store_id ?? "girasol")
-        .returns<{ id: string; image: string | null }[]>(),
-    ])
 
   const imagenes = new Map((fotos ?? []).map((f) => [f.id, f.image]))
 
