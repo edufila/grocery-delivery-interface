@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { Check, Keyboard, Loader2 } from "lucide-react"
 
 import { NEXT_STATUS_ACTION, nextStatus, type Order } from "@/lib/orders"
+import { avisarAlEquipo } from "@/lib/push-cliente"
 import { createClient } from "@/lib/supabase/client"
 
 export function ShopperActions({
@@ -64,6 +65,8 @@ export function ShopperActions({
     const result = data as { ok: boolean; motivo?: string; restantes?: number } | null
 
     if (result?.ok) {
+      // "¡Llegó tu pedido!" en el teléfono del cliente, aunque tenga la app cerrada.
+      void avisarAlEquipo("estado-cliente", order.id)
       router.refresh()
       return
     }
@@ -116,6 +119,7 @@ export function ShopperActions({
       router.refresh()
       return
     }
+    void avisarAlEquipo("estado-cliente", order.id)
     router.refresh()
   }
 
@@ -147,6 +151,12 @@ export function ShopperActions({
       router.refresh()
       return
     }
+    /**
+     * Cada paso le llega al cliente con la app cerrada: "están comprando tu
+     * pedido", "va en camino". Qué dice lo decide la base mirando el estado
+     * (avisos_pendientes); aquí solo se toca la puerta.
+     */
+    void avisarAlEquipo("estado-cliente", order.id)
     router.refresh()
   }
 

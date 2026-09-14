@@ -62,6 +62,7 @@ export function DetallePedido({ orderId, onClose }: { orderId: string; onClose: 
      * figurando como pendiente.
      */
     void avisarAlEquipo("pedido-listo")
+    void avisarAlEquipo("estado-cliente", orderId)
     router.refresh()
   }
 

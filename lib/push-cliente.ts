@@ -137,13 +137,15 @@ export async function borrarPush() {
  * persona, no lo que diga este llamado: ver `/api/avisar`.
  */
 export async function avisarAlEquipo(
-  motivo: "pago-reportado" | "pedido-listo" | "pedido-nuevo",
+  motivo: "pago-reportado" | "pedido-listo" | "pedido-nuevo" | "estado-cliente",
+  /** Solo para "estado-cliente": de qué pedido, para despertar a su dueño. */
+  pedido?: string,
 ) {
   try {
     await fetch("/api/avisar", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ motivo }),
+      body: JSON.stringify({ motivo, pedido }),
       /**
        * Que la petición sobreviva a que se cierre la pantalla.
        *

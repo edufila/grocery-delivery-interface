@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation"
 import { ArrowLeft, Check, MapPin } from "lucide-react"
 
 import { OrderLiveRefresh } from "@/components/live-refresh"
+import { AvisamePedido } from "@/components/tracking/avisame-pedido"
 import { FestejoPedido } from "@/components/tracking/festejo-pedido"
 import { EstadoHero } from "@/components/tracking/estado-hero"
 import { DeliveryCodeCard } from "@/components/tracking/delivery-code-card"
@@ -162,6 +163,9 @@ export default async function PedidoPage({
 
       <div className="mx-auto max-w-lg space-y-4 px-4 pb-10 pt-4">
         <EstadoHero order={order} esperaPago={hayQuePagar && order.payment_verified_at == null} />
+
+        {/* Mientras hay algo por pasar: con el pedido cerrado no queda qué avisar. */}
+        {!cancelled && order.status !== "entregado" && <AvisamePedido />}
 
         {!cancelled && (
           <MapaSeguimiento

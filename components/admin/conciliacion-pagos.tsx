@@ -131,8 +131,10 @@ export function ConciliacionPagos({
       return
     }
 
-    // Recién ahora el pedido existe para los shoppers: se les avisa.
+    // Recién ahora el pedido existe para los shoppers: se les avisa. Y al
+    // cliente, que su pago llegó.
     void avisarAlEquipo("pedido-listo")
+    void avisarAlEquipo("estado-cliente", pedido.id)
 
     /**
      * Se repite en pantalla qué quedó confirmado. Confirmar un pago libera un
