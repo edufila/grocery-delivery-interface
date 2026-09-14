@@ -1,11 +1,12 @@
 "use client"
 
 import Link from "next/link"
-import { useMemo, useRef, useState } from "react"
+import { useCallback, useMemo, useRef, useState } from "react"
 import { Search } from "lucide-react"
 
 import { CambiarAbasto } from "./cambiar-abasto"
 import { CatalogHeader } from "./catalog-header"
+import { FichaProducto } from "./ficha-producto"
 import { ProductCard } from "./product-card"
 import { StoreHero } from "./store-hero"
 import { CartBar } from "./cart-bar"
@@ -59,6 +60,9 @@ export function ProductCatalog({
 
   const [category, setCategory] = useState<Category>(initialCategory)
   const listaRef = useRef<HTMLElement>(null)
+  const [viendo, setViendo] = useState<string | null>(null)
+  const cerrarFicha = useCallback(() => setViendo(null), [])
+  const productoAbierto = viendo ? products.find((p) => p.id === viendo) : undefined
 
   /**
    * Al cambiar de categoría con la lista ya bajada, se vuelve a su comienzo.
@@ -180,6 +184,7 @@ export function ProductCatalog({
                 onRemove={removeOne}
                 esFavorito={favoritos.ids.has(product.id)}
                 onFavorito={favoritos.haySesion ? favoritos.alternar : undefined}
+                onVer={setViendo}
                 tasaVes={tasaVes}
               />
             ))}
@@ -188,6 +193,17 @@ export function ProductCatalog({
       </main>
 
       <CartBar count={count} total={subtotal} tasaVes={tasaVes} />
+
+      {productoAbierto && (
+        <FichaProducto
+          product={productoAbierto}
+          quantity={quantities[productoAbierto.id] ?? 0}
+          tasaVes={tasaVes}
+          onAdd={agregar}
+          onRemove={removeOne}
+          onClose={cerrarFicha}
+        />
+      )}
     </div>
   )
 }

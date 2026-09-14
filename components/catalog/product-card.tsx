@@ -13,6 +13,8 @@ type Props = {
   /** Sin sesión no se ofrece: no habría dónde guardarlo. */
   esFavorito?: boolean
   onFavorito?: (id: string) => void
+  /** Abre la ficha grande del producto. */
+  onVer?: (id: string) => void
   /** Sin tasa cargada no se muestra la referencia en bolívares. */
   tasaVes?: number | null
 }
@@ -24,6 +26,7 @@ export function ProductCard({
   onRemove,
   esFavorito,
   onFavorito,
+  onVer,
   tasaVes,
 }: Props) {
   const bs = bsEquivalent(product.price, tasaVes ?? null)
@@ -38,14 +41,24 @@ export function ProductCard({
           fondo claro de estudio, y metidas con relleno dentro de otro gris se
           veía un cuadro dentro de un cuadro, con dos grises que no casaban. */}
       <div className="relative aspect-square w-full overflow-hidden bg-gray-50">
-        <img
-          src={product.image || "/placeholder.svg"}
-          alt={product.name}
-          // En una grilla larga, la mayoría empieza fuera de la pantalla.
-          loading="lazy"
-          decoding="async"
-          className={`h-full w-full object-cover ${agotado ? "opacity-40 grayscale" : ""}`}
-        />
+        {/* La foto es un botón que abre la ficha: hermano de la estrella y no
+            su padre, para no anidar un botón dentro de otro. */}
+        <button
+          type="button"
+          onClick={() => onVer?.(product.id)}
+          className="block h-full w-full"
+          aria-label={`Ver ${product.name} en grande`}
+          tabIndex={onVer ? 0 : -1}
+        >
+          <img
+            src={product.image || "/placeholder.svg"}
+            alt=""
+            // En una grilla larga, la mayoría empieza fuera de la pantalla.
+            loading="lazy"
+            decoding="async"
+            className={`h-full w-full object-cover ${agotado ? "opacity-40 grayscale" : ""}`}
+          />
+        </button>
         {agotado ? (
           <span className="absolute left-2 top-2 rounded-full bg-gray-900/80 px-2 py-0.5 text-[10px] font-semibold text-white">
             Agotado

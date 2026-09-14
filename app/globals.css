@@ -321,6 +321,25 @@
   }
 }
 
+/* Las hojas que suben desde abajo, y el velo que oscurece detrás. */
+@keyframes sube-hoja {
+  0% {
+    transform: translateY(100%);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes aparece {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
 /**
  * Quien pidió al sistema menos movimiento no recibe ninguna de estas. Hay gente
  * a la que el movimiento en pantalla le da mareo de verdad.
