@@ -28,7 +28,7 @@ export function ShopperCard({ shopper }: { shopper: OrderShopper }) {
       )}
 
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-gray-500">
           Tu shopper
         </p>
         <p className="truncate text-sm font-semibold text-gray-900">{nombre}</p>
