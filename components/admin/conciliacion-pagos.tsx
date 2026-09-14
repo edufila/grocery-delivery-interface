@@ -1,12 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { BadgeCheck, Clock, Loader2, Search } from "lucide-react"
 
 import { AvisoPagos } from "@/components/admin/aviso-pagos"
 import { DetallePedido } from "@/components/admin/detalle-pedido"
-import { formatMoney, formatOrderDate, type Order } from "@/lib/orders"
+import { formatMoney, formatOrderDate, haceCuanto, type Order } from "@/lib/orders"
 import { formatBolivares, leerMonto, ultimosDigitos } from "@/lib/pagos"
 import { avisarAlEquipo } from "@/lib/push-cliente"
 import { createClient } from "@/lib/supabase/client"
@@ -156,7 +156,6 @@ export function ConciliacionPagos({
   return (
     <div className="flex flex-col gap-4">
       <AvisoPagos />
-
 
       <section>
         <h3 className="mb-1 text-sm font-semibold text-gray-900">
@@ -321,14 +320,39 @@ function TarjetaPago({
   const ultimos = ultimosDigitos(pedido.payment_reference)
   const enBolivares = pedido.amount_ves != null
   const escrito = (pedido.payment_reference ?? "").replace(/\D/g, "")
+  const ahora = useAhora()
+
+  /**
+   * Cuánto lleva esperando, y no solo a qué hora reportó. Del otro lado hay
+   * alguien mirando su pedido detenido; pasados veinte minutos se marca en
+   * rojo, que es cuando empieza a escribir preguntando qué pasó.
+   */
+  const minutosEsperando =
+    pedido.payment_reported_at && ahora
+      ? (ahora - new Date(pedido.payment_reported_at).getTime()) / 60_000
+      : 0
+  const urgente = minutosEsperando >= 20
 
   return (
-    <li className="rounded-2xl border border-amber-200 bg-amber-50/60 p-3">
+    <li
+      className={`rounded-2xl border p-3 ${
+        urgente ? "border-rose-200 bg-rose-50/60" : "border-amber-200 bg-amber-50/60"
+      }`}
+    >
       <div className="flex items-center justify-between gap-2">
         <p className="font-mono text-sm font-semibold text-gray-900">{pedido.code}</p>
-        <p className="flex items-center gap-1 text-xs text-amber-700">
+        <p
+          className={`flex items-center gap-1 text-xs font-medium ${
+            urgente ? "text-rose-700" : "text-amber-800"
+          }`}
+          title={pedido.payment_reported_at ? formatOrderDate(pedido.payment_reported_at) : undefined}
+        >
           <Clock className="h-3.5 w-3.5" aria-hidden="true" />
-          {pedido.payment_reported_at ? formatOrderDate(pedido.payment_reported_at) : "reportado"}
+          {pedido.payment_reported_at
+            ? ahora
+              ? `Reportó ${haceCuanto(pedido.payment_reported_at, ahora)}`
+              : formatOrderDate(pedido.payment_reported_at)
+            : "reportado"}
         </p>
       </div>
 
@@ -370,6 +394,23 @@ function TarjetaPago({
           aparece. Dejarlo aquí sin tocar es exactamente lo correcto. */}
     </li>
   )
+}
+
+/**
+ * La hora del teléfono, al montar y cada minuto.
+ *
+ * Null en el primer dibujo, que viene del servidor: si se calculara allá, el
+ * "hace 3 min" del servidor y el del teléfono no coincidirían y React se
+ * quejaría del desfase. Mientras tanto se muestra la hora exacta.
+ */
+function useAhora() {
+  const [ahora, setAhora] = useState<number | null>(null)
+  useEffect(() => {
+    setAhora(Date.now())
+    const id = window.setInterval(() => setAhora(Date.now()), 60_000)
+    return () => window.clearInterval(id)
+  }, [])
+  return ahora
 }
 
 function Evidencia({

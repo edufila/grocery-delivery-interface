@@ -167,3 +167,20 @@ export function formatOrderDate(iso: string) {
     timeZone: ZONA_HORARIA,
   })
 }
+
+/**
+ * "hace 12 min", "hace 2 h", "hace 3 días": cuánto lleva algo esperando.
+ *
+ * Para lo que alguien está esperando la hora exacta dice poco; lo que importa
+ * es si son dos minutos o cuarenta. `ahora` se pasa para poder probarlo y para
+ * calcularlo en el teléfono, no en el servidor.
+ */
+export function haceCuanto(iso: string, ahora: number = Date.now()) {
+  const minutos = Math.max(0, Math.floor((ahora - new Date(iso).getTime()) / 60_000))
+  if (minutos < 1) return "recién"
+  if (minutos < 60) return `hace ${minutos} min`
+  const horas = Math.floor(minutos / 60)
+  if (horas < 24) return `hace ${horas} h`
+  const dias = Math.floor(horas / 24)
+  return dias === 1 ? "hace 1 día" : `hace ${dias} días`
+}

@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest"
 
 import { toCategory } from "./categories"
-import { formatMoney, formatOrderDate, nextStatus, statusLabel, type OrderStatus } from "./orders"
+import {
+  formatMoney,
+  formatOrderDate,
+  haceCuanto,
+  nextStatus,
+  statusLabel,
+  type OrderStatus,
+} from "./orders"
 import { firstName, formatBirthDate, isProfileComplete } from "./profile"
 import { safeNextPath } from "./safe-path"
 import { slugify } from "./slug"
@@ -120,5 +127,21 @@ describe("formatOrderDate", () => {
   it("cambia de día según Venezuela, no según UTC", () => {
     // 02:00 UTC del 14 son las 10 de la noche del 13 en Venezuela.
     expect(formatOrderDate("2026-09-14T02:00:00Z")).toContain("13 de septiembre")
+  })
+})
+
+describe("haceCuanto", () => {
+  const ahora = Date.parse("2026-09-13T20:00:00Z")
+
+  it("cuenta minutos, horas y días", () => {
+    expect(haceCuanto("2026-09-13T19:59:30Z", ahora)).toBe("recién")
+    expect(haceCuanto("2026-09-13T19:48:00Z", ahora)).toBe("hace 12 min")
+    expect(haceCuanto("2026-09-13T18:00:00Z", ahora)).toBe("hace 2 h")
+    expect(haceCuanto("2026-09-12T19:00:00Z", ahora)).toBe("hace 1 día")
+    expect(haceCuanto("2026-09-10T20:00:00Z", ahora)).toBe("hace 3 días")
+  })
+
+  it("una hora del futuro, por relojes desfasados, no da negativo", () => {
+    expect(haceCuanto("2026-09-13T20:05:00Z", ahora)).toBe("recién")
   })
 })
