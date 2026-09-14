@@ -63,14 +63,19 @@ export default async function PedidoPage({
   /**
    * Lo que falta, todo junto.
    *
-   * Las cuatro dependen del pedido pero no entre sí, y encadenadas eran cuatro
+   * Dependen del pedido pero no entre sí, y encadenadas eran
    * viajes de ida y vuelta a Supabase uno detrás de otro. Esta es la pantalla
    * que el cliente deja abierta mirando por dónde viene su pedido, y que se
    * rearma sola cada vez que algo cambia: cada viaje de más se paga muchas
    * veces. Juntas cuestan lo que la más lenta.
    */
-  const [{ data: items }, { data: shopperRows }, { data: deliveryCode }, { data: metodo }] =
-    await Promise.all([
+  const [
+    { data: items },
+    { data: shopperRows },
+    { data: deliveryCode },
+    { data: metodo },
+    { data: fotos },
+  ] = await Promise.all([
       supabase.from("order_items").select("*").eq("order_id", order.id).returns<OrderItem[]>(),
       // Solo nombre, foto y @: no expone teléfono ni correo del shopper.
       supabase.rpc("order_shopper", { p_order_id: order.id }),
@@ -87,7 +92,15 @@ export default async function PedidoPage({
         .select("instructions")
         .eq("id", order.payment_method)
         .maybeSingle<{ instructions: string | null }>(),
+      // Las fotos del catálogo del abasto: el renglón del pedido no la guarda.
+      supabase
+        .from("products")
+        .select("id, image")
+        .eq("store_id", order.store_id ?? "girasol")
+        .returns<{ id: string; image: string | null }[]>(),
     ])
+
+  const imagenes = new Map((fotos ?? []).map((f) => [f.id, f.image]))
 
   const lines = items ?? []
   const currentStep = STATUS_FLOW.indexOf(order.status)
@@ -274,8 +287,15 @@ export default async function PedidoPage({
               const ajustado = item.status === "ajustado" && llevadas !== item.qty
 
               return (
-                <li key={item.id} className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
+                <li key={item.id} className="flex items-start gap-3">
+                  <img
+                    src={imagenes.get(item.product_id) || "/placeholder.svg"}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    className={`h-12 w-12 shrink-0 rounded-xl bg-gray-50 object-cover ${faltante ? "opacity-40 grayscale" : ""}`}
+                  />
+                  <div className="min-w-0 flex-1">
                     <p
                       className={`text-sm font-medium ${
                         faltante ? "text-gray-500 line-through" : "text-gray-900"
