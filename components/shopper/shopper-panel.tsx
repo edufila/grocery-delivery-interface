@@ -148,6 +148,11 @@ export function ShopperPanel({
             userId={userId}
             title="Chat con el cliente"
             subtitle={`Pedido ${order.code}`}
+            respuestasRapidas={
+              order.status === "en_camino"
+                ? ["Voy en camino", "Estoy afuera", "Llego en 5 minutos"]
+                : ["Ya estoy comprando", "No había, ¿te sirve otra marca?", "Voy saliendo del abasto"]
+            }
           />
         </div>
       )}

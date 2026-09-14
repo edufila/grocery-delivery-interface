@@ -260,6 +260,11 @@ export default async function PedidoPage({
                               orderId={order.id}
                               userId={user.id}
                               title="Chat con tu shopper"
+                              respuestasRapidas={
+                                status === "en_camino"
+                                  ? ["Ya bajo", "Espérame un momento", "Toca el timbre"]
+                                  : ["Sí, otra marca está bien", "Mejor no lo lleves", "Gracias"]
+                              }
                               subtitle={shopper?.full_name ?? "Sobre este pedido"}
                             />
                           )}

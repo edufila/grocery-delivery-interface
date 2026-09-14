@@ -23,11 +23,17 @@ export function OrderChat({
   userId,
   title,
   subtitle,
+  respuestasRapidas = [],
 }: {
   orderId: string
   userId: string
   title: string
   subtitle: string
+  /**
+   * Frases de un toque. Quien va manejando no puede escribir "estoy afuera",
+   * y es justo cuando más hace falta decirlo.
+   */
+  respuestasRapidas?: string[]
 }) {
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
@@ -103,8 +109,8 @@ export function OrderChat({
     }
   }, [open])
 
-  async function send() {
-    const body = draft.trim()
+  async function send(texto?: string) {
+    const body = (texto ?? draft).trim()
     if (!body || sending) return
 
     setSending(true)
@@ -120,12 +126,14 @@ export function OrderChat({
       setError(
         sendError.message.includes("does not exist")
           ? "Falta correr la migración del chat en Supabase."
-          : "No se pudo enviar. Prueba de nuevo.",
+          : /fetch|network/i.test(sendError.message)
+            ? "Sin conexión. Tu mensaje no salió."
+            : "No se pudo enviar. Prueba de nuevo.",
       )
       return
     }
 
-    setDraft("")
+    if (texto === undefined) setDraft("")
     // Si Realtime no está habilitado, al menos el propio mensaje aparece.
     void load()
   }
@@ -199,9 +207,9 @@ export function OrderChat({
                       <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
                         {message.body}
                       </p>
-                      <p className={`mt-1 text-[11px] ${mine ? "text-emerald-100" : "text-gray-400"}`}>
+                      <p className={`mt-1 text-[11px] ${mine ? "text-emerald-100" : "text-gray-500"}`}>
                         {new Date(message.created_at).toLocaleTimeString("es-VE", {
-                  timeZone: ZONA_HORARIA,
+                          timeZone: ZONA_HORARIA,
                           hour: "numeric",
                           minute: "2-digit",
                         })}
@@ -219,8 +227,26 @@ export function OrderChat({
               </p>
             )}
 
+            {respuestasRapidas.length > 0 && (
+              <div className="flex shrink-0 gap-2 overflow-x-auto border-t border-gray-100 px-4 pt-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {respuestasRapidas.map((frase) => (
+                  <button
+                    key={frase}
+                    type="button"
+                    onClick={() => void send(frase)}
+                    disabled={sending}
+                    className="min-h-11 shrink-0 whitespace-nowrap rounded-full border border-emerald-200 bg-emerald-50 px-4 text-sm font-medium text-emerald-800 transition active:scale-95 disabled:opacity-60"
+                  >
+                    {frase}
+                  </button>
+                ))}
+              </div>
+            )}
+
             <form
-              className="flex shrink-0 items-center gap-2 border-t border-gray-100 px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]"
+              className={`flex shrink-0 items-center gap-2 px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] ${
+                respuestasRapidas.length > 0 ? "" : "border-t border-gray-100"
+              }`}
               onSubmit={(event) => {
                 event.preventDefault()
                 void send()
@@ -233,7 +259,7 @@ export function OrderChat({
                 aria-label="Mensaje"
                 enterKeyHint="send"
                 maxLength={1000}
-                className="h-12 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-emerald-500 focus:bg-white"
+                className="h-12 w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 text-base text-gray-900 outline-none transition placeholder:text-gray-500 focus:border-emerald-500 focus:bg-white"
               />
               <button
                 type="submit"
