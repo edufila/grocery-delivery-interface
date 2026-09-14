@@ -2,7 +2,10 @@ import { BadgePercent, Bike, Clock } from "lucide-react"
 
 import { bsEquivalent, formatBolivares } from "@/lib/pagos"
 
+import { CompartirAbasto } from "./compartir-abasto"
+
 type Props = {
+  id: string
   name: string
   image?: string | null
   tag?: string | null
@@ -23,7 +26,7 @@ type Props = {
  * No es fija: al bajar se va, y queda arriba solo la barra con el buscador y las
  * categorías, que es lo que se usa mientras se compra.
  */
-export function StoreHero({ name, image, tag, eta, deliveryFee, tasaVes }: Props) {
+export function StoreHero({ id, name, image, tag, eta, deliveryFee, tasaVes }: Props) {
   const bs = deliveryFee != null ? bsEquivalent(Number(deliveryFee), tasaVes ?? null) : null
 
   return (
@@ -46,6 +49,10 @@ export function StoreHero({ name, image, tag, eta, deliveryFee, tasaVes }: Props
             className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/0"
             aria-hidden="true"
           />
+
+          <div className="absolute right-3 top-3">
+            <CompartirAbasto storeId={id} storeName={name} />
+          </div>
 
           <div className="absolute inset-x-0 bottom-0 p-4 text-white">
             {tag && (

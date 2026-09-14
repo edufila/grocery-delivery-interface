@@ -85,6 +85,7 @@ export function ProductCatalog({
     <div className="min-h-dvh bg-gray-50 pb-28">
       <CambiarAbasto storeId={storeId} storeName={storeName} />
       <StoreHero
+        id={storeId}
         name={storeName}
         image={storeImage}
         tag={storeTag}
