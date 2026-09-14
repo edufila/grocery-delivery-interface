@@ -65,21 +65,21 @@ export default async function ShopperOrderPage({
    */
   const [{ data: items }, { data: customerRows }, { data: store }, { data: fotos }] =
     await Promise.all([
-    supabase.from("order_items").select("*").eq("order_id", order.id).returns<OrderItem[]>(),
-    supabase.rpc("order_customer", { p_order_id: order.id }),
-    supabase
-      .from("stores")
-      .select("name, lat, lng")
-      .eq("id", order.store_id ?? "girasol")
-      .maybeSingle<{ name: string; lat: number | null; lng: number | null }>(),
-    // Las fotos del catálogo del abasto, para reconocer cada cosa en el anaquel.
-    // El renglón del pedido guarda nombre y precio, pero no la foto.
-    supabase
-      .from("products")
-      .select("id, image")
-      .eq("store_id", order.store_id ?? "girasol")
-      .returns<{ id: string; image: string | null }[]>(),
-  ])
+      supabase.from("order_items").select("*").eq("order_id", order.id).returns<OrderItem[]>(),
+      supabase.rpc("order_customer", { p_order_id: order.id }),
+      supabase
+        .from("stores")
+        .select("name, lat, lng")
+        .eq("id", order.store_id ?? "girasol")
+        .maybeSingle<{ name: string; lat: number | null; lng: number | null }>(),
+      // Las fotos del catálogo del abasto, para reconocer cada cosa en el anaquel.
+      // El renglón del pedido guarda nombre y precio, pero no la foto.
+      supabase
+        .from("products")
+        .select("id, image")
+        .eq("store_id", order.store_id ?? "girasol")
+        .returns<{ id: string; image: string | null }[]>(),
+    ])
 
   const imagenes = Object.fromEntries((fotos ?? []).map((f) => [f.id, f.image]))
 
