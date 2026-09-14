@@ -59,6 +59,7 @@ export default async function BuscarPage({
   let tiendas = new Map<string, string>()
   let habituales: Fila[] = []
   let tasaVes: number | null = null
+  let conProductos: Set<string> | undefined
 
   if (isSupabaseConfigured) {
     const supabase = await createClient()
@@ -128,16 +129,32 @@ export default async function BuscarPage({
           .limit(30)
           .returns<{ product_id: string }[]>()
 
-    const [settings, { data: abastos }, { data: productos }, { data: favoritos }] =
-      await Promise.all([
-        fetchSettings(supabase),
-        locales,
-        lista,
-        marcados,
-      ])
+    const [
+      settings,
+      { data: abastos },
+      { data: productos },
+      { data: favoritos },
+      { data: categoriasVendidas },
+    ] = await Promise.all([
+      fetchSettings(supabase),
+      locales,
+      lista,
+      marcados,
+      // Solo dos columnas cortas por producto: alcanza para saber qué
+      // categorías tienen algo sin traer el catálogo entero.
+      supabase
+        .from("products")
+        .select("category, store_id")
+        .eq("active", true)
+        .limit(5000)
+        .returns<{ category: string; store_id: string }[]>(),
+    ])
 
     tasaVes = settings?.rate_ves ?? null
     tiendas = new Map((abastos ?? []).map((t) => [t.id, t.name]))
+    conProductos = new Set(
+      (categoriasVendidas ?? []).filter((p) => tiendas.has(p.store_id)).map((p) => p.category),
+    )
     // Un producto de un abasto apagado no debe aparecer.
     resultados = (productos ?? []).filter((p) => tiendas.has(p.store_id))
 
@@ -173,7 +190,12 @@ export default async function BuscarPage({
         <div className="mx-auto max-w-md px-4 py-3">
           <Buscador valorInicial={termino} categoria={categoria} mayorista={soloMayorista} />
         </div>
-        <CategoriaChips activa={categoria} termino={termino} mayorista={soloMayorista} />
+        <CategoriaChips
+          activa={categoria}
+          termino={termino}
+          mayorista={soloMayorista}
+          conProductos={conProductos}
+        />
       </header>
 
       <div className="mx-auto flex max-w-md flex-col gap-6 px-4 py-4">

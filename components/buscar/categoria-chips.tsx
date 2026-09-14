@@ -15,10 +15,17 @@ export function CategoriaChips({
   activa,
   termino,
   mayorista,
+  conProductos,
 }: {
   activa: Category
   termino: string
   mayorista: boolean
+  /**
+   * Las categorías que algún abasto abierto tiene. Las demás no se ofrecen:
+   * tocar "Limpieza" sin que nadie venda limpieza era llegar a "No
+   * encontramos". Sin el dato, se muestran todas.
+   */
+  conProductos?: ReadonlySet<string>
 }) {
   const enlace = (categoria: Category) => {
     const partes: string[] = []
@@ -31,24 +38,32 @@ export function CategoriaChips({
   return (
     <nav aria-label="Categorías" className="mx-auto max-w-md">
       <ul className="flex gap-2 overflow-x-auto px-4 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {categories.map((categoria) => {
-          const esActiva = categoria === activa
-          return (
-            <li key={categoria} className="shrink-0">
-              <Link
-                href={enlace(categoria)}
-                aria-current={esActiva ? "true" : undefined}
-                className={`flex min-h-11 items-center rounded-full px-4 text-sm font-medium transition ${
-                  esActiva
-                    ? "bg-emerald-600 text-white"
-                    : "border border-gray-200 bg-white text-gray-600 active:bg-gray-50"
-                }`}
-              >
-                {categoria}
-              </Link>
-            </li>
+        {categories
+          .filter(
+            (categoria) =>
+              !conProductos ||
+              categoria === "Todos" ||
+              categoria === activa ||
+              conProductos.has(categoria),
           )
-        })}
+          .map((categoria) => {
+            const esActiva = categoria === activa
+            return (
+              <li key={categoria} className="shrink-0">
+                <Link
+                  href={enlace(categoria)}
+                  aria-current={esActiva ? "true" : undefined}
+                  className={`flex min-h-11 items-center rounded-full px-4 text-sm font-medium transition ${
+                    esActiva
+                      ? "bg-emerald-600 text-white"
+                      : "border border-gray-200 bg-white text-gray-600 active:bg-gray-50"
+                  }`}
+                >
+                  {categoria}
+                </Link>
+              </li>
+            )
+          })}
       </ul>
     </nav>
   )
