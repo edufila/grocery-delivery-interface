@@ -527,7 +527,7 @@ function DeliveryCard({ session }: { session: Session }) {
           Carga una dirección de entrega antes de confirmar el pedido.
         </p>
         <Link
-          href="/perfil"
+          href="/perfil?desde=checkout"
           className="mt-3 flex h-12 w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-semibold text-white"
         >
           Agregar dirección
@@ -545,7 +545,7 @@ function DeliveryCard({ session }: { session: Session }) {
           el mapa, así que el repartidor no tendría a dónde ir. Edítala y márcalo.
         </p>
         <Link
-          href="/perfil"
+          href="/perfil?desde=checkout"
           className="mt-3 flex h-12 w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-semibold text-white"
         >
           Marcar el punto
@@ -565,7 +565,7 @@ function DeliveryCard({ session }: { session: Session }) {
         <p className="truncate text-sm text-gray-500">{session.address.detail}</p>
       </div>
       <Link
-        href="/perfil"
+        href="/perfil?desde=checkout"
         className="-mr-2 flex min-h-11 shrink-0 items-center px-2 text-sm font-medium text-emerald-600"
       >
         Cambiar

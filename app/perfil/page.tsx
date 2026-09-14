@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { redirect } from "next/navigation"
-import { ChevronRight, LogOut, Mail, PackageSearch, SlidersHorizontal } from "lucide-react"
+import { ArrowLeft, ChevronRight, LogOut, Mail, PackageSearch, SlidersHorizontal } from "lucide-react"
 
 import { BottomNav } from "@/components/bottom-nav"
 import { AddressManager } from "@/components/profile/address-manager"
@@ -22,7 +22,13 @@ function initialsFrom(name: string) {
   return parts.map((part) => part[0]?.toUpperCase() ?? "").join("") || "?"
 }
 
-export default async function PerfilPage() {
+export default async function PerfilPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ desde?: string }>
+}) {
+  const { desde } = await searchParams
+
   if (!isSupabaseConfigured) redirect("/login")
 
   const supabase = await createClient()
@@ -82,6 +88,24 @@ export default async function PerfilPage() {
       </header>
 
       <div className="mx-auto max-w-md px-4 pb-28 pt-6">
+        {/**
+         * El camino de vuelta a quien llegó desde el carrito.
+         *
+         * El checkout manda aquí a cargar o corregir la dirección. Sin esto, al
+         * guardarla no había cómo volver: el carrito no está en la barra de
+         * abajo, y la persona quedaba en Perfil sin saber cómo terminar la
+         * compra que tenía a medio hacer.
+         */}
+        {desde === "checkout" && (
+          <Link
+            href="/checkout"
+            className="mb-4 flex min-h-12 items-center gap-2 rounded-2xl bg-emerald-600 px-4 text-sm font-semibold text-white shadow-md shadow-emerald-900/15 transition active:scale-[0.99]"
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            Volver al carrito para terminar el pedido
+          </Link>
+        )}
+
         <section className="flex items-center gap-4 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm shadow-gray-900/[0.06]">
           {avatarUrl ? (
             <img
