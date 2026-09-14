@@ -30,6 +30,25 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#067e42",
     lang: "es",
     orientation: "portrait",
+    /**
+     * Mantener apretado el ícono de la app instalada en Android muestra estos
+     * atajos. Son lo que más se abre después del inicio: seguir un pedido y
+     * buscar algo.
+     */
+    shortcuts: [
+      {
+        name: "Mis pedidos",
+        short_name: "Pedidos",
+        url: "/pedidos",
+        icons: [{ src: "/icon-192.png", sizes: "192x192", type: "image/png" }],
+      },
+      {
+        name: "Buscar productos",
+        short_name: "Buscar",
+        url: "/buscar",
+        icons: [{ src: "/icon-192.png", sizes: "192x192", type: "image/png" }],
+      },
+    ],
     icons: [
       /**
        * Android pide un png de 192 y otro de 512 para considerar la app

@@ -353,3 +353,16 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/**
+ * El anillo de foco, igual en toda la app.
+ *
+ * Casi ningún botón traía el suyo: con teclado -- o con el lector de pantalla,
+ * o con un teclado conectado a una tablet en el abasto -- no se veía dónde
+ * estaba parado. Solo con :focus-visible, así el toque con el dedo no deja un
+ * anillo pegado.
+ */
+:where(a, button, input, select, textarea, [role="switch"], [tabindex]):focus-visible {
+  outline: 3px solid var(--color-emerald-600);
+  outline-offset: 2px;
+}
