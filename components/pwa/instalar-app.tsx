@@ -19,6 +19,19 @@ function esIOS() {
   return /iphone|ipad|ipod/i.test(navigator.userAgent)
 }
 
+const DESCARTADO = "abasto-instalar-descartado"
+const DOS_SEMANAS = 14 * 24 * 60 * 60 * 1000
+
+/** Si la persona cerró el aviso hace menos de dos semanas. */
+function descartadoHacePoco() {
+  try {
+    const cuando = Number(localStorage.getItem(DESCARTADO))
+    return Number.isFinite(cuando) && Date.now() - cuando < DOS_SEMANAS
+  } catch {
+    return false
+  }
+}
+
 function yaInstalada() {
   return (
     window.matchMedia("(display-mode: standalone)").matches ||
@@ -38,14 +51,18 @@ function yaInstalada() {
  * navegador -- el shopper la usa decenas de veces por turno -- y en iPhone es
  * la única forma de que algún día lleguen las notificaciones.
  */
-export function InstalarApp() {
+export function InstalarApp({ descartable = false }: { descartable?: boolean } = {}) {
   const [evento, setEvento] = useState<EventoInstalar | null>(null)
   const [instalada, setInstalada] = useState(true)
   const [ios, setIos] = useState(false)
   const [pasos, setPasos] = useState(false)
+  const [descartado, setDescartado] = useState(false)
 
   useEffect(() => {
     setInstalada(yaInstalada())
+    // Solo donde se puede cerrar se respeta el cierre: en Perfil sigue estando,
+    // para quien lo cerró en el inicio y después cambió de idea.
+    if (descartable) setDescartado(descartadoHacePoco())
     setIos(esIOS())
 
     const alPoder = (e: Event) => {
@@ -64,7 +81,7 @@ export function InstalarApp() {
       window.removeEventListener("beforeinstallprompt", alPoder)
       window.removeEventListener("appinstalled", alInstalar)
     }
-  }, [])
+  }, [descartable])
 
   async function instalar() {
     if (!evento) return
@@ -76,30 +93,53 @@ export function InstalarApp() {
     if (outcome === "accepted") setInstalada(true)
   }
 
-  if (instalada) return null
+  function descartar() {
+    setDescartado(true)
+    try {
+      localStorage.setItem(DESCARTADO, String(Date.now()))
+    } catch {
+      // Sin storage se va solo por esta visita.
+    }
+  }
+
+  if (instalada || descartado) return null
   // En iPhone siempre se ofrece, porque el evento no existe. En el resto, solo
   // cuando el navegador avisó que se puede: si no, el botón no haría nada.
   if (!ios && !evento) return null
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => (ios ? setPasos(true) : void instalar())}
-        className="flex w-full items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4 text-left active:bg-emerald-50"
-      >
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100">
-          <Download className="h-5 w-5 text-emerald-600" aria-hidden="true" />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-sm font-semibold text-gray-900">
-            Instalar {APP_SHORT_NAME} en tu teléfono
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => (ios ? setPasos(true) : void instalar())}
+          className={`flex w-full items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4 text-left active:bg-emerald-50 ${
+            descartable ? "pr-12" : ""
+          }`}
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100">
+            <Download className="h-5 w-5 text-emerald-600" aria-hidden="true" />
           </span>
-          <span className="block text-sm leading-relaxed text-gray-500">
-            Se abre a pantalla completa, sin la barra del navegador.
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold text-gray-900">
+              Instalar {APP_SHORT_NAME} en tu teléfono
+            </span>
+            <span className="block text-sm leading-relaxed text-gray-500">
+              Se abre a pantalla completa, sin la barra del navegador.
+            </span>
           </span>
-        </span>
-      </button>
+        </button>
+        {descartable && (
+          <button
+            type="button"
+            onClick={descartar}
+            className="absolute right-1 top-1 flex h-11 w-11 items-center justify-center rounded-full text-gray-500 active:bg-emerald-100"
+            aria-label="No mostrar por ahora"
+          >
+            <X className="h-4 w-4" aria-hidden="true" />
+          </button>
+        )}
+      </div>
 
       {pasos && (
         <div
@@ -110,12 +150,12 @@ export function InstalarApp() {
         >
           <button
             type="button"
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 animate-[aparece_0.2s_ease-out] bg-black/40"
             onClick={() => setPasos(false)}
             aria-label="Cerrar"
           />
 
-          <div className="relative w-full max-w-lg rounded-t-3xl bg-white pb-[calc(env(safe-area-inset-bottom)+1.5rem)]">
+          <div className="relative w-full max-w-lg animate-[sube-hoja_0.28s_cubic-bezier(0.2,0.9,0.3,1)] rounded-t-3xl bg-white pb-[calc(env(safe-area-inset-bottom)+1.5rem)] pt-2">
             <div className="mx-auto h-1 w-10 rounded-full bg-gray-200" aria-hidden="true" />
 
             <div className="flex items-center justify-between px-5 pb-1 pt-4">

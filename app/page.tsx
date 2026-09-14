@@ -5,6 +5,7 @@ import { SaludoInicio } from "@/components/saludo-inicio"
 import { NearbyStores } from "@/components/nearby-stores"
 import { PedidoEnCurso } from "@/components/pedido-en-curso"
 import { BottomNav } from "@/components/bottom-nav"
+import { InstalarApp } from "@/components/pwa/instalar-app"
 import type { Store } from "@/lib/admin"
 import { fetchSettings } from "@/lib/settings"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
@@ -58,6 +59,11 @@ export default async function HomePage() {
         {/* Quien espera un pedido abre la app justo por eso: va primero. */}
         <PedidoEnCurso />
         <NearbyStores stores={stores} tasaVes={settings?.rate_ves ?? null} />
+        {/* Después de los abastos y no antes: no le gana a lo que se viene a
+            hacer. Se puede cerrar; en Perfil sigue estando. */}
+        <div className="mx-auto max-w-md px-4 empty:hidden">
+          <InstalarApp descartable />
+        </div>
       </div>
 
       <BottomNav />
