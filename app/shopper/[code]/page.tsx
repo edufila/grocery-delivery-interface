@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
-import { ArrowLeft, MapPin, Phone, User } from "lucide-react"
+import { ArrowLeft, MapPin, MessageCircle, Phone, User } from "lucide-react"
 
 import { OrderLiveRefresh } from "@/components/live-refresh"
 import { ShopperPanel } from "@/components/shopper/shopper-panel"
@@ -17,7 +17,7 @@ import {
   type Role,
 } from "@/lib/orders"
 import { pageTitle } from "@/lib/brand"
-import { firstName } from "@/lib/profile"
+import { enlaceWhatsApp, firstName } from "@/lib/profile"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/server"
 
@@ -40,20 +40,14 @@ export default async function ShopperOrderPage({
 
   if (!user) redirect(`/login?next=/shopper/${code}`)
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle<{ role: Role }>()
+  // El rol y el pedido a la vez: la RLS ya decide qué pedido se puede leer, así
+  // que esperar el rol antes de pedirlo no protege nada y costaba un viaje.
+  const [{ data: profile }, { data: order }] = await Promise.all([
+    supabase.from("profiles").select("role").eq("id", user.id).maybeSingle<{ role: Role }>(),
+    supabase.from("orders").select("*").eq("code", code.toUpperCase()).maybeSingle<Order>(),
+  ])
 
   if (!profile || !SHOPPER_ROLES.includes(profile.role)) redirect("/shopper")
-
-  const { data: order } = await supabase
-    .from("orders")
-    .select("*")
-    .eq("code", code.toUpperCase())
-    .maybeSingle<Order>()
-
   if (!order) notFound()
 
   /**
@@ -69,7 +63,8 @@ export default async function ShopperOrderPage({
    * no recorte nada, para que la pantalla siga siendo correcta contra una base
    * donde esa migración todavía no se corrió.
    */
-  const [{ data: items }, { data: customerRows }, { data: store }, { data: fotos }] = await Promise.all([
+  const [{ data: items }, { data: customerRows }, { data: store }, { data: fotos }] =
+    await Promise.all([
     supabase.from("order_items").select("*").eq("order_id", order.id).returns<OrderItem[]>(),
     supabase.rpc("order_customer", { p_order_id: order.id }),
     supabase
@@ -149,13 +144,28 @@ export default async function ShopperOrderPage({
                   {firstName(customer.full_name) || "Sin nombre cargado"}
                 </p>
               </div>
+              {/* WhatsApp primero: aquí casi todo se coordina por ahí, y una
+                  llamada gasta saldo. Llamar queda al lado para cuando no
+                  contesta. */}
+              {customer.phone && enlaceWhatsApp(customer.phone) && (
+                <a
+                  href={enlaceWhatsApp(customer.phone)!}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-11 shrink-0 items-center gap-1.5 rounded-xl bg-emerald-600 px-3 text-sm font-semibold text-white"
+                  aria-label={`Escribirle por WhatsApp a ${firstName(customer.full_name) ?? "el cliente"}`}
+                >
+                  <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                  WhatsApp
+                </a>
+              )}
               {customer.phone && (
                 <a
                   href={`tel:${customer.phone.replace(/\s/g, "")}`}
-                  className="flex h-11 shrink-0 items-center gap-1.5 rounded-xl border border-gray-200 px-3 text-sm font-semibold text-emerald-600"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-gray-200 text-emerald-600"
+                  aria-label="Llamar al cliente"
                 >
                   <Phone className="h-4 w-4" aria-hidden="true" />
-                  Llamar
                 </a>
               )}
             </div>

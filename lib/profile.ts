@@ -29,3 +29,22 @@ export function formatBirthDate(value: string | null) {
   if (!year || !month || !day) return value
   return `${day}/${month}/${year}`
 }
+
+/**
+ * El enlace para escribirle por WhatsApp a un teléfono venezolano, o null si el
+ * número no alcanza para armarlo.
+ *
+ * WhatsApp pide el número internacional sin ceros ni signos: 0414-123.45.67 es
+ * 584141234567. Aquí casi todo se coordina por ahí, y llamar gasta saldo.
+ *
+ * Acepta como la gente lo escribe: con 0 adelante, con +58, con 58, o solo los
+ * diez dígitos que empiezan en 4.
+ */
+export function enlaceWhatsApp(telefono: string | null | undefined) {
+  let digitos = (telefono ?? "").replace(/\D/g, "")
+  if (digitos.startsWith("0058")) digitos = digitos.slice(2)
+  if (digitos.startsWith("58") && digitos.length === 12) return `https://wa.me/${digitos}`
+  if (digitos.startsWith("0") && digitos.length === 11) return `https://wa.me/58${digitos.slice(1)}`
+  if (digitos.length === 10) return `https://wa.me/58${digitos}`
+  return null
+}

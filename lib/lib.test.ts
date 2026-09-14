@@ -9,7 +9,7 @@ import {
   statusLabel,
   type OrderStatus,
 } from "./orders"
-import { firstName, formatBirthDate, isProfileComplete } from "./profile"
+import { enlaceWhatsApp, firstName, formatBirthDate, isProfileComplete } from "./profile"
 import { safeNextPath } from "./safe-path"
 import { slugify } from "./slug"
 
@@ -143,5 +143,20 @@ describe("haceCuanto", () => {
 
   it("una hora del futuro, por relojes desfasados, no da negativo", () => {
     expect(haceCuanto("2026-09-13T20:05:00Z", ahora)).toBe("recién")
+  })
+})
+
+describe("enlaceWhatsApp", () => {
+  it("arma el número internacional desde como se escribe aquí", () => {
+    expect(enlaceWhatsApp("0414-123.45.67")).toBe("https://wa.me/584141234567")
+    expect(enlaceWhatsApp("+58 414 1234567")).toBe("https://wa.me/584141234567")
+    expect(enlaceWhatsApp("584141234567")).toBe("https://wa.me/584141234567")
+    expect(enlaceWhatsApp("4141234567")).toBe("https://wa.me/584141234567")
+    expect(enlaceWhatsApp("0058 414 1234567")).toBe("https://wa.me/584141234567")
+  })
+
+  it("sin número suficiente no inventa uno", () => {
+    expect(enlaceWhatsApp(null)).toBeNull()
+    expect(enlaceWhatsApp("0414")).toBeNull()
   })
 })
