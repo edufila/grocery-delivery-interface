@@ -21,6 +21,7 @@ export type PedidoPorCobrar = Pick<
   | "payment_method"
   | "payment_reference"
   | "payment_reported_at"
+  | "created_at"
 >
 
 /**
@@ -61,6 +62,7 @@ export function ConciliacionPagos({
   /** Qué pedido se está mirando en el modal, si hay alguno. */
   const [detalle, setDetalle] = useState<string | null>(null)
 
+  const ahora = useAhora()
   const digitos = referencia.replace(/\D/g, "")
 
   async function registrar() {
@@ -279,6 +281,9 @@ export function ConciliacionPagos({
                     {pedido.amount_ves != null
                       ? `Bs. ${formatBolivares(Number(pedido.amount_ves))}`
                       : formatMoney(pedido.final_total ?? pedido.total)}
+                    {/* Cuánto lleva: uno de hace cinco minutos está pagando; uno
+                        de hace dos horas necesita que alguien le escriba. */}
+                    {ahora && ` · pidió ${haceCuanto(pedido.created_at, ahora)}`}
                   </p>
                 </div>
                 {/* El mismo detalle que abre la lista de pedidos: no hay una
@@ -288,7 +293,7 @@ export function ConciliacionPagos({
                   onClick={() => setDetalle(pedido.id)}
                   className="flex min-h-11 shrink-0 items-center rounded-lg px-3 text-sm font-medium text-emerald-600 active:bg-emerald-50"
                 >
-                  Ver
+                  Ver y escribirle
                 </button>
               </li>
             ))}
