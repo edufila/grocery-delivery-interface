@@ -165,12 +165,12 @@ export function OrderChat({
         >
           <button
             type="button"
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 animate-[aparece_0.2s_ease-out] bg-black/40"
             onClick={() => setOpen(false)}
             aria-label="Cerrar chat"
           />
 
-          <div className="relative flex h-[80dvh] w-full max-w-lg flex-col rounded-t-3xl bg-white">
+          <div className="relative flex h-[80dvh] w-full max-w-lg animate-[sube-hoja_0.28s_cubic-bezier(0.2,0.9,0.3,1)] flex-col rounded-t-3xl bg-white">
             <header className="flex shrink-0 items-center gap-3 border-b border-gray-100 px-5 py-4">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-gray-900">{title}</p>

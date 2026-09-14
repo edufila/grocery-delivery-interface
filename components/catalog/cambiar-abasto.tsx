@@ -68,9 +68,9 @@ export function CambiarAbasto({ storeId, storeName }: { storeId: string; storeNa
     >
       {/* Sin botón de cerrar ni toque afuera: hay que elegir una de las dos,
           porque cualquier producto que agregue aquí rompería el pedido. */}
-      <div className="absolute inset-0 bg-black/50" />
+      <div className="absolute inset-0 animate-[aparece_0.2s_ease-out] bg-black/50" />
 
-      <div className="relative w-full max-w-lg rounded-t-3xl bg-white px-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] pt-6">
+      <div className="relative w-full max-w-lg animate-[sube-hoja_0.28s_cubic-bezier(0.2,0.9,0.3,1)] rounded-t-3xl bg-white px-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] pt-6">
         <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-50">
           <ShoppingCart className="h-6 w-6 text-amber-600" aria-hidden="true" />
         </span>

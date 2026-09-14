@@ -181,14 +181,14 @@ export function DeliveryTopBar() {
         >
           <button
             type="button"
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 animate-[aparece_0.2s_ease-out] bg-black/40"
             onClick={() => setOpen(false)}
             aria-label="Cerrar"
           />
 
           {/* max-h + overflow en la lista: con muchas direcciones la hoja
               scrollea sola en vez de crecer fuera de la pantalla. */}
-          <div className="relative flex max-h-[85dvh] w-full max-w-lg flex-col rounded-t-3xl bg-white pt-2">
+          <div className="relative flex max-h-[85dvh] w-full max-w-lg animate-[sube-hoja_0.28s_cubic-bezier(0.2,0.9,0.3,1)] flex-col rounded-t-3xl bg-white pt-2">
             <div className="mx-auto h-1 w-10 shrink-0 rounded-full bg-gray-200" aria-hidden="true" />
 
             <div className="mx-auto flex w-full max-w-md shrink-0 items-center justify-between px-5 pb-2 pt-4">
