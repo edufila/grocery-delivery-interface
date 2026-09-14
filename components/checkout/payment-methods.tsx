@@ -40,7 +40,7 @@ export function PaymentMethods({ value, onChange, metodos, sinSesion, tasaVes, t
         <p className="rounded-xl bg-amber-50 px-3 py-2.5 text-sm leading-relaxed text-amber-800">
           {sinSesion
             ? "Entra a tu cuenta para ver cómo pagar."
-            : "No hay métodos de pago habilitados. Se cargan desde el panel de administración."}
+            : "Ahora mismo no hay cómo pagar en línea. Vuelve a intentar en un rato."}
         </p>
       ) : (
         <fieldset>
@@ -54,7 +54,7 @@ export function PaymentMethods({ value, onChange, metodos, sinSesion, tasaVes, t
                   key={m.id}
                   className={`flex cursor-pointer flex-col gap-1.5 rounded-xl border p-3 transition-colors ${
                     selected
-                      ? "border-emerald-500 bg-emerald-50/60"
+                      ? "border-emerald-600 bg-emerald-50/60 ring-1 ring-emerald-600"
                       : "border-gray-200 hover:border-gray-300"
                   }`}
                 >
@@ -66,7 +66,7 @@ export function PaymentMethods({ value, onChange, metodos, sinSesion, tasaVes, t
                     onChange={() => onChange(m.id)}
                     className="sr-only"
                   />
-                  <Icon className={`h-5 w-5 ${selected ? "text-emerald-600" : "text-gray-400"}`} />
+                  <Icon className={`h-5 w-5 ${selected ? "text-emerald-600" : "text-gray-500"}`} aria-hidden="true" />
                   <span className="text-sm font-medium text-gray-900">{m.label}</span>
                   {m.hint && <span className="text-xs text-gray-500">{m.hint}</span>}
                 </label>
@@ -88,7 +88,7 @@ export function PaymentMethods({ value, onChange, metodos, sinSesion, tasaVes, t
               maximumFractionDigits: 2,
             })}
           </span>
-          . El monto exacto sale al confirmar, a la tasa BCV de hoy: Bs.{" "}
+          . El monto exacto sale al confirmar, a la tasa BCV vigente: Bs.{" "}
           {tasaVes.toLocaleString("es-VE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} por
           dólar.
         </p>

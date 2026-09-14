@@ -29,7 +29,7 @@ export function OrderSummary({ subtotal, serviceFee, deliveryFee, tasaVes }: Pro
       <div className="space-y-2.5">
         <Row label="Subtotal" value={`$${subtotal.toFixed(2)}`} />
         <Row label="Tarifa de servicio" value={`$${serviceFee.toFixed(2)}`} muted />
-        <Row label="Costo de delivery" value={`$${deliveryFee.toFixed(2)}`} muted />
+        <Row label="Envío" value={`$${deliveryFee.toFixed(2)}`} muted />
 
         <div className="my-2 border-t border-dashed border-gray-200" />
 
