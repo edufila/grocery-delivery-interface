@@ -4,6 +4,7 @@ import { useMemo, useState } from "react"
 import { CambiarAbasto } from "./cambiar-abasto"
 import { CatalogHeader } from "./catalog-header"
 import { ProductCard } from "./product-card"
+import { StoreHero } from "./store-hero"
 import { CartBar } from "./cart-bar"
 import type { Category } from "@/lib/categories"
 import { useCart } from "@/lib/cart"
@@ -15,6 +16,9 @@ type Props = {
   storeId: string
   storeName: string
   storeTag?: string
+  storeImage?: string | null
+  storeEta?: string | null
+  deliveryFee?: number | null
   initialQuery?: string
   initialCategory?: Category
   initialWholesaleOnly?: boolean
@@ -26,6 +30,9 @@ export function ProductCatalog({
   storeId,
   storeName,
   storeTag,
+  storeImage,
+  storeEta,
+  deliveryFee,
   initialQuery = "",
   initialCategory = "Todos",
   initialWholesaleOnly = false,
@@ -49,7 +56,6 @@ export function ProductCatalog({
 
   const [category, setCategory] = useState<Category>(initialCategory)
   const [query, setQuery] = useState(initialQuery)
-  const [searchOpen, setSearchOpen] = useState(initialQuery.length > 0)
   const [wholesaleOnly, setWholesaleOnly] = useState(initialWholesaleOnly)
 
   const visibleProducts = useMemo(() => {
@@ -78,22 +84,27 @@ export function ProductCatalog({
   return (
     <div className="min-h-dvh bg-gray-50 pb-28">
       <CambiarAbasto storeId={storeId} storeName={storeName} />
+      <StoreHero
+        name={storeName}
+        image={storeImage}
+        tag={storeTag}
+        eta={storeEta}
+        deliveryFee={deliveryFee}
+        tasaVes={tasaVes}
+      />
       <CatalogHeader
         storeName={storeName}
-        storeTag={storeTag}
         active={category}
         onCategoryChange={setCategory}
         query={query}
         onQueryChange={setQuery}
-        searchOpen={searchOpen}
-        onSearchOpenChange={setSearchOpen}
       />
 
       <main className="mx-auto max-w-3xl px-4 py-4">
         <div className="mb-3 flex items-baseline justify-between gap-3">
-          <h1 className="text-lg font-bold text-gray-900">
+          <h2 className="text-lg font-bold text-gray-900">
             {category === "Todos" ? "Catálogo" : category}
-          </h1>
+          </h2>
           <p className="shrink-0 text-sm text-gray-500">
             {visibleProducts.length} {visibleProducts.length === 1 ? "producto" : "productos"}
           </p>

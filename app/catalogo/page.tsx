@@ -31,19 +31,25 @@ export default async function CatalogoPage({
   const supabase = await createClient()
   const storeId = params.tienda ?? "girasol"
 
-  const { data: store } = await supabase
-    .from("stores")
-    .select("id, name, tag, active")
-    .eq("id", storeId)
-    .maybeSingle<Pick<Store, "id" | "name" | "tag" | "active">>()
-
-  if (!store || !store.active) notFound()
-
-  // Se cargan en el servidor para que la grilla llegue armada en el HTML.
-  const [products, settings] = await Promise.all([
-    fetchProducts(supabase, store.id),
+  /**
+   * Las tres a la vez. Los productos se piden con el id de la dirección, sin
+   * esperar a confirmar que el abasto existe: si no existe o está apagado, se
+   * tiran y sale 404 igual. Esperar primero costaba un viaje entero a Supabase
+   * en cada entrada a un catálogo, para el caso raro de un enlace viejo.
+   */
+  const [{ data: store }, products, settings] = await Promise.all([
+    supabase
+      .from("stores")
+      .select("id, name, tag, active, image, eta, delivery_fee")
+      .eq("id", storeId)
+      .maybeSingle<
+        Pick<Store, "id" | "name" | "tag" | "active" | "image" | "eta" | "delivery_fee">
+      >(),
+    fetchProducts(supabase, storeId),
     fetchSettings(supabase),
   ])
+
+  if (!store || !store.active) notFound()
 
   return (
     <ProductCatalog
@@ -51,6 +57,9 @@ export default async function CatalogoPage({
       storeId={store.id}
       storeName={store.name}
       storeTag={store.tag ?? undefined}
+      storeImage={store.image}
+      storeEta={store.eta}
+      deliveryFee={store.delivery_fee}
       initialQuery={params.q ?? ""}
       initialCategory={toCategory(params.categoria)}
       initialWholesaleOnly={params.mayorista === "1"}
