@@ -21,10 +21,10 @@ export default function NotFound() {
           Ir al inicio
         </Link>
         <Link
-          href="/catalogo"
+          href="/buscar"
           className="mt-3 flex h-14 w-full items-center justify-center rounded-2xl border border-gray-200 bg-white text-base font-semibold text-gray-700 transition active:scale-[0.99]"
         >
-          Ver el catálogo
+          Buscar productos
         </Link>
       </div>
     </main>
