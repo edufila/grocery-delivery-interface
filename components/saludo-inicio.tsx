@@ -1,5 +1,6 @@
 import { Bike } from "lucide-react"
 
+import { NombreSaludo } from "@/components/nombre-saludo"
 import { formatOrderDate } from "@/lib/orders"
 import { formatBolivares } from "@/lib/pagos"
 
@@ -65,7 +66,10 @@ export function SaludoInicio({
         />
 
         <div className="relative">
-          <p className="text-sm font-medium text-white">{saludo(horaEnVenezuela(ahora))}</p>
+          <p className="text-sm font-medium text-white">
+            {saludo(horaEnVenezuela(ahora))}
+            <NombreSaludo />
+          </p>
           <h1 className="mt-0.5 text-2xl font-bold leading-tight tracking-tight text-balance">
             ¿Qué te llevamos hoy?
           </h1>
