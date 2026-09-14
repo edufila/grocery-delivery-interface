@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { Loader2, MapPin, MapPinOff } from "lucide-react"
+import { MapPin, MapPinOff } from "lucide-react"
 
 import { ZONA_HORARIA } from "@/lib/orders"
 import { createClient } from "@/lib/supabase/client"
