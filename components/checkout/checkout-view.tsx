@@ -11,6 +11,7 @@ import { CartItemList, type CartLine } from "./cart-item-list"
 import { SubstitutionOptions } from "./substitution-options"
 import { PaymentMethods } from "./payment-methods"
 import { OrderSummary } from "./order-summary"
+import { DireccionRapida } from "./direccion-rapida"
 import { useCart } from "@/lib/cart"
 import { nombreDesdeId } from "@/lib/carrito"
 import { bsEquivalent, fetchMetodosPago, formatBolivares, sePuedeOfrecer, type MetodoPago } from "@/lib/pagos"
@@ -401,7 +402,10 @@ export function CheckoutView() {
               </section>
             )}
 
-            <DeliveryCard session={session} />
+            <DeliveryCard
+              session={session}
+              onDireccion={(address) => setSession((actual) => ({ ...actual, address }))}
+            />
             <CartItemList
               abasto={tiendas.length === 1 ? tiendas[0] : null}
               items={items}
@@ -547,7 +551,13 @@ export function CheckoutView() {
 }
 
 /** Dónde se entrega. Sin esto no se puede pedir, y hay que decirlo claro. */
-function DeliveryCard({ session }: { session: Session }) {
+function DeliveryCard({
+  session,
+  onDireccion,
+}: {
+  session: Session
+  onDireccion: (address: Address) => void
+}) {
   if (session.loading) {
     return (
       <section className="rounded-2xl border border-gray-100 bg-white p-4 text-sm text-gray-500">
@@ -573,38 +583,15 @@ function DeliveryCard({ session }: { session: Session }) {
     )
   }
 
-  if (!session.address) {
+  // Sin dirección, o con una sin punto: se completa aquí mismo, sin mandar a
+  // Perfil en medio de la compra. Ver DireccionRapida.
+  if (!session.address || session.address.lat == null || session.address.lng == null) {
     return (
-      <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-        <h2 className="text-sm font-semibold text-amber-900">Falta tu dirección</h2>
-        <p className="mt-1 text-sm leading-relaxed text-amber-800">
-          Carga una dirección de entrega antes de confirmar el pedido.
-        </p>
-        <Link
-          href="/perfil?desde=checkout"
-          className="mt-3 flex h-12 w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-semibold text-white"
-        >
-          Agregar dirección
-        </Link>
-      </section>
-    )
-  }
-
-  if (session.address.lat == null || session.address.lng == null) {
-    return (
-      <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-        <h2 className="text-sm font-semibold text-amber-900">Falta marcar el punto</h2>
-        <p className="mt-1 text-sm leading-relaxed text-amber-800">
-          <span className="font-semibold">{session.address.label}</span> no tiene el punto exacto en
-          el mapa, así que el repartidor no tendría a dónde ir. Edítala y márcalo.
-        </p>
-        <Link
-          href="/perfil?desde=checkout"
-          className="mt-3 flex h-12 w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-semibold text-white"
-        >
-          Marcar el punto
-        </Link>
-      </section>
+      <DireccionRapida
+        userId={session.userId}
+        sinPunto={session.address}
+        onLista={onDireccion}
+      />
     )
   }
 
