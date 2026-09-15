@@ -17,7 +17,7 @@ export type CartLine = {
 
 type Props = {
   /** El abasto del pedido, para decirlo y para volver a agregar más. */
-  abasto?: { id: string; name: string } | null
+  abasto?: { id: string; name: string; eta?: string | null } | null
   items: CartLine[]
   onInc: (id: string) => void
   onDec: (id: string) => void
@@ -37,7 +37,14 @@ export function CartItemList({ abasto, items, onInc, onDec, onRemove, tasaVes }:
               {items.reduce((n, i) => n + i.qty, 0) === 1 ? "artículo" : "artículos"})
             </span>
           </h2>
-          {abasto && <p className="truncate text-sm text-gray-500">De {abasto.name}</p>}
+          {abasto && (
+            <p className="truncate text-sm text-gray-500">
+              De {abasto.name}
+              {/* El tiempo que carga el abasto, dicho antes de pedir: es lo que
+                  uno quiere saber justo antes de comprometerse. */}
+              {abasto.eta ? ` · llega en ${abasto.eta}` : ""}
+            </p>
+          )}
         </div>
         {/* Volver al mismo abasto: casi siempre falta algo, y el botón de atrás
             no siempre lleva ahí (si se llegó desde el inicio o un enlace). */}

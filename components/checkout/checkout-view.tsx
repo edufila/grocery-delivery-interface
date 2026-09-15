@@ -34,7 +34,7 @@ type Session = {
   address: Address | null
 }
 
-type Tienda = { id: string; name: string; delivery_fee: number }
+type Tienda = { id: string; name: string; delivery_fee: number; eta: string | null }
 
 /**
  * `place_order` rechaza el pedido con mensajes escritos para que los lea una
@@ -148,7 +148,7 @@ export function CheckoutView() {
           .maybeSingle<{ service_fee: number; rate_ves: number | null }>(),
         supabase
           .from("stores")
-          .select("id, name, delivery_fee")
+          .select("id, name, delivery_fee, eta")
           .in("id", storeIds)
           .returns<Tienda[]>(),
       ])
