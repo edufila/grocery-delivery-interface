@@ -10,10 +10,23 @@ import { InstalarApp } from "@/components/pwa/instalar-app"
 import type { Store } from "@/lib/admin"
 import { fetchSettings } from "@/lib/settings"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
-import { createClient } from "@/lib/supabase/server"
+import { crearClientePublico } from "@/lib/supabase/publico"
+
+/**
+ * El inicio se sirve hecho y se rehace cada minuto.
+ *
+ * Nada de lo que se arma aquí depende de quién mira: abastos, tarifas y tasa
+ * son iguales para todos, y lo personal -- el pedido en curso, el saludo con
+ * nombre, la dirección -- lo completa el teléfono. Antes se armaba de cero en
+ * cada visita: medido en producción con 4G lenta, el servidor tardaba 1,1 s
+ * en contestar, más de la mitad de lo que tardaba en verse la pantalla.
+ *
+ * Un minuto: si alguien cambia un abasto en el panel, se ve al rato.
+ */
+export const revalidate = 60
 
 export default async function HomePage() {
-  const supabase = isSupabaseConfigured ? await createClient() : null
+  const supabase = isSupabaseConfigured ? crearClientePublico() : null
 
   /**
    * Las dos consultas a la vez, no una después de la otra.

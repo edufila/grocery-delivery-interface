@@ -1,3 +1,6 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import { Bike } from "lucide-react"
 
 import { NombreSaludo } from "@/components/nombre-saludo"
@@ -47,9 +50,21 @@ export function SaludoInicio({
   tasaVes: number | null
   actualizada: string | null
 }) {
-  const ahora = new Date()
+  /**
+   * La hora del teléfono, no la del servidor.
+   *
+   * El inicio se sirve de caché y se rehace cada minuto -- o más, si nadie
+   * entra --: calculado allá, el saludo y el "de hoy" de la tasa podían quedar
+   * de otra hora. Hasta que el teléfono lo calcula se dice "Hola", que vale a
+   * cualquier hora.
+   */
+  const [ahora, setAhora] = useState<Date | null>(null)
+  useEffect(() => setAhora(new Date()), [])
+
   const vigente =
-    actualizada != null && fechaEnVenezuela(new Date(actualizada)) === fechaEnVenezuela(ahora)
+    ahora != null &&
+    actualizada != null &&
+    fechaEnVenezuela(new Date(actualizada)) === fechaEnVenezuela(ahora)
 
   return (
     <section className="mx-auto max-w-md px-4 pt-3">
@@ -67,7 +82,7 @@ export function SaludoInicio({
 
         <div className="relative">
           <p className="text-sm font-medium text-white">
-            {saludo(horaEnVenezuela(ahora))}
+            {ahora ? saludo(horaEnVenezuela(ahora)) : "Hola"}
             <NombreSaludo />
           </p>
           <h1 className="mt-0.5 text-2xl font-bold leading-tight tracking-tight text-balance">
@@ -87,7 +102,7 @@ export function SaludoInicio({
             </div>
           ) : null}
 
-          {tasaVes && actualizada && !vigente ? (
+          {tasaVes && actualizada && ahora && !vigente ? (
             <p className="mt-2 text-xs leading-relaxed text-white">
               {/* "Actualizada" y no "la última que se pudo traer": el BCV no
                   publica los fines de semana ni los feriados, así que un domingo
