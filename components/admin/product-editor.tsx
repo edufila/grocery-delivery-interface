@@ -35,6 +35,34 @@ export function ProductEditor({ products }: { products: AdminProduct[] }) {
     setSavedId(null)
   }
 
+  /**
+   * La existencia se guarda al tocarla, sola.
+   *
+   * Es lo que se cambia a diario, a veces varias veces en la mañana mientras
+   * se revisa el anaquel: con un "Guardar" aparte había que acordarse de
+   * tocarlo en cada producto, y el que se olvidaba seguía vendiéndose agotado.
+   * Solo esa columna: si el precio de la misma tarjeta está a medio escribir,
+   * no se guarda de rebote.
+   */
+  async function cambiarExistencia(product: AdminProduct, hay: boolean) {
+    edit(product.id, { in_stock: hay })
+    setError("")
+    setErrorId(null)
+
+    const { error: saveError } = await createClient()
+      .from("products")
+      .update({ in_stock: hay })
+      .eq("id", product.id)
+
+    if (saveError) {
+      edit(product.id, { in_stock: !hay })
+      setErrorId(product.id)
+      setError("No pudimos cambiar la existencia. Prueba de nuevo.")
+      return
+    }
+    router.refresh()
+  }
+
   async function save(product: AdminProduct) {
     /**
      * Un precio en cero no se guarda.
@@ -133,15 +161,23 @@ export function ProductEditor({ products }: { products: AdminProduct[] }) {
             En el catálogo
           </label>
 
-          <label className="flex min-h-11 items-center gap-2 text-sm text-gray-600">
-            <input
-              type="checkbox"
-              checked={product.in_stock}
-              onChange={(event) => edit(product.id, { in_stock: event.target.checked })}
-              className="h-4 w-4 accent-emerald-600"
+          <button
+            type="button"
+            role="switch"
+            aria-checked={product.in_stock}
+            onClick={() => void cambiarExistencia(product, !product.in_stock)}
+            className={`flex min-h-11 items-center gap-2 rounded-full px-3 text-sm font-semibold transition active:scale-95 ${
+              product.in_stock
+                ? "bg-emerald-50 text-emerald-800"
+                : "bg-rose-50 text-rose-700"
+            }`}
+          >
+            <span
+              className={`h-2.5 w-2.5 rounded-full ${product.in_stock ? "bg-emerald-600" : "bg-rose-600"}`}
+              aria-hidden="true"
             />
-            Hay existencia
-          </label>
+            {product.in_stock ? "Hay existencia" : "Agotado"}
+          </button>
 
           <button
             type="button"
