@@ -150,8 +150,8 @@ export function SettingsEditor({ settings }: { settings: Settings }) {
       </label>
 
       <p className="mt-2 text-xs leading-relaxed text-gray-500">
-        Se actualiza sola todos los días con la tasa oficial del BCV. Si escribes un número aquí,
-        ese manda hasta que la próxima corrida automática lo pise de nuevo. Sin tasa cargada, el
+        Se revisa sola cada hora contra la tasa oficial del BCV, y entra el mismo día en que rige.
+        Si escribes un número aquí, ese manda durante 12 horas; después la automática lo pisa. Sin tasa cargada, el
         pago móvil no se le ofrece al cliente: no habría con qué decirle cuántos bolívares pagar.
       </p>
 

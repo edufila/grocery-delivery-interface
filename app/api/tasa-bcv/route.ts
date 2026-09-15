@@ -1,10 +1,13 @@
 import { timingSafeEqual } from "node:crypto"
 
+import { refrescarTasa } from "@/lib/refrescar-tasa"
+
 /**
  * Trae la tasa oficial del BCV y la deja cargada en `settings.rate_ves`, para
  * no depender de que un admin se acuerde de escribirla todos los días.
  *
- * La pega Vercel Cron una vez al día (ver `vercel.json`). Vercel manda
+ * La pega Vercel Cron una vez al día (ver `vercel.json`). Como una vez al día no
+ * alcanza, las pantallas también la revisan solas cada hora (lib/refrescar-tasa.ts). Vercel manda
  * `Authorization: Bearer $CRON_SECRET` solo si esa variable está configurada,
  * así que sirve igual que el token de `pago-recibido`: sin ella, la ruta no
  * atiende a nadie.
@@ -17,8 +20,6 @@ import { timingSafeEqual } from "node:crypto"
 
 // Node y no Edge: hace falta timingSafeEqual.
 export const runtime = "nodejs"
-
-const FUENTE_BCV = "https://ve.dolarapi.com/v1/dolares/oficial"
 
 function mismoToken(a: string, b: string) {
   const uno = Buffer.from(a)
@@ -47,73 +48,29 @@ export async function GET(request: Request) {
     return responder({ error: "Token inválido" }, 401)
   }
 
-  const fuente = await fetch(FUENTE_BCV, { cache: "no-store" }).catch(() => null)
-  const datos = fuente && fuente.ok ? await fuente.json().catch(() => null) : null
+  // La decisión (tasa usable, que rija desde hoy, mismo orden que la anterior,
+  // respetar una manual reciente) vive en lib/tasa-bcv.ts, con tests. Es la
+  // misma que usan las pantallas al revisarla solas cada hora.
+  const resultado = await refrescarTasa({ forzar: true })
 
-  const tasa = Number(datos?.promedio)
-
-  if (!fuente?.ok || !Number.isFinite(tasa) || tasa <= 0) {
-    return responder({ error: "El BCV no respondió con una tasa usable", detalle: datos }, 502)
+  switch (resultado.estado) {
+    case "aplicada":
+      return responder({ ok: true, rate_ves: resultado.tasa, anterior: resultado.anterior, fecha_bcv: resultado.vigenteDesde }, 200)
+    case "esperar":
+      return responder({ ok: true, sin_cambios: resultado.motivo, recibida: resultado.recibida }, 200)
+    case "rechazada":
+      return responder(
+        {
+          error: resultado.motivo,
+          anterior: resultado.anterior,
+          recibida: resultado.recibida,
+          que_hacer: "Comprobarla contra el BCV y, si es real, cargarla a mano desde el panel.",
+        },
+        409,
+      )
+    case "sin-configurar":
+      return responder({ error: "La ruta no está configurada" }, 503)
+    default:
+      return responder({ error: "No pudimos actualizar la tasa", detalle: "motivo" in resultado ? resultado.motivo : null }, 502)
   }
-
-  /**
-   * Que no entre una tasa de otro orden de magnitud.
-   *
-   * "Un número positivo" no alcanza como comprobación cuando ese número
-   * multiplica todos los precios de la app. Si la fuente devuelve 8,2 en vez de
-   * 820 -- un punto decimal corrido, un cambio de formato, una respuesta de
-   * error que casualmente parsea -- un pedido de $3,50 se cotizaría en Bs 28 en
-   * lugar de Bs 2.870. Se vendería a una centésima del precio, solo, de
-   * madrugada y sin que nadie mire.
-   *
-   * El límite es un factor de dos y no un porcentaje: la tasa aquí se mueve, y
-   * a veces salta fuerte, así que un tope estrecho rechazaría movimientos
-   * legítimos. Duplicarse o partirse a la mitad de un día para otro no es un
-   * movimiento, es un error de dato.
-   *
-   * Rechazar tiene su costo -- se sigue cobrando con la tasa vieja -- pero es
-   * un costo acotado y visible: la app muestra de cuándo es la tasa que está
-   * usando, y un admin la puede escribir a mano. Aceptar basura no tiene fondo.
-   */
-  const anterior = await fetch(`${url}/rest/v1/settings?id=eq.global&select=rate_ves`, {
-    headers: { apikey: llave, Authorization: `Bearer ${llave}` },
-    cache: "no-store",
-  })
-    .then((r) => (r.ok ? r.json() : null))
-    .then((filas) => Number(filas?.[0]?.rate_ves))
-    .catch(() => Number.NaN)
-
-  if (Number.isFinite(anterior) && anterior > 0 && (tasa > anterior * 2 || tasa < anterior / 2)) {
-    return responder(
-      {
-        error: "La tasa nueva es de otro orden que la anterior, así que no se aplicó",
-        anterior,
-        recibida: tasa,
-        que_hacer: "Comprobarla contra el BCV y, si es real, cargarla a mano desde el panel.",
-      },
-      409,
-    )
-  }
-
-  const respuesta = await fetch(`${url}/rest/v1/settings?id=eq.global`, {
-    method: "PATCH",
-    headers: {
-      apikey: llave,
-      Authorization: `Bearer ${llave}`,
-      "Content-Type": "application/json",
-      Prefer: "return=minimal",
-    },
-    body: JSON.stringify({
-      rate_ves: tasa,
-      rate_ves_updated_at: new Date().toISOString(),
-      rate_ves_source: "bcv",
-    }),
-  })
-
-  if (!respuesta.ok) {
-    const detalle = await respuesta.text().catch(() => null)
-    return responder({ error: "No pudimos guardar la tasa", detalle }, 502)
-  }
-
-  return responder({ ok: true, rate_ves: tasa, fecha_bcv: datos.fechaActualizacion }, 200)
 }

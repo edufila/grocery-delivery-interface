@@ -1,3 +1,4 @@
+import { after } from "next/server"
 import type { Metadata } from "next"
 import Link from "next/link"
 import { redirect } from "next/navigation"
@@ -19,6 +20,7 @@ import { diaEnVenezuela, formatMoney, haceCuanto, type Order, type Role } from "
 import { lunesEnVenezuela, resumenPorShopper, type PedidoDeSemana } from "@/lib/semana"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/server"
+import { refrescarTasa } from "@/lib/refrescar-tasa"
 
 export const metadata: Metadata = {
   title: pageTitle("Administración"),
@@ -45,6 +47,9 @@ type PedidoAdmin = Pick<
 >
 
 export default async function AdminPage() {
+  // La tasa del BCV se revisa sola, después de responder y como mucho una vez
+  // por hora: el cron diario no alcanza (ver lib/refrescar-tasa.ts).
+  after(refrescarTasa)
   if (!isSupabaseConfigured) redirect("/login")
 
   const supabase = await createClient()

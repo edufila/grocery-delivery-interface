@@ -1,3 +1,4 @@
+import { after } from "next/server"
 import { DeliveryTopBar } from "@/components/delivery-top-bar"
 import { SearchBar } from "@/components/search-bar"
 import { CategoryShortcuts } from "@/components/category-shortcuts"
@@ -11,6 +12,7 @@ import type { Store } from "@/lib/admin"
 import { fetchSettings } from "@/lib/settings"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { crearClientePublico } from "@/lib/supabase/publico"
+import { refrescarTasa } from "@/lib/refrescar-tasa"
 
 /**
  * El inicio se sirve hecho y se rehace cada minuto.
@@ -26,6 +28,9 @@ import { crearClientePublico } from "@/lib/supabase/publico"
 export const revalidate = 60
 
 export default async function HomePage() {
+  // La tasa del BCV se revisa sola, después de responder y como mucho una vez
+  // por hora: el cron diario no alcanza (ver lib/refrescar-tasa.ts).
+  after(refrescarTasa)
   const supabase = isSupabaseConfigured ? crearClientePublico() : null
 
   /**

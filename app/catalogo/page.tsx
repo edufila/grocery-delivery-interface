@@ -1,11 +1,13 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
+import { after } from "next/server"
 import { cache } from "react"
 
 import { ProductCatalog } from "@/components/catalog/product-catalog"
 import { APP_NAME, pageTitle } from "@/lib/brand"
 import { toCategory } from "@/lib/categories"
 import { ajustesPublicos, productosPublicos, tiendaPublica } from "@/lib/datos-publicos"
+import { refrescarTasa } from "@/lib/refrescar-tasa"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 
 /**
@@ -68,6 +70,8 @@ export default async function CatalogoPage({
   searchParams: Promise<{ q?: string; categoria?: string; mayorista?: string; tienda?: string }>
 }) {
   const params = await searchParams
+  // El catálogo es de lo que más se abre: también revisa la tasa (lib/refrescar-tasa.ts).
+  after(refrescarTasa)
 
   if (!isSupabaseConfigured) {
     return (
