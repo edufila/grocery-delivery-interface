@@ -386,6 +386,12 @@ function mensajeAlCliente(orden: Order, nombre: string | null) {
   const hola = firstName(nombre) ? `Hola, ${firstName(nombre)}. ` : "Hola. "
   const pedido = `tu pedido ${orden.code}`
 
+  // Cancelado con pago: lo que hay que coordinar es la devolución.
+  if (orden.status === "cancelado" && (orden.payment_reported_at || orden.payment_verified_at)) {
+    const monto = orden.amount_ves != null ? ` de Bs. ${formatBolivares(Number(orden.amount_ves))}` : ""
+    return `${hola}Vimos que cancelaste ${pedido}. Para devolverte el pago${monto}, ¿nos pasas los datos de tu Pago Móvil (banco, cédula y teléfono)?`
+  }
+
   if (orden.payment_required !== false && orden.payment_verified_at == null) {
     if (orden.payment_reference) {
       return `${hola}Estamos verificando el pago de ${pedido} con la referencia ${orden.payment_reference}. ¿Nos confirmas desde qué banco lo hiciste?`
