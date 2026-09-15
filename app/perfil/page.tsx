@@ -129,31 +129,8 @@ export default async function PerfilPage({
           </div>
         </section>
 
-        {/* Se muestra solo si el teléfono puede instalarla y todavía no está. */}
-        <div className="mt-4 empty:mt-0">
-          <InstalarApp />
-        </div>
-
-        {!isProfileComplete(profile) && (
-          <p className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-800">
-            Completa tu nombre y teléfono para que el shopper pueda ubicarte con tu pedido.
-          </p>
-        )}
-
-        <section className="mt-4 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm shadow-gray-900/[0.06]">
-          <h2 className="mb-4 text-base font-semibold text-gray-900">Tus datos</h2>
-          <ProfileForm
-            userId={user.id}
-            profile={profile}
-            nameLocked={profile?.role === "shopper"}
-          />
-        </section>
-
-        <section className="mt-4 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm shadow-gray-900/[0.06]">
-          <h2 className="mb-4 text-base font-semibold text-gray-900">Direcciones de entrega</h2>
-          <AddressManager userId={user.id} addresses={addresses ?? []} />
-        </section>
-
+        {/* Los paneles de trabajo van arriba: quien es admin o shopper entra a
+            Perfil para ir ahí, y antes quedaban debajo de los formularios. */}
         {/* Índigo, no el negro de antes: se distingue del verde del shopper sin
             parecer un botón apagado, y no se confunde con el ámbar de los
             avisos ni con el rojo de lo que borra. */}
@@ -201,6 +178,31 @@ export default async function PerfilPage({
             <ChevronRight className="h-5 w-5 shrink-0 text-emerald-600" aria-hidden="true" />
           </Link>
         )}
+
+        {/* Se muestra solo si el teléfono puede instalarla y todavía no está. */}
+        <div className="mt-4 empty:mt-0">
+          <InstalarApp />
+        </div>
+
+        {!isProfileComplete(profile) && (
+          <p className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-800">
+            Completa tu nombre y teléfono para que el shopper pueda ubicarte con tu pedido.
+          </p>
+        )}
+
+        <section className="mt-4 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm shadow-gray-900/[0.06]">
+          <h2 className="mb-4 text-base font-semibold text-gray-900">Tus datos</h2>
+          <ProfileForm
+            userId={user.id}
+            profile={profile}
+            nameLocked={profile?.role === "shopper"}
+          />
+        </section>
+
+        <section className="mt-4 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm shadow-gray-900/[0.06]">
+          <h2 className="mb-4 text-base font-semibold text-gray-900">Direcciones de entrega</h2>
+          <AddressManager userId={user.id} addresses={addresses ?? []} />
+        </section>
 
         <form action="/auth/sign-out" method="post" className="mt-6">
           <button
