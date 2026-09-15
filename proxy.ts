@@ -25,6 +25,18 @@ export async function proxy(request: NextRequest) {
   // Sin credenciales cargadas la app funciona igual, solo que sin auth.
   if (!isSupabaseConfigured) return NextResponse.next()
 
+  /**
+   * El inicio no pasa por aquí.
+   *
+   * Se sirve de caché (revalidate = 60) y no lee la sesión en el servidor: todo
+   * lo personal lo pinta el teléfono. Pero este archivo corre ANTES de la caché,
+   * y el getUser() de abajo es un viaje a Supabase: a quien tenía sesión, el
+   * inicio en caché le costaba igual ese viaje en cada visita. El token lo
+   * sigue refrescando el cliente del navegador, y la próxima pantalla que sí
+   * pase por aquí refresca las cookies.
+   */
+  if (request.nextUrl.pathname === "/") return NextResponse.next()
+
   let response = NextResponse.next({ request })
 
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
