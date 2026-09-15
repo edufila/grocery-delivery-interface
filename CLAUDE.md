@@ -120,6 +120,14 @@ Mientras tanto:
 - **Las que sube el panel están bien.** El recortador guarda en WebP al 85% y
   en el tamaño correcto. Si una foto pesa de más, lo más rápido es volver a
   subirla desde Administración.
+- **Las del repo se sirven en WebP.** `node scripts/a-webp.mjs` genera un
+  `.webp` al lado de cada PNG de `public/images` y `public/products`, y la lista
+  `lib/fotos-webp.ts`. Las pantallas usan `fotoLigera(src)`, que cambia solo las
+  de esa lista: la base sigue guardando el `.png` (la vista previa de WhatsApp
+  lo usa) y una foto nueva sin WebP se pide tal cual. Medido: la foto de un
+  abasto pasó de 367 KB a 40 KB; todas juntas, de 2,2 MB a 206 KB. `sharp` está
+  en `node_modules/.pnpm` aunque Next no lo vea, y el script lo busca ahí.
+  **Al agregar una foto al repo, correr el script.**
 - **Las que llegan al repo se achican a mano** con `pnpm achicar-fotos` (sin
   argumentos dice qué haría; con `--hacerlo` lo hace). Mira `public/images`
   (tiendas a 640) y `public/products` (a 400: se ven a unos 200 px). Las de

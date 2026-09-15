@@ -30,6 +30,7 @@ import { pageTitle } from "@/lib/brand"
 import { formatBolivares } from "@/lib/pagos"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/server"
+import { fotoLigera } from "@/lib/fotos"
 
 export const metadata: Metadata = {
   title: pageTitle("Seguimiento del pedido"),
@@ -321,7 +322,7 @@ const [
               return (
                 <li key={item.id} className="flex items-start gap-3">
                   <img
-                    src={imagenes.get(item.product_id) || "/placeholder.svg"}
+                    src={fotoLigera(imagenes.get(item.product_id)) || "/placeholder.svg"}
                     alt=""
                     loading="lazy"
                     decoding="async"

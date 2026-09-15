@@ -3,6 +3,7 @@ import { BadgePercent, Bike, Clock } from "lucide-react"
 import { bsEquivalent, formatBolivares } from "@/lib/pagos"
 
 import { CompartirAbasto } from "./compartir-abasto"
+import { fotoLigera } from "@/lib/fotos"
 
 type Props = {
   id: string
@@ -35,7 +36,7 @@ export function StoreHero({ id, name, image, tag, eta, deliveryFee, tasaVes }: P
         <div className="relative h-40 animate-[entra_0.35s_ease-out] overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 to-emerald-800 shadow-md shadow-gray-900/10">
           {image && (
             <img
-              src={image}
+              src={fotoLigera(image) ?? undefined}
               alt=""
               className="absolute inset-0 h-full w-full object-cover"
               decoding="async"

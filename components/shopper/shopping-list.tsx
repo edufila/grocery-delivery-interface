@@ -6,6 +6,7 @@ import { Check, Loader2, Minus, PackageX } from "lucide-react"
 
 import { formatMoney, type OrderItem } from "@/lib/orders"
 import { createClient } from "@/lib/supabase/client"
+import { fotoLigera } from "@/lib/fotos"
 
 type Item = OrderItem & { status: string; final_qty: number | null }
 
@@ -98,7 +99,7 @@ export function ShoppingList({
                 <div className="flex min-w-0 gap-3">
                   <span className="relative h-14 w-14 shrink-0">
                     <img
-                      src={imagenes[item.product_id] || "/placeholder.svg"}
+                      src={fotoLigera(imagenes[item.product_id]) || "/placeholder.svg"}
                       alt=""
                       loading="lazy"
                       decoding="async"

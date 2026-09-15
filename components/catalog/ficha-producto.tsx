@@ -6,6 +6,7 @@ import { Minus, Plus, X } from "lucide-react"
 import { bsEquivalent, formatBolivares } from "@/lib/pagos"
 import type { Product } from "@/lib/products"
 import { precioPorUnidad } from "@/lib/unidades"
+import { fotoLigera } from "@/lib/fotos"
 
 /**
  * El producto en grande, al tocar su foto.
@@ -67,7 +68,7 @@ export function FichaProducto({
       <div className="relative w-full max-w-lg animate-[sube-hoja_0.28s_cubic-bezier(0.2,0.9,0.3,1)] overflow-hidden rounded-t-3xl bg-white pb-[calc(env(safe-area-inset-bottom)+1rem)]">
         <div className="relative mx-auto aspect-square max-h-[55dvh] w-full bg-gray-50">
           <img
-            src={product.image || "/placeholder.svg"}
+            src={fotoLigera(product.image) || "/placeholder.svg"}
             alt={product.name}
             className={`h-full w-full object-cover ${agotado ? "opacity-50 grayscale" : ""}`}
           />

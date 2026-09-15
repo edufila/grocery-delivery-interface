@@ -12,6 +12,7 @@ import { fetchSettings } from "@/lib/settings"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/server"
 import { normalizarTexto } from "@/lib/texto"
+import { fotoLigera } from "@/lib/fotos"
 
 export const metadata: Metadata = {
   title: pageTitle("Explorar"),
@@ -236,7 +237,7 @@ export default async function BuscarPage({
                       className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-3 active:bg-gray-50"
                     >
                       <img
-                        src={fila.image || "/placeholder.svg"}
+                        src={fotoLigera(fila.image) || "/placeholder.svg"}
                         alt=""
                         className="h-14 w-14 shrink-0 rounded-xl bg-gray-50 object-cover"
                         loading="lazy"
@@ -313,7 +314,7 @@ export default async function BuscarPage({
                         className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-3 active:bg-gray-50"
                       >
                         <img
-                          src={fila.image || "/placeholder.svg"}
+                          src={fotoLigera(fila.image) || "/placeholder.svg"}
                           alt=""
                           className="h-14 w-14 shrink-0 rounded-xl bg-gray-50 object-cover"
                           loading="lazy"

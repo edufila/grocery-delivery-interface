@@ -5,6 +5,7 @@ import { Plus, Minus, Star } from "lucide-react"
 import { bsEquivalent, formatBolivares } from "@/lib/pagos"
 import type { Product } from "@/lib/products"
 import { precioPorUnidad } from "@/lib/unidades"
+import { fotoLigera } from "@/lib/fotos"
 
 type Props = {
   product: Product
@@ -53,7 +54,7 @@ export function ProductCard({
           tabIndex={onVer ? 0 : -1}
         >
           <img
-            src={product.image || "/placeholder.svg"}
+            src={fotoLigera(product.image) || "/placeholder.svg"}
             alt=""
             // En una grilla larga, la mayoría empieza fuera de la pantalla.
             loading="lazy"

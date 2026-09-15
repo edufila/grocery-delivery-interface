@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Minus, Plus, Trash2 } from "lucide-react"
 
 import { bsEquivalent, formatBolivares } from "@/lib/pagos"
+import { fotoLigera } from "@/lib/fotos"
 
 export type CartLine = {
   id: string
@@ -73,7 +74,7 @@ export function CartItemList({ abasto, items, onInc, onDec, onRemove, tasaVes }:
           <li key={item.id} className="flex items-start gap-3 py-3">
             <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-gray-50">
               <Image
-                src={item.image || "/placeholder.svg"}
+                src={fotoLigera(item.image) || "/placeholder.svg"}
                 alt=""
                 fill
                 sizes="64px"

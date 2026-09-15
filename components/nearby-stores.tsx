@@ -9,6 +9,7 @@ import { bsEquivalent, formatBolivares } from "@/lib/pagos"
 import { usuarioEnTelefono } from "@/lib/sesion"
 import { createClient } from "@/lib/supabase/client"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
+import { fotoLigera } from "@/lib/fotos"
 
 const FAVORITES_KEY = "abastos-favoritos"
 
@@ -144,7 +145,7 @@ export function NearbyStores({ stores, tasaVes }: { stores: Store[]; tasaVes?: n
                     toque. Eran 360 KB que el teléfono descargaba para algo que
                     todavía no estaba mirando. */}
                 <img
-                  src={store.image || "/placeholder.svg"}
+                  src={fotoLigera(store.image) || "/placeholder.svg"}
                   alt={`Fachada de ${store.name}`}
                   className="h-full w-full object-cover"
                   loading={indice === 0 ? "eager" : "lazy"}
