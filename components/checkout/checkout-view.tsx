@@ -93,6 +93,7 @@ export function CheckoutView() {
   const [serviceFee, setServiceFee] = useState(SERVICE_FEE)
   const [metodos, setMetodos] = useState<MetodoPago[]>([])
   const [tasaVes, setTasaVes] = useState<number | null>(null)
+  const [sinTelefono, setSinTelefono] = useState(false)
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
@@ -111,15 +112,21 @@ export function CheckoutView() {
         return
       }
 
-      const { data } = await supabase
-        .from("addresses")
-        .select("id, label, detail, is_default, lat, lng")
-        .eq("user_id", user.id)
-        .order("is_default", { ascending: false })
-        .limit(1)
-        .maybeSingle<Address>()
+      const [{ data }, { data: perfil }] = await Promise.all([
+        supabase
+          .from("addresses")
+          .select("id, label, detail, is_default, lat, lng")
+          .eq("user_id", user.id)
+          .order("is_default", { ascending: false })
+          .limit(1)
+          .maybeSingle<Address>(),
+        supabase.from("profiles").select("phone").eq("id", user.id).maybeSingle<{ phone: string | null }>(),
+      ])
 
-      if (!cancelled) setSession({ loading: false, userId: user.id, address: data ?? null })
+      if (!cancelled) {
+        setSession({ loading: false, userId: user.id, address: data ?? null })
+        setSinTelefono(!perfil?.phone)
+      }
     })()
 
     return () => {
@@ -406,6 +413,9 @@ export function CheckoutView() {
               session={session}
               onDireccion={(address) => setSession((actual) => ({ ...actual, address }))}
             />
+            {session.userId && sinTelefono && (
+              <TelefonoRapido userId={session.userId} onListo={() => setSinTelefono(false)} />
+            )}
             <CartItemList
               abasto={tiendas.length === 1 ? tiendas[0] : null}
               items={items}
@@ -611,6 +621,80 @@ function DeliveryCard({
       >
         Cambiar
       </Link>
+    </section>
+  )
+}
+
+/**
+ * El teléfono, si falta, sin salir del carrito.
+ *
+ * No traba el pedido -- se puede entregar sin él --, pero sin teléfono el
+ * shopper no tiene cómo escribirle por WhatsApp si falta algo o no encuentra la
+ * casa, y termina esperando en la puerta. Es el mejor momento para pedirlo: la
+ * persona está a punto de recibir a alguien.
+ */
+function TelefonoRapido({ userId, onListo }: { userId: string; onListo: () => void }) {
+  const [telefono, setTelefono] = useState("")
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState("")
+  const digitos = telefono.replace(/\D/g, "")
+
+  async function guardar() {
+    if (digitos.length < 10) {
+      setError("Parece incompleto: son 11 dígitos, como 0414 123 4567.")
+      return
+    }
+    setBusy(true)
+    setError("")
+    const { error: fallo } = await createClient()
+      .from("profiles")
+      .update({ phone: telefono.trim() })
+      .eq("id", userId)
+    setBusy(false)
+    if (fallo) {
+      setError("No pudimos guardarlo. Puedes cargarlo luego en Perfil.")
+      return
+    }
+    onListo()
+  }
+
+  return (
+    <section className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+      <label htmlFor="telefono-rapido" className="block text-sm font-semibold text-gray-900">
+        ¿A qué número te escribe tu shopper?
+      </label>
+      <p className="mt-0.5 text-xs leading-relaxed text-gray-500">
+        Por WhatsApp, si falta algo o no encuentra la casa. Queda guardado en tu perfil.
+      </p>
+      <div className="mt-3 flex gap-2">
+        <input
+          id="telefono-rapido"
+          type="tel"
+          inputMode="numeric"
+          autoComplete="tel"
+          value={telefono}
+          onChange={(event) => {
+            setTelefono(event.target.value)
+            if (error) setError("")
+          }}
+          placeholder="0414 123 4567"
+          className="h-12 min-w-0 flex-1 rounded-xl border border-gray-200 bg-white px-3 text-base tabular-nums text-gray-900 outline-none placeholder:text-gray-500 focus:border-emerald-500"
+        />
+        <button
+          type="button"
+          onClick={() => void guardar()}
+          disabled={busy || digitos.length === 0}
+          className="flex h-12 shrink-0 items-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white disabled:bg-gray-200 disabled:text-gray-600"
+        >
+          {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+          Guardar
+        </button>
+      </div>
+      {error && (
+        <p role="alert" className="mt-2 text-sm text-rose-700">
+          {error}
+        </p>
+      )}
     </section>
   )
 }
