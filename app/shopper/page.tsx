@@ -98,7 +98,14 @@ export default async function ShopperPage() {
       o.shopper_id === null &&
       o.status === "confirmado" &&
       (o.payment_required === false || o.payment_verified_at != null),
-  )
+    )
+    /**
+     * El que hay que salir a comprar primero, arriba: lo antes posible por
+     * orden de llegada, y un programado cuando falta una hora para su turno.
+     * Antes iban por fecha de pedido, y uno para el jueves quedaba encima del
+     * que alguien esperaba ya.
+     */
+    .sort((a, b) => cuandoTomar(a) - cuandoTomar(b))
   const entregados = todos.filter((o) => o.shopper_id === user.id && o.status === "entregado")
 
   /**
@@ -263,6 +270,11 @@ function Grupo({
       )}
     </section>
   )
+}
+
+/** Desde cuándo conviene tomarlo: una hora antes del turno, o desde que se pidió. */
+function cuandoTomar(o: { created_at: string; entregar_desde?: string | null }) {
+  return o.entregar_desde ? new Date(o.entregar_desde).getTime() - 60 * 60 * 1000 : new Date(o.created_at).getTime()
 }
 
 function SinPermiso({ rol }: { rol: string }) {

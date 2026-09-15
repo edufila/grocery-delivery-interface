@@ -9,6 +9,7 @@ import { pageTitle } from "@/lib/brand"
 import { formatMoney, formatOrderDate, statusLabel, type Order } from "@/lib/orders"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/server"
+import { cuandoLlega } from "@/lib/horario"
 
 export const metadata: Metadata = {
   title: pageTitle("Pedidos"),
@@ -28,6 +29,7 @@ type Fila = Pick<
   | "payment_verified_at"
   | "payment_reference"
   | "store_id"
+  | "entregar_desde"
 >
 
 /**
@@ -94,7 +96,10 @@ function Grupo({
                   </div>
                   <p className="mt-1 truncate text-sm text-gray-500">
                     <span className="font-mono">{order.code}</span> ·{" "}
-                    {formatOrderDate(order.created_at)}
+                    {/* Programado y en curso: importa cuándo llega, no cuándo se pidió. */}
+                    {order.entregar_desde && order.status !== "entregado" && order.status !== "cancelado"
+                      ? `llega ${cuandoLlega(order.entregar_desde)}`
+                      : formatOrderDate(order.created_at)}
                   </p>
                 </div>
                 <span className="shrink-0 text-base font-semibold tabular-nums text-gray-900">
@@ -126,7 +131,7 @@ export default async function PedidosPage() {
     supabase
       .from("orders")
       .select(
-        "id, code, status, total, final_total, created_at, address_label, shopper_id, payment_required, payment_verified_at, payment_reference, store_id",
+        "id, code, status, total, final_total, created_at, address_label, shopper_id, payment_required, payment_verified_at, payment_reference, store_id, entregar_desde",
       )
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })

@@ -18,6 +18,7 @@ import { enlaceWhatsApp, firstName } from "@/lib/profile"
 import { avisarAlEquipo } from "@/lib/push-cliente"
 import { createClient } from "@/lib/supabase/client"
 import { useHoja } from "@/lib/usar-hoja"
+import { cuandoLlega } from "@/lib/horario"
 
 type Persona = { id: string; full_name: string | null; phone: string | null; email: string | null }
 
@@ -282,6 +283,10 @@ export function DetallePedido({ orderId, onClose }: { orderId: string; onClose: 
                       encontró en el abasto.
                     </p>
                   )}
+                  <Renglon
+                    label="Entrega"
+                    valor={orden.entregar_desde ? `Programada, ${cuandoLlega(orden.entregar_desde)}` : "Lo antes posible"}
+                  />
                   <Renglon
                     label="Pago"
                     valor={PAYMENT_LABEL[orden.payment_method] ?? orden.payment_method}

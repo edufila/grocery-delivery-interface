@@ -10,6 +10,7 @@ import { usuarioEnTelefono } from "@/lib/sesion"
 import { createClient } from "@/lib/supabase/client"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { fotoLigera } from "@/lib/fotos"
+import { estimarEntrega, textoEstimado, type Punto } from "@/lib/entrega"
 import { PastillaHorario } from "@/components/estado-horario"
 
 const FAVORITES_KEY = "abastos-favoritos"
@@ -17,6 +18,8 @@ const FAVORITES_KEY = "abastos-favoritos"
 export function NearbyStores({ stores, tasaVes }: { stores: Store[]; tasaVes?: number | null }) {
   const [favorites, setFavorites] = useState<string[]>([])
   const [userId, setUserId] = useState<string | null>(null)
+  // Tu dirección principal, para decir cuánto tarda cada abasto hasta ahí.
+  const [destino, setDestino] = useState<Punto | null>(null)
 
   /**
    * Con sesión los favoritos van a la cuenta, así siguen al cambiar de
@@ -46,13 +49,26 @@ export function NearbyStores({ stores, tasaVes }: { stores: Store[]; tasaVes?: n
 
       setUserId(user.id)
 
-      const { data } = await supabase
-        .from("favorites")
-        .select("store_id")
-        .eq("user_id", user.id)
-        .returns<{ store_id: string }[]>()
+      // Juntas: los favoritos y el punto de la dirección principal (una fila).
+      const [{ data }, { data: direccion }] = await Promise.all([
+        supabase
+          .from("favorites")
+          .select("store_id")
+          .eq("user_id", user.id)
+          .returns<{ store_id: string }[]>(),
+        supabase
+          .from("addresses")
+          .select("lat, lng")
+          .eq("user_id", user.id)
+          .not("lat", "is", null)
+          .order("is_default", { ascending: false })
+          .limit(1)
+          .maybeSingle<Punto>(),
+      ])
 
-      if (!cancelled) setFavorites((data ?? []).map((row) => row.store_id))
+      if (cancelled) return
+      setFavorites((data ?? []).map((row) => row.store_id))
+      if (direccion) setDestino(direccion)
     })()
 
     return () => {
@@ -105,6 +121,9 @@ export function NearbyStores({ stores, tasaVes }: { stores: Store[]; tasaVes?: n
           // Cada tienda va a su propio catálogo.
           const href = `/catalogo?tienda=${store.id}`
           const isFavorite = favorites.includes(store.id)
+          // Con tu dirección, el tiempo hasta tu casa; sin ella, el que puso el abasto.
+          const estimado = estimarEntrega(store, destino)
+          const eta = estimado ? textoEstimado(estimado) : store.eta
 
           return (
             <article
@@ -196,11 +215,12 @@ export function NearbyStores({ stores, tasaVes }: { stores: Store[]; tasaVes?: n
 
               <div className="p-4">
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-600">
-                  {store.eta && (
+                  {eta && (
                     <>
                       <span className="flex items-center gap-1.5">
                         <Clock className="h-4 w-4 text-gray-400" aria-hidden="true" />
-                        {store.eta}
+                        {eta}
+                        {estimado && <span className="text-gray-500">· {String(estimado.km).replace(".", ",")} km</span>}
                       </span>
                       <span className="h-1 w-1 rounded-full bg-gray-300" aria-hidden="true" />
                     </>
