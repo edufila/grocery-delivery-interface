@@ -27,6 +27,7 @@ import {
   ZONA_HORARIA,
 } from "@/lib/orders"
 import { pageTitle } from "@/lib/brand"
+import { formatBolivares } from "@/lib/pagos"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/server"
 
@@ -379,7 +380,10 @@ const [
                 </div>
                 <div className="flex justify-between border-t border-gray-100 pt-2 text-base font-semibold text-gray-900">
                   <dt>Total</dt>
-                  <dd className="tabular-nums">{formatMoney(order.final_total)}</dd>
+                  <dd className="text-right tabular-nums">
+                    {formatMoney(order.final_total)}
+                    <TotalEnBolivares order={order} dolares={order.final_total} />
+                  </dd>
                 </div>
                 <p className="text-xs leading-relaxed text-gray-500">
                   El monto cambió porque no estaba todo disponible. Solo se cobra lo que el shopper
@@ -389,7 +393,10 @@ const [
             ) : (
               <div className="flex justify-between border-t border-gray-100 pt-2 text-base font-semibold text-gray-900">
                 <dt>Total</dt>
-                <dd className="tabular-nums">{formatMoney(order.final_total ?? order.total)}</dd>
+                <dd className="text-right tabular-nums">
+                  {formatMoney(order.final_total ?? order.total)}
+                  <TotalEnBolivares order={order} dolares={order.final_total ?? order.total} />
+                </dd>
               </div>
             )}
           </dl>
@@ -436,5 +443,28 @@ const [
         </section>
       </div>
     </main>
+  )
+}
+
+/**
+ * El total en bolívares, debajo del de dólares.
+ *
+ * Con la tasa congelada en el pedido y no con la de hoy: es la que se usó para
+ * cotizar y la que decide cuánto se pagó. Si el pedido cobra en bolívares, el
+ * monto exacto con sus céntimos únicos manda mientras el total no cambió; si
+ * cambió por faltantes, se recalcula con la misma tasa.
+ */
+function TotalEnBolivares({ order, dolares }: { order: Order; dolares: number }) {
+  const tasa = order.rate_ves != null ? Number(order.rate_ves) : null
+  if (!tasa) return null
+
+  const cambio = order.final_total != null && order.final_total !== order.total
+  const bolivares =
+    !cambio && order.amount_ves != null ? Number(order.amount_ves) : Number(dolares) * tasa
+
+  return (
+    <span className="block text-xs font-medium text-gray-500">
+      Bs {formatBolivares(bolivares)}
+    </span>
   )
 }
