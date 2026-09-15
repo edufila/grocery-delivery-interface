@@ -3,34 +3,16 @@ import { notFound } from "next/navigation"
 import { cache } from "react"
 
 import { ProductCatalog } from "@/components/catalog/product-catalog"
-import type { Store } from "@/lib/admin"
 import { APP_NAME, pageTitle } from "@/lib/brand"
 import { toCategory } from "@/lib/categories"
-import { fetchProducts } from "@/lib/products"
-import { fetchSettings } from "@/lib/settings"
+import { ajustesPublicos, productosPublicos, tiendaPublica } from "@/lib/datos-publicos"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
-import { createClient } from "@/lib/supabase/server"
-
-type TiendaDelCatalogo = Pick<
-  Store,
-  "id" | "name" | "tag" | "active" | "image" | "eta" | "delivery_fee"
->
 
 /**
- * El abasto, una sola vez por visita.
- *
- * Lo piden dos: la página y los metadatos de la vista previa. Sin `cache`
- * serían dos viajes a Supabase para la misma fila.
+ * El abasto: una sola vez por visita (lo piden la página y los metadatos de la
+ * vista previa) y guardado un minuto entre visitas. Ver lib/datos-publicos.ts.
  */
-const buscarTienda = cache(async (storeId: string) => {
-  const supabase = await createClient()
-  const { data } = await supabase
-    .from("stores")
-    .select("id, name, tag, active, image, eta, delivery_fee")
-    .eq("id", storeId)
-    .maybeSingle<TiendaDelCatalogo>()
-  return data
-})
+const buscarTienda = cache(tiendaPublica)
 
 /**
  * La vista previa al compartir el enlace de un abasto.
@@ -99,7 +81,6 @@ export default async function CatalogoPage({
     )
   }
 
-  const supabase = await createClient()
   const storeId = params.tienda ?? "girasol"
 
   /**
@@ -110,8 +91,8 @@ export default async function CatalogoPage({
    */
   const [store, products, settings] = await Promise.all([
     buscarTienda(storeId),
-    fetchProducts(supabase, storeId),
-    fetchSettings(supabase),
+    productosPublicos(storeId),
+    ajustesPublicos(),
   ])
 
   if (!store || !store.active) notFound()
