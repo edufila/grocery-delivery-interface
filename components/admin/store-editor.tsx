@@ -113,7 +113,7 @@ export function StoreEditor({ store }: { store: Store }) {
               value={(draft[field.key] as string | null) ?? ""}
               onChange={(event) => setDraft({ ...draft, [field.key]: event.target.value })}
               placeholder={"hint" in field ? field.hint : undefined}
-              className="mt-1 h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500"
+              className="mt-1 h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none placeholder:text-gray-500 focus:border-emerald-500"
             />
           </label>
         ))}

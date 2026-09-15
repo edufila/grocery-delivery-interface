@@ -167,7 +167,7 @@ export function ImagePicker({
           onChange={(event) => onChange(event.target.value)}
           placeholder="Ruta o URL de la foto"
           aria-label="Foto"
-          className="h-11 min-w-0 flex-1 rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500"
+          className="h-11 min-w-0 flex-1 rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 outline-none placeholder:text-gray-500 focus:border-emerald-500"
         />
         {value && (
           <button

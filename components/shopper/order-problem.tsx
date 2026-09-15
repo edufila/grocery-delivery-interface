@@ -127,7 +127,7 @@ export function OrderProblem({ orderId }: { orderId: string }) {
             onChange={(event) => setReason(event.target.value)}
             placeholder="El abasto está cerrado"
             aria-label="Motivo de la cancelación"
-            className="mt-3 h-12 w-full rounded-xl border border-amber-300 bg-white px-3 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-amber-500"
+            className="mt-3 h-12 w-full rounded-xl border border-amber-300 bg-white px-3 text-base text-gray-900 outline-none placeholder:text-gray-500 focus:border-amber-500"
           />
 
           <div className="mt-3 flex gap-2">

@@ -210,7 +210,7 @@ export function AddressManager({ userId, addresses }: { userId: string; addresse
               value={draft.label}
               onChange={(event) => setDraft({ ...draft, label: event.target.value })}
               placeholder="Casa, Trabajo..."
-              className="mt-1.5 h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-emerald-500"
+              className="mt-1.5 h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none transition placeholder:text-gray-500 focus:border-emerald-500"
             />
           </div>
 
@@ -223,7 +223,7 @@ export function AddressManager({ userId, addresses }: { userId: string; addresse
               value={draft.detail}
               onChange={(event) => setDraft({ ...draft, detail: event.target.value })}
               placeholder="Urb. La Zaragoza, casa 3"
-              className="mt-1.5 h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-emerald-500"
+              className="mt-1.5 h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none transition placeholder:text-gray-500 focus:border-emerald-500"
             />
           </div>
 

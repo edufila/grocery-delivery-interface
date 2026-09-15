@@ -223,7 +223,7 @@ export function LoginView({ next, initialError }: { next: string; initialError?:
                   setEmail(event.target.value)
                   if (error) setError("")
                 }}
-                className="mt-2 h-14 w-full rounded-2xl border border-gray-200 bg-white px-4 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
+                className="mt-2 h-14 w-full rounded-2xl border border-gray-200 bg-white px-4 text-base text-gray-900 outline-none transition placeholder:text-gray-500 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
               />
 
               {error && <ErrorText>{error}</ErrorText>}

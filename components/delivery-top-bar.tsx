@@ -278,14 +278,14 @@ export function DeliveryTopBar() {
                           onChange={(event) => setLabel(event.target.value)}
                           placeholder="Nombre: Casa, Trabajo..."
                           aria-label="Nombre de la dirección"
-                          className="h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500"
+                          className="h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none placeholder:text-gray-500 focus:border-emerald-500"
                         />
                         <input
                           value={detail}
                           onChange={(event) => setDetail(event.target.value)}
                           placeholder="Urb. La Zaragoza, casa 3"
                           aria-label="Dirección"
-                          className="h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500"
+                          className="h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none placeholder:text-gray-500 focus:border-emerald-500"
                         />
                         <UseMyLocation coords={coords} onCapture={setCoords} />
                         {!coords && (

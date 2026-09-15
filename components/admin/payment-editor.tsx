@@ -136,7 +136,7 @@ export function PaymentEditor({
                       ? "Banco de Venezuela — 0102\n0414-1234567\nC.I. 12.345.678"
                       : "Los datos que el cliente necesita para pagarte"
                   }
-                  className="mt-1.5 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-base leading-relaxed text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-emerald-500"
+                  className="mt-1.5 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-base leading-relaxed text-gray-900 outline-none transition placeholder:text-gray-500 focus:border-emerald-500"
                 />
                 <p className="mt-1 text-xs leading-relaxed text-gray-500">
                   Esto lo ve el cliente tal cual, con los saltos de línea. Sin datos, el método no

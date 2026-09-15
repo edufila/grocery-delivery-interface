@@ -131,7 +131,7 @@ export function ProfileForm({ userId, profile, nameLocked = false }: Props) {
           enterKeyHint="next"
           placeholder="María González"
           disabled={nameLocked}
-          className="mt-2 h-14 w-full rounded-2xl border border-gray-200 bg-white px-4 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 disabled:bg-gray-50 disabled:text-gray-600"
+          className="mt-2 h-14 w-full rounded-2xl border border-gray-200 bg-white px-4 text-base text-gray-900 outline-none transition placeholder:text-gray-500 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 disabled:bg-gray-50 disabled:text-gray-600"
         />
         {nameLocked && (
           <p className="mt-1.5 text-xs leading-relaxed text-gray-500">
@@ -142,7 +142,9 @@ export function ProfileForm({ userId, profile, nameLocked = false }: Props) {
       </div>
 
       <fieldset>
-        <legend className="block text-sm font-medium text-gray-700">Fecha de nacimiento</legend>
+        <legend className="block text-sm font-medium text-gray-700">
+          Fecha de nacimiento <span className="font-normal text-gray-500">(opcional)</span>
+        </legend>
         <div className="mt-2 grid grid-cols-[1fr_1.4fr_1fr] gap-2">
           <select
             value={day}
