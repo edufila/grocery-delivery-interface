@@ -16,6 +16,7 @@ import {
 } from "@/lib/datos-publicos"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/server"
+import { masBaratos } from "@/lib/comparar"
 import { normalizarTexto } from "@/lib/texto"
 import { fotoLigera } from "@/lib/fotos"
 
@@ -127,28 +128,8 @@ export default async function BuscarPage({
     porTienda.set(fila.store_id, lista)
   }
 
-  /**
-   * El más barato de cada producto que está en más de un abasto.
-   *
-   * Es la razón de tener varios abastos en una misma app: el mismo arroz cuesta
-   * distinto en cada uno, y esta es la única pantalla que los muestra juntos.
-   * Se compara por nombre y presentación, sin acentos: dos abastos que cargaron
-   * "Harina PAN" igual cuentan como el mismo producto. Si empatan, ninguno se
-   * marca: no hay nada que elegir.
-   */
-  const masBarato = new Set<string>()
-  const porProducto = new Map<string, Fila[]>()
-  for (const fila of resultados) {
-    const clave = normalizarTexto(`${fila.name} ${fila.unit}`)
-    porProducto.set(clave, [...(porProducto.get(clave) ?? []), fila])
-  }
-  for (const filas of porProducto.values()) {
-    const tiendasDistintas = new Set(filas.map((f) => f.store_id))
-    if (tiendasDistintas.size < 2) continue
-    const minimo = Math.min(...filas.map((f) => Number(f.price)))
-    const ganadores = filas.filter((f) => Number(f.price) === minimo)
-    if (ganadores.length === 1) masBarato.add(`${ganadores[0].store_id}-${ganadores[0].id}`)
-  }
+  // "Más barato aquí": ver lib/comparar.ts.
+  const masBarato = masBaratos(resultados)
 
   const queSeBusco = filtraTexto
     ? `"${termino}"`
