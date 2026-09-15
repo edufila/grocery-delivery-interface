@@ -192,7 +192,12 @@ export default async function ShopperOrderPage({
           </p>
         </section>
 
-        <ShopperPanel order={order} userId={user.id} store={store ?? null} />
+        <ShopperPanel
+          order={order}
+          userId={user.id}
+          store={store ?? null}
+          sinRevisar={lines.filter((item) => item.status === "pendiente").length}
+        />
       </div>
     </main>
   )

@@ -12,11 +12,14 @@ export function ShopperActions({
   order,
   userId,
   sharing = false,
+  sinRevisar = 0,
 }: {
   order: Order
   userId: string
   /** Salir a entregar sin transmitir deja al cliente sin saber dónde estás. */
   sharing?: boolean
+  /** Productos de la lista sin marcar: salir así es olvidarse algo o cobrarlo sin llevarlo. */
+  sinRevisar?: number
 }) {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
@@ -222,6 +225,22 @@ export function ShopperActions({
         </button>
       ) : siguiente ? (
         <>
+          {/**
+           * Aviso y no bloqueo: a veces se marca todo de un tirón en la caja, y
+           * frenar el botón sería peor. Pero salir con renglones sin marcar es
+           * la forma más común de olvidar algo en el abasto, o de que el cliente
+           * pague por algo que no le llegó -- el total final sale de lo marcado.
+           */}
+          {siguiente === "en_camino" && sinRevisar > 0 && (
+            <p className="rounded-2xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-800">
+              <span className="font-semibold">
+                {sinRevisar === 1
+                  ? "Te falta 1 producto por marcar"
+                  : `Te faltan ${sinRevisar} productos por marcar`}
+              </span>{" "}
+              en la lista. Márcalos antes de salir: lo que no se marca se cobra como si lo llevaras.
+            </p>
+          )}
           {bloqueadoPorUbicacion && (
             <p className="rounded-2xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-800">
               Enciende <span className="font-semibold">Compartir mi ubicación</span> antes de salir.

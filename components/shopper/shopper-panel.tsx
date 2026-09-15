@@ -21,10 +21,13 @@ export function ShopperPanel({
   order,
   userId,
   store,
+  sinRevisar = 0,
 }: {
   order: Order
   userId: string
   store: { name: string; lat: number | null; lng: number | null } | null
+  /** Renglones de la lista que todavía no se marcaron. */
+  sinRevisar?: number
 }) {
   const [sharing, setSharing] = useState(false)
   const [trip, setTrip] = useState<{ km: number; min: number } | null>(null)
@@ -163,7 +166,7 @@ export function ShopperPanel({
         <LocationShare orderId={order.id} onSharingChange={setSharing} onPosition={setPosition} />
       )}
 
-      <ShopperActions order={order} userId={userId} sharing={sharing} />
+      <ShopperActions order={order} userId={userId} sharing={sharing} sinRevisar={sinRevisar} />
 
       {mine && order.status !== "entregado" && order.status !== "cancelado" && (
         <OrderProblem orderId={order.id} />
