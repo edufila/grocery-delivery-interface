@@ -57,7 +57,17 @@ export default async function ShopperPage() {
       .select(
         "id, code, status, total, created_at, address_label, shopper_id, payment_required, payment_verified_at",
       )
+      /**
+       * Los suyos y los sin dueño, nada más.
+       *
+       * A un shopper la RLS ya le da solo eso. A admin y dev les da todos los
+       * pedidos del sistema -- los de cada shopper, de siempre --, y esta
+       * pantalla los bajaba enteros para después tirar casi todos. Crece con
+       * cada pedido que se hace.
+       */
+      .or(`shopper_id.eq.${user.id},shopper_id.is.null`)
       .order("created_at", { ascending: false })
+      .limit(300)
       .returns<ShopperOrder[]>(),
   ])
 
