@@ -183,6 +183,15 @@ le pasa los suyos con `conocer()`. Antes de sumar una consulta en un
 componente que va en todas las pantallas (layout, barra, carrito), medir cuántas
 salen: `performance.getEntriesByType('resource')` en la consola.
 
+**Lo que es igual para todos sale de caché.** Abastos, productos, tasa y
+búsquedas de Explorar pasan por `lib/datos-publicos.ts` (`unstable_cache`, un
+minuto, cliente sin cookies). El inicio es estático con `revalidate = 60`, y el
+proxy de sesión no corre en `/` ni en `/catalogo`. Medido en producción: el
+catálogo pasó de ~1,1 s a ~0,35 s de respuesta. El costo es que un cambio del
+panel tarda hasta un minuto en verse; `place_order` sigue validando contra la
+base, así que no se cobra mal. **Nunca meter algo que dependa de quién mira
+dentro de esas funciones.**
+
 ## RLS no reemplaza el filtro por usuario
 
 A admin y dev las políticas les dejan leer **todos** los pedidos (lo necesita el
