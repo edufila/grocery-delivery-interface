@@ -8,10 +8,12 @@ import { ImagePicker } from "@/components/admin/image-picker"
 import { UseMyLocation, type Coords } from "@/components/profile/use-my-location"
 import { STORE_TEXT_FIELDS, type Store } from "@/lib/admin"
 import { createClient } from "@/lib/supabase/client"
+import { leerMonto } from "@/lib/pagos"
 
 export function StoreEditor({ store }: { store: Store }) {
   const router = useRouter()
   const [draft, setDraft] = useState<Store>(store)
+  const [envioTexto, setEnvioTexto] = useState(String(store.delivery_fee))
   const [coords, setCoords] = useState<Coords>(
     store.lat != null && store.lng != null ? { lat: store.lat, lng: store.lng } : null,
   )
@@ -119,13 +121,14 @@ export function StoreEditor({ store }: { store: Store }) {
         <label className="block">
           <span className="block text-sm font-medium text-gray-700">Costo de envío ($)</span>
           <input
-            type="number"
-            step="0.01"
-            min="0"
-            value={draft.delivery_fee}
-            onChange={(event) =>
-              setDraft({ ...draft, delivery_fee: Number(event.target.value) || 0 })
-            }
+            // Texto y no number, para aceptar coma. Se guarda el número leído;
+            // lo que no se entiende queda en 0 como antes, que es envío gratis.
+            inputMode="decimal"
+            value={envioTexto}
+            onChange={(event) => {
+              setEnvioTexto(event.target.value)
+              setDraft({ ...draft, delivery_fee: leerMonto(event.target.value) ?? 0 })
+            }}
             className="mt-1 h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base tabular-nums text-gray-900 outline-none focus:border-emerald-500"
           />
         </label>

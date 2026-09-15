@@ -8,6 +8,7 @@ import { ImagePicker } from "@/components/admin/image-picker"
 import { categories } from "@/lib/categories"
 import { slugify } from "@/lib/slug"
 import { createClient } from "@/lib/supabase/client"
+import { leerMonto } from "@/lib/pagos"
 
 export function NewProduct({
   stores,
@@ -32,7 +33,7 @@ export function NewProduct({
   // locales con precios distintos, y sin el prefijo el segundo chocaría.
   const id = name.trim() ? `${storeId}-${slugify(name)}` : ""
   const canSave =
-    name.trim().length >= 3 && unit.trim().length >= 2 && Number(price) > 0 && !!image && !busy
+    name.trim().length >= 3 && unit.trim().length >= 2 && (leerMonto(price) ?? 0) > 0 && !!image && !busy
 
   async function save(event: React.FormEvent) {
     event.preventDefault()
@@ -46,7 +47,7 @@ export function NewProduct({
       store_id: storeId,
       name: name.trim(),
       unit: unit.trim(),
-      price: Number(price),
+      price: leerMonto(price),
       category,
       image,
       wholesale,
@@ -116,7 +117,7 @@ export function NewProduct({
             value={name}
             onChange={(event) => setName(event.target.value)}
             placeholder="Harina de Maíz PAN"
-            className="mt-1 h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500"
+            className="mt-1 h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none placeholder:text-gray-500 focus:border-emerald-500"
           />
           {id && <span className="mt-1 block font-mono text-xs text-gray-500">{id}</span>}
         </label>
@@ -127,20 +128,19 @@ export function NewProduct({
             value={unit}
             onChange={(event) => setUnit(event.target.value)}
             placeholder="Unidad · 1 kg"
-            className="mt-1 h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500"
+            className="mt-1 h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none placeholder:text-gray-500 focus:border-emerald-500"
           />
         </label>
 
         <label className="block">
           <span className="block text-sm font-medium text-gray-700">Precio ($)</span>
           <input
-            type="number"
-            step="0.01"
-            min="0"
+            // Texto y no number: aquí el precio se escribe con coma (1,85).
+            inputMode="decimal"
             value={price}
             onChange={(event) => setPrice(event.target.value)}
-            placeholder="1.85"
-            className="mt-1 h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base tabular-nums text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500"
+            placeholder="1,85"
+            className="mt-1 h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base tabular-nums text-gray-900 outline-none placeholder:text-gray-500 focus:border-emerald-500"
           />
         </label>
 
