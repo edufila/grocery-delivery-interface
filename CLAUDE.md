@@ -192,6 +192,20 @@ panel tarda hasta un minuto en verse; `place_order` sigue validando contra la
 base, así que no se cobra mal. **Nunca meter algo que dependa de quién mira
 dentro de esas funciones.**
 
+## Horario, entregas y privacidad
+
+**El horario lo impone `place_order`, la pantalla solo avisa.** `lib/horario.ts`
+repite la cuenta de `abasto_abierto` (0049) y `abasto_abierto_en` (0051) para
+decirlo antes del botón. Si se cambia una regla (margen de una hora, tres días,
+8 a 8 sin horario), se cambia en los dos lados.
+
+**Abierto o cerrado se calcula en el teléfono** (`useHorario`), nunca en el
+servidor: el inicio sale de caché y un "Abierto" viejo podía quedar pegado.
+
+**`/terminos` solo dice lo que el código hace.** Si cambia qué ve el shopper,
+qué se guarda, cómo se cancela o qué borra `borrar_mis_datos` (0050), se
+cambia también esa página y su fecha.
+
 ## RLS no reemplaza el filtro por usuario
 
 A admin y dev las políticas les dejan leer **todos** los pedidos (lo necesita el

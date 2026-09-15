@@ -85,7 +85,8 @@ export default async function TerminosPage() {
           </p>
           <p>
             Si un producto falta en el anaquel, el shopper hace lo que elegiste en el carrito para
-            ese caso. Cada abasto tiene un horario: fuera de él no se puede pedir.
+            ese caso. Cada abasto tiene un horario: fuera de él puedes programar la entrega para cuando
+            abra, hasta tres días después.
           </p>
         </Seccion>
 
