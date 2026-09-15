@@ -1,7 +1,7 @@
 export default function LoadingPerfil() {
   return (
     <main className="min-h-dvh bg-gray-50">
-      <header className="border-b border-gray-100 bg-white">
+      <header className="pt-barra-estado border-b border-gray-100 bg-white">
         <div className="mx-auto max-w-md px-4 py-4">
           <h1 className="text-lg font-semibold text-gray-900">Perfil</h1>
         </div>
