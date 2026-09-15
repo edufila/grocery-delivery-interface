@@ -7,6 +7,7 @@ import { AtSign, Check, ChevronDown, Loader2, Search } from "lucide-react"
 import { ImagePicker } from "@/components/admin/image-picker"
 import type { Role } from "@/lib/orders"
 import { createClient } from "@/lib/supabase/client"
+import { contieneTexto } from "@/lib/texto"
 
 export type AdminUser = {
   id: string
@@ -59,15 +60,28 @@ export function UserManager({
     Object.fromEntries(users.map((u) => [u.id, u.avatar_url ?? ""])),
   )
 
-  const term = query.trim().toLowerCase()
+  const term = query.trim()
+
+  /**
+   * Sin búsqueda, primero el equipo y apenas unos clientes.
+   *
+   * Lo que se viene a hacer aquí casi siempre es sobre el equipo -- dar el rol
+   * de shopper, cambiar un @ --, y la lista mostraba a todo el que alguna vez
+   * entró, en el orden en que llegó. Con cientos de clientes, el equipo quedaba
+   * enterrado. A un cliente puntual se lo encuentra buscando, sin acentos.
+   */
+  const MAX_CLIENTES_SIN_BUSCAR = 15
+  const equipo = users.filter((u) => u.role !== "cliente")
+  const clientes = users.filter((u) => u.role === "cliente")
   const shown = term
     ? users.filter(
         (u) =>
-          u.email?.toLowerCase().includes(term) ||
-          u.full_name?.toLowerCase().includes(term) ||
-          u.handle?.includes(term),
+          contieneTexto(u.email ?? "", term) ||
+          contieneTexto(u.full_name ?? "", term) ||
+          contieneTexto(u.handle ?? "", term.replace(/^@/, "")),
       )
-    : users
+    : [...equipo, ...clientes.slice(0, MAX_CLIENTES_SIN_BUSCAR)]
+  const clientesOcultos = term ? 0 : Math.max(0, clientes.length - MAX_CLIENTES_SIN_BUSCAR)
 
   async function setRole(user: AdminUser, role: Role) {
     setBusyId(user.id)
@@ -127,7 +141,7 @@ export function UserManager({
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Buscar por correo, nombre o @"
-          className="h-12 w-full rounded-xl border border-gray-200 bg-white pl-10 pr-3 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500"
+          className="h-12 w-full rounded-xl border border-gray-200 bg-white pl-10 pr-3 text-base text-gray-900 outline-none placeholder:text-gray-500 focus:border-emerald-500"
         />
       </label>
 
@@ -139,6 +153,8 @@ export function UserManager({
 
       <p className="text-xs text-gray-500">
         {shown.length} de {users.length} {users.length === 1 ? "usuario" : "usuarios"}
+        {clientesOcultos > 0 &&
+          ` · ${clientesOcultos} ${clientesOcultos === 1 ? "cliente más" : "clientes más"}: búscalos por nombre o correo`}
       </p>
 
       {shown.length === 0 ? (
@@ -243,7 +259,7 @@ export function UserManager({
                     onChange={(event) => setNames({ ...names, [user.id]: event.target.value })}
                     placeholder="Nombre visible"
                     aria-label="Nombre visible del shopper"
-                    className="mt-2 h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500"
+                    className="mt-2 h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-base text-gray-900 outline-none placeholder:text-gray-500 focus:border-emerald-500"
                   />
 
                   <div className="mt-2">
@@ -279,7 +295,7 @@ export function UserManager({
                       }
                       placeholder="andres"
                       aria-label={`@ de ${user.full_name ?? user.email}`}
-                      className="h-11 w-full rounded-xl border border-gray-200 bg-white pl-9 pr-3 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-500"
+                      className="h-11 w-full rounded-xl border border-gray-200 bg-white pl-9 pr-3 text-base text-gray-900 outline-none placeholder:text-gray-500 focus:border-emerald-500"
                     />
                   </span>
                   <button
