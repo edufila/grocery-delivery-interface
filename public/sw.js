@@ -12,7 +12,9 @@
  * curso: servir una versión vieja sería peor que no mostrar nada. Siempre va a
  * la red primero y solo si no hay red muestra la pantalla de sin conexión.
  */
-const CACHE = "abasto-v1"
+// Subir el número cada vez que cambia la pantalla de sin conexión: si no, los
+// teléfonos que ya la guardaron siguen mostrando la vieja.
+const CACHE = "abasto-v2"
 const SIN_CONEXION = "/sin-conexion"
 
 self.addEventListener("install", (evento) => {
