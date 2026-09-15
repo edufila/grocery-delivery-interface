@@ -1,9 +1,11 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { redirect } from "next/navigation"
-import { ArrowLeft } from "lucide-react"
+import { AlertTriangle, ArrowLeft } from "lucide-react"
 
+import { ExportarPedidos } from "@/components/admin/exportar-pedidos"
 import { OrdersCleanup } from "@/components/admin/orders-cleanup"
+import { PagoSemanal } from "@/components/admin/pago-semanal"
 import { SettingsEditor } from "@/components/admin/settings-editor"
 import { StoreEditor } from "@/components/admin/store-editor"
 import { StoreProducts } from "@/components/admin/store-products"
@@ -13,7 +15,8 @@ import { PaymentEditor } from "@/components/admin/payment-editor"
 import { pageTitle } from "@/lib/brand"
 import { fetchMetodosPago } from "@/lib/pagos"
 import type { AdminProduct, Settings, Store } from "@/lib/admin"
-import { diaEnVenezuela, formatMoney, type Order, type Role } from "@/lib/orders"
+import { diaEnVenezuela, formatMoney, haceCuanto, type Order, type Role } from "@/lib/orders"
+import { lunesEnVenezuela, resumenPorShopper, type PedidoDeSemana } from "@/lib/semana"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/server"
 
@@ -68,6 +71,7 @@ export default async function AdminPage() {
     { data: settings },
     { data: orders },
     { data: users },
+    { data: deLaSemana },
   ] = await Promise.all([
     supabase.from("profiles").select("role").eq("id", user.id).maybeSingle<{ role: Role }>(),
     fetchMetodosPago(supabase),
@@ -87,6 +91,15 @@ export default async function AdminPage() {
       .select("id, email, full_name, avatar_url, handle, role")
       .order("role")
       .returns<AdminUser[]>(),
+    // Aparte de los cien de arriba: una semana puede traer más, y aquí solo
+    // hacen falta cinco columnas de lo entregado.
+    supabase
+      .from("orders")
+      .select("shopper_id, status, created_at, total, final_total, delivery_fee")
+      .eq("status", "entregado")
+      .gte("created_at", lunesEnVenezuela(new Date()).toISOString())
+      .limit(5000)
+      .returns<PedidoDeSemana[]>(),
   ])
 
   if (!profile || !ADMIN_ROLES.includes(profile.role)) {
@@ -146,6 +159,30 @@ export default async function AdminPage() {
       // undefined, que aquí cuenta como "sin devolver".
       !(o as { payment_refunded_at?: string | null }).payment_refunded_at,
   )
+  /**
+   * Pagados (o en efectivo) y sin shopper hace más de quince minutos.
+   *
+   * Es el pedido que se enfría sin que nadie lo note: el cliente ya pagó, el
+   * panel de pagos está limpio, y ningún shopper lo tomó. Se cuenta desde que
+   * quedó libre -- la verificación del pago si la hubo --, no desde que se pidió.
+   */
+  const ahora = Date.now()
+  const esperandoShopper = (orders ?? [])
+    .filter(
+      (o) =>
+        o.status === "confirmado" &&
+        !o.shopper_id &&
+        (o.payment_required === false || o.payment_verified_at != null),
+    )
+    .map((o) => ({ ...o, libreDesde: o.payment_verified_at ?? o.created_at }))
+    .filter((o) => ahora - new Date(o.libreDesde).getTime() > 15 * 60 * 1000)
+
+  const nombres = Object.fromEntries(
+    (users ?? []).map((u) => [u.id, u.full_name || (u.handle ? `@${u.handle}` : u.email) || "Sin nombre"]),
+  )
+  const semana = resumenPorShopper(deLaSemana ?? [], lunesEnVenezuela(new Date()))
+  const nombresAbasto = Object.fromEntries((stores ?? []).map((s) => [s.id, s.name]))
+
   const sinPagar = (orders ?? []).filter(
     (o) =>
       o.payment_required !== false &&
@@ -190,6 +227,7 @@ export default async function AdminPage() {
             {[
               { id: "pagos", nombre: "Pagos", cuenta: porVerificar.length + aDevolver.length },
               { id: "pedidos", nombre: "Pedidos", cuenta: 0 },
+              { id: "semana", nombre: "Semana", cuenta: 0 },
               { id: "usuarios", nombre: "Usuarios", cuenta: 0 },
               { id: "tiendas", nombre: "Tiendas", cuenta: 0 },
               { id: "productos", nombre: "Productos", cuenta: 0 },
@@ -231,6 +269,31 @@ export default async function AdminPage() {
           ))}
         </section>
 
+        {esperandoShopper.length > 0 && (
+          <section
+            aria-labelledby="esperando-shopper"
+            className="rounded-2xl border border-amber-200 bg-amber-50 p-4"
+          >
+            <h2 id="esperando-shopper" className="flex items-center gap-2 text-sm font-semibold text-amber-900">
+              <AlertTriangle className="h-4 w-4" aria-hidden="true" />
+              {esperandoShopper.length === 1
+                ? "Un pedido listo lleva rato sin shopper"
+                : `${esperandoShopper.length} pedidos listos llevan rato sin shopper`}
+            </h2>
+            <ul className="mt-2 flex flex-col gap-1 text-sm text-amber-900">
+              {esperandoShopper.map((o) => (
+                <li key={o.id} className="flex justify-between gap-3">
+                  <span className="font-mono">{o.code}</span>
+                  <span className="tabular-nums">libre {haceCuanto(o.libreDesde)}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2 text-xs leading-relaxed text-amber-800">
+              Ya está pagado y ningún shopper lo tomó. Avísale a alguien del equipo.
+            </p>
+          </section>
+        )}
+
         {/* Lo urgente primero: es a donde lleva el aviso de un pago reportado, y
             antes quedaba sexto, debajo del catálogo entero. */}
         <Section
@@ -247,6 +310,17 @@ export default async function AdminPage() {
           hint="Toca uno para ver qué pidió y a quién. Las casillas son para borrar los de prueba: se va el pedido con sus productos y su código."
         >
           <OrdersCleanup orders={orders ?? []} />
+        </Section>
+
+        <Section
+          id="semana"
+          title="Esta semana"
+          hint="Lo entregado desde el lunes, por shopper. Para cerrar un período o cuadrar con el banco, descarga los pedidos y ábrelos en Excel."
+        >
+          <div className="flex flex-col gap-3">
+            <PagoSemanal filas={semana} nombres={nombres} />
+            <ExportarPedidos nombresAbasto={nombresAbasto} />
+          </div>
         </Section>
 
         <Section

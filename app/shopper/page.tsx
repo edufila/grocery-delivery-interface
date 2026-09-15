@@ -17,6 +17,7 @@ import {
 } from "@/lib/orders"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/server"
+import { lunesEnVenezuela } from "@/lib/semana"
 
 export const metadata: Metadata = {
   title: pageTitle("Panel del shopper"),
@@ -250,19 +251,6 @@ function Grupo({
       )}
     </section>
   )
-}
-
-/** El lunes de esta semana a medianoche, en hora de Venezuela (UTC-4, sin horario de verano). */
-function lunesEnVenezuela(ahora: Date) {
-  const OFFSET_MS = 4 * 60 * 60 * 1000
-  const local = new Date(ahora.getTime() - OFFSET_MS)
-  const diasDesdeLunes = (local.getUTCDay() + 6) % 7
-  const lunesLocal = Date.UTC(
-    local.getUTCFullYear(),
-    local.getUTCMonth(),
-    local.getUTCDate() - diasDesdeLunes,
-  )
-  return new Date(lunesLocal + OFFSET_MS)
 }
 
 function SinPermiso({ rol }: { rol: string }) {
