@@ -152,6 +152,19 @@ no existe.
 monto en bolívares no es `type="number"`: "27.388,87" no entra. Va como texto
 con `inputMode="decimal"` y se lee con `leerMonto` (`lib/pagos.ts`).
 
+## Lo que se pide desde el teléfono
+
+**En componentes de cliente, `usuarioEnTelefono` (`lib/sesion.ts`) y no
+`auth.getUser()`.** `getUser` va al servidor cada vez; el inicio lo llamaba
+desde cinco componentes. Para decidir qué mostrar alcanza la sesión guardada;
+lo que protege los datos es la RLS. En el servidor sí va `getUser()`.
+
+**Nada descarga "el catálogo entero" por las dudas.** El carrito lo hacía en
+cada pantalla, vacío incluido. Ahora pide solo los ids que tiene, y el catálogo
+le pasa los suyos con `conocer()`. Antes de sumar una consulta en un
+componente que va en todas las pantallas (layout, barra, carrito), medir cuántas
+salen: `performance.getEntriesByType('resource')` en la consola.
+
 ## RLS no reemplaza el filtro por usuario
 
 A admin y dev las políticas les dejan leer **todos** los pedidos (lo necesita el
