@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
-import { ArrowLeft, Check, MapPin } from "lucide-react"
+import { ArrowLeft, MapPin } from "lucide-react"
 
 import { OrderLiveRefresh } from "@/components/live-refresh"
 import { AvisamePedido } from "@/components/tracking/avisame-pedido"
@@ -18,9 +18,6 @@ import {
   formatMoney,
   formatOrderDate,
   PAYMENT_LABEL,
-  STATUS_FLOW,
-  statusDescription,
-  statusLabel,
   SUBSTITUTION_LABEL,
   type Order,
   type OrderItem,
@@ -117,7 +114,6 @@ const [
   const imagenes = new Map((fotos ?? []).map((f) => [f.id, f.image]))
 
   const lines = items ?? []
-  const currentStep = STATUS_FLOW.indexOf(order.status)
   const cancelled = order.status === "cancelado"
   const shopper = (shopperRows as OrderShopper[] | null)?.[0] ?? null
 
@@ -216,6 +212,29 @@ const [
 
         {shopper && !cancelled && <ShopperCard shopper={shopper} />}
 
+        {/* El chat con el shopper, aparte y cerca de su tarjeta. Antes vivía
+            dentro de una lista numerada de estados que repetía lo que ya dice la
+            tarjeta grande de arriba. */}
+        {order.shopper_id && !cancelled && order.status !== "entregado" && (
+          <section className="rounded-2xl border border-gray-100 bg-white p-4">
+            <p className="text-sm font-semibold text-gray-900">¿Algo que coordinar?</p>
+            <p className="mt-0.5 text-sm leading-relaxed text-gray-500">
+              Si falta un producto o no encuentra la casa, tu shopper te escribe por aquí.
+            </p>
+            <OrderChat
+              orderId={order.id}
+              userId={user.id}
+              title="Chat con tu shopper"
+              respuestasRapidas={
+                order.status === "en_camino"
+                  ? ["Ya bajo", "Espérame un momento", "Toca el timbre"]
+                  : ["Sí, otra marca está bien", "Mejor no lo lleves", "Gracias"]
+              }
+              subtitle={shopper?.full_name ?? "Sobre este pedido"}
+            />
+          </section>
+        )}
+
         {deliveryCode && order.status !== "entregado" && !cancelled && (
           <DeliveryCodeCard
             orderId={order.id}
@@ -243,72 +262,6 @@ const [
             </div>
           </section>
         )}
-
-        <section className="rounded-2xl border border-gray-100 bg-white p-5">
-          <h2 className="mb-4 text-base font-semibold text-gray-900">Estado</h2>
-          {cancelled ? (
-            <div className="rounded-xl bg-rose-50 px-4 py-3">
-              <p className="text-sm font-medium text-rose-700">Este pedido fue cancelado.</p>
-              {order.cancel_reason && (
-                <p className="mt-1 text-sm leading-relaxed text-rose-800">
-                  Motivo: {order.cancel_reason}
-                </p>
-              )}
-            </div>
-          ) : (
-            <ol className="flex flex-col gap-4">
-              {STATUS_FLOW.map((status, index) => {
-                const done = index < currentStep
-                const current = index === currentStep
-                return (
-                  <li key={status} className="flex items-start gap-3">
-                    <span
-                      className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                        done
-                          ? "bg-emerald-600 text-white"
-                          : current
-                            ? "bg-emerald-100 text-emerald-700 ring-4 ring-emerald-50"
-                            : "bg-gray-100 text-gray-500"
-                      }`}
-                      aria-hidden="true"
-                    >
-                      {done ? <Check className="h-4 w-4" strokeWidth={3} /> : index + 1}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p
-                        className={`text-sm font-semibold ${
-                          done || current ? "text-gray-900" : "text-gray-500"
-                        }`}
-                      >
-                        {statusLabel(status, order.shopper_id)}
-                      </p>
-                      {current && (
-                        <>
-                          <p className="mt-0.5 text-sm text-gray-500">
-                            {statusDescription(status, order.shopper_id)}
-                          </p>
-                          {order.shopper_id && status !== "entregado" && (
-                            <OrderChat
-                              orderId={order.id}
-                              userId={user.id}
-                              title="Chat con tu shopper"
-                              respuestasRapidas={
-                                status === "en_camino"
-                                  ? ["Ya bajo", "Espérame un momento", "Toca el timbre"]
-                                  : ["Sí, otra marca está bien", "Mejor no lo lleves", "Gracias"]
-                              }
-                              subtitle={shopper?.full_name ?? "Sobre este pedido"}
-                            />
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </li>
-                )
-              })}
-            </ol>
-          )}
-        </section>
 
         <section className="rounded-2xl border border-gray-100 bg-white p-5">
           <h2 className="mb-3 text-base font-semibold text-gray-900">
