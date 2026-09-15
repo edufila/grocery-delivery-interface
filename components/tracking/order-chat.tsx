@@ -5,6 +5,7 @@ import { MessageCircle, Send, X } from "lucide-react"
 
 import { ZONA_HORARIA } from "@/lib/orders"
 import { createClient } from "@/lib/supabase/client"
+import { useHoja } from "@/lib/usar-hoja"
 
 type Message = {
   id: string
@@ -95,19 +96,7 @@ export function OrderChat({
     if (open) endRef.current?.scrollIntoView({ block: "end" })
   }, [open, messages])
 
-  useEffect(() => {
-    if (!open) return
-    const previous = document.body.style.overflow
-    document.body.style.overflow = "hidden"
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false)
-    }
-    window.addEventListener("keydown", onKey)
-    return () => {
-      document.body.style.overflow = previous
-      window.removeEventListener("keydown", onKey)
-    }
-  }, [open])
+  const hojaRef = useHoja<HTMLDivElement>(open, () => setOpen(false))
 
   async function send(texto?: string) {
     const body = (texto ?? draft).trim()
@@ -170,7 +159,7 @@ export function OrderChat({
             aria-label="Cerrar chat"
           />
 
-          <div className="relative flex h-[80dvh] w-full max-w-lg animate-[sube-hoja_0.28s_cubic-bezier(0.2,0.9,0.3,1)] flex-col rounded-t-3xl bg-white">
+          <div ref={hojaRef} className="relative flex h-[80dvh] w-full max-w-lg animate-[sube-hoja_0.28s_cubic-bezier(0.2,0.9,0.3,1)] flex-col rounded-t-3xl bg-white">
             <header className="flex shrink-0 items-center gap-3 border-b border-gray-100 px-5 py-4">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-gray-900">{title}</p>

@@ -1,12 +1,12 @@
 "use client"
 
-import { useEffect } from "react"
 import { Minus, Plus, X } from "lucide-react"
 
 import { bsEquivalent, formatBolivares } from "@/lib/pagos"
 import type { Product } from "@/lib/products"
 import { precioPorUnidad } from "@/lib/unidades"
 import { fotoLigera } from "@/lib/fotos"
+import { useHoja } from "@/lib/usar-hoja"
 
 /**
  * El producto en grande, al tocar su foto.
@@ -36,20 +36,9 @@ export function FichaProducto({
 }) {
   const bs = bsEquivalent(product.price, tasaVes ?? null)
   const agotado = !product.in_stock
+  // Foco dentro, Escape cierra, fondo quieto: ver lib/usar-hoja.ts.
+  const hojaRef = useHoja<HTMLDivElement>(true, onClose)
 
-  // Con la hoja abierta el fondo no scrollea, y Escape la cierra.
-  useEffect(() => {
-    const antes = document.body.style.overflow
-    document.body.style.overflow = "hidden"
-    const alTeclear = (evento: KeyboardEvent) => {
-      if (evento.key === "Escape") onClose()
-    }
-    window.addEventListener("keydown", alTeclear)
-    return () => {
-      document.body.style.overflow = antes
-      window.removeEventListener("keydown", alTeclear)
-    }
-  }, [onClose])
 
   return (
     <div
@@ -65,7 +54,7 @@ export function FichaProducto({
         aria-label="Cerrar"
       />
 
-      <div className="relative w-full max-w-lg animate-[sube-hoja_0.28s_cubic-bezier(0.2,0.9,0.3,1)] overflow-hidden rounded-t-3xl bg-white pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+      <div ref={hojaRef} className="relative w-full max-w-lg animate-[sube-hoja_0.28s_cubic-bezier(0.2,0.9,0.3,1)] overflow-hidden rounded-t-3xl bg-white pb-[calc(env(safe-area-inset-bottom)+1rem)]">
         <div className="relative mx-auto aspect-square max-h-[55dvh] w-full bg-gray-50">
           <img
             src={fotoLigera(product.image) || "/placeholder.svg"}

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { Download, Share, SquarePlus, X } from "lucide-react"
 
 import { APP_SHORT_NAME } from "@/lib/brand"
+import { useHoja } from "@/lib/usar-hoja"
 
 /**
  * El evento que dispara Chrome cuando la app cumple con lo que pide para ser
@@ -56,6 +57,7 @@ export function InstalarApp({ descartable = false }: { descartable?: boolean } =
   const [instalada, setInstalada] = useState(true)
   const [ios, setIos] = useState(false)
   const [pasos, setPasos] = useState(false)
+  const hojaRef = useHoja<HTMLDivElement>(pasos, () => setPasos(false))
   const [descartado, setDescartado] = useState(false)
 
   useEffect(() => {
@@ -155,7 +157,7 @@ export function InstalarApp({ descartable = false }: { descartable?: boolean } =
             aria-label="Cerrar"
           />
 
-          <div className="relative w-full max-w-lg animate-[sube-hoja_0.28s_cubic-bezier(0.2,0.9,0.3,1)] rounded-t-3xl bg-white pb-[calc(env(safe-area-inset-bottom)+1.5rem)] pt-2">
+          <div ref={hojaRef} className="relative w-full max-w-lg animate-[sube-hoja_0.28s_cubic-bezier(0.2,0.9,0.3,1)] rounded-t-3xl bg-white pb-[calc(env(safe-area-inset-bottom)+1.5rem)] pt-2">
             <div className="mx-auto h-1 w-10 rounded-full bg-gray-200" aria-hidden="true" />
 
             <div className="flex items-center justify-between px-5 pb-1 pt-4">

@@ -12,6 +12,7 @@ import type { Address } from "@/lib/orders"
 import { usuarioEnTelefono } from "@/lib/sesion"
 import { createClient } from "@/lib/supabase/client"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
+import { useHoja } from "@/lib/usar-hoja"
 
 export function DeliveryTopBar() {
   const router = useRouter()
@@ -61,20 +62,8 @@ export function DeliveryTopBar() {
     void load()
   }, [load])
 
-  // Con la hoja abierta, el fondo no debe scrollear.
-  useEffect(() => {
-    if (!open) return
-    const previous = document.body.style.overflow
-    document.body.style.overflow = "hidden"
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false)
-    }
-    window.addEventListener("keydown", onKey)
-    return () => {
-      document.body.style.overflow = previous
-      window.removeEventListener("keydown", onKey)
-    }
-  }, [open])
+
+  const hojaRef = useHoja<HTMLDivElement>(open, () => setOpen(false))
 
   const selected = addresses.find((a) => a.is_default) ?? addresses[0] ?? null
 
@@ -189,7 +178,7 @@ export function DeliveryTopBar() {
 
           {/* max-h + overflow en la lista: con muchas direcciones la hoja
               scrollea sola en vez de crecer fuera de la pantalla. */}
-          <div className="relative flex max-h-[85dvh] w-full max-w-lg animate-[sube-hoja_0.28s_cubic-bezier(0.2,0.9,0.3,1)] flex-col rounded-t-3xl bg-white pt-2">
+          <div ref={hojaRef} className="relative flex max-h-[85dvh] w-full max-w-lg animate-[sube-hoja_0.28s_cubic-bezier(0.2,0.9,0.3,1)] flex-col rounded-t-3xl bg-white pt-2">
             <div className="mx-auto h-1 w-10 shrink-0 rounded-full bg-gray-200" aria-hidden="true" />
 
             <div className="mx-auto flex w-full max-w-md shrink-0 items-center justify-between px-5 pb-2 pt-4">

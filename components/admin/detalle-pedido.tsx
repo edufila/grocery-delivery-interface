@@ -17,6 +17,7 @@ import { formatBolivares } from "@/lib/pagos"
 import { enlaceWhatsApp, firstName } from "@/lib/profile"
 import { avisarAlEquipo } from "@/lib/push-cliente"
 import { createClient } from "@/lib/supabase/client"
+import { useHoja } from "@/lib/usar-hoja"
 
 type Persona = { id: string; full_name: string | null; phone: string | null; email: string | null }
 
@@ -36,6 +37,7 @@ export function DetallePedido({ orderId, onClose }: { orderId: string; onClose: 
   const [error, setError] = useState("")
   const [verificando, setVerificando] = useState(false)
   const router = useRouter()
+  const hojaRef = useHoja<HTMLDivElement>(true, onClose)
 
   async function verificar() {
     setVerificando(true)
@@ -123,19 +125,6 @@ export function DetallePedido({ orderId, onClose }: { orderId: string; onClose: 
     }
   }, [orderId])
 
-  // Con la hoja abierta el fondo no debe scrollear.
-  useEffect(() => {
-    const antes = document.body.style.overflow
-    document.body.style.overflow = "hidden"
-    const alTeclado = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose()
-    }
-    window.addEventListener("keydown", alTeclado)
-    return () => {
-      document.body.style.overflow = antes
-      window.removeEventListener("keydown", alTeclado)
-    }
-  }, [onClose])
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true">
@@ -146,7 +135,7 @@ export function DetallePedido({ orderId, onClose }: { orderId: string; onClose: 
         aria-label="Cerrar"
       />
 
-      <div className="relative flex max-h-[88dvh] w-full max-w-lg animate-[sube-hoja_0.28s_cubic-bezier(0.2,0.9,0.3,1)] flex-col rounded-t-3xl bg-white">
+      <div ref={hojaRef} className="relative flex max-h-[88dvh] w-full max-w-lg animate-[sube-hoja_0.28s_cubic-bezier(0.2,0.9,0.3,1)] flex-col rounded-t-3xl bg-white">
         <header className="flex shrink-0 items-center gap-3 border-b border-gray-100 px-5 py-4">
           <div className="min-w-0 flex-1">
             <p className="font-mono text-sm font-semibold text-gray-900">

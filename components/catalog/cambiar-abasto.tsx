@@ -7,6 +7,7 @@ import { ShoppingCart, Trash2 } from "lucide-react"
 import { useCart } from "@/lib/cart"
 import { createClient } from "@/lib/supabase/client"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
+import { useHoja } from "@/lib/usar-hoja"
 
 /**
  * Ataja al cliente que entra a un abasto teniendo un carrito de otro.
@@ -45,15 +46,9 @@ export function CambiarAbasto({ storeId, storeName }: { storeId: string; storeNa
     }
   }, [hayOtro, otro])
 
-  // Con la hoja abierta el fondo no debe scrollear.
-  useEffect(() => {
-    if (!hayOtro) return
-    const antes = document.body.style.overflow
-    document.body.style.overflow = "hidden"
-    return () => {
-      document.body.style.overflow = antes
-    }
-  }, [hayOtro])
+
+  // Escape no hace nada: aquí hay que elegir una de las dos (ver abajo).
+  const hojaRef = useHoja<HTMLDivElement>(hayOtro, () => {})
 
   if (!hayOtro) return null
 
@@ -70,7 +65,7 @@ export function CambiarAbasto({ storeId, storeName }: { storeId: string; storeNa
           porque cualquier producto que agregue aquí rompería el pedido. */}
       <div className="absolute inset-0 animate-[aparece_0.2s_ease-out] bg-black/50" />
 
-      <div className="relative w-full max-w-lg animate-[sube-hoja_0.28s_cubic-bezier(0.2,0.9,0.3,1)] rounded-t-3xl bg-white px-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] pt-6">
+      <div ref={hojaRef} className="relative w-full max-w-lg animate-[sube-hoja_0.28s_cubic-bezier(0.2,0.9,0.3,1)] rounded-t-3xl bg-white px-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] pt-6">
         <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-50">
           <ShoppingCart className="h-6 w-6 text-amber-600" aria-hidden="true" />
         </span>

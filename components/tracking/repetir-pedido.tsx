@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { RotateCcw } from "lucide-react"
 
 import { useCart } from "@/lib/cart"
+import { useHoja } from "@/lib/usar-hoja"
 
 /**
  * Vuelve a armar el carrito con lo de un pedido anterior.
@@ -25,6 +26,7 @@ export function RepetirPedido({
   const router = useRouter()
   const { count, reemplazar } = useCart()
   const [confirmando, setConfirmando] = useState(false)
+  const hojaRef = useHoja<HTMLDivElement>(confirmando, () => setConfirmando(false))
 
   function repetir() {
     const cantidades: Record<string, number> = {}
@@ -63,7 +65,7 @@ export function RepetirPedido({
             aria-label="Cerrar"
           />
 
-          <div className="relative w-full max-w-lg animate-[sube-hoja_0.28s_cubic-bezier(0.2,0.9,0.3,1)] rounded-t-3xl bg-white px-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] pt-6">
+          <div ref={hojaRef} className="relative w-full max-w-lg animate-[sube-hoja_0.28s_cubic-bezier(0.2,0.9,0.3,1)] rounded-t-3xl bg-white px-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] pt-6">
             <h2 className="text-center text-lg font-semibold text-gray-900">
               Ya tienes un carrito armado
             </h2>
