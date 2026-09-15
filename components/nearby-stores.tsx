@@ -211,7 +211,7 @@ export function NearbyStores({ stores, tasaVes }: { stores: Store[]; tasaVes?: n
 
                 <Link
                   href={href}
-                  aria-label={`Comprar en ${store.name}`}
+                  aria-label={`Comprar ahora en ${store.name}`}
                   className="group relative z-20 mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 text-sm font-semibold text-white shadow-md shadow-emerald-900/15 transition active:scale-[0.99]"
                 >
                   Comprar ahora

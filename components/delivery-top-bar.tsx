@@ -151,7 +151,9 @@ export function DeliveryTopBar() {
             type="button"
             onClick={() => setOpen(true)}
             className="flex min-h-11 min-w-0 flex-1 items-center gap-2 px-2 text-left"
-            aria-label="Cambiar dirección de entrega"
+            // Empieza con lo que se lee en pantalla: quien usa control por voz
+            // dice lo que ve, y un nombre distinto no le responde.
+            aria-label={`Entregar en ${buttonLabel}. Cambiar dirección`}
             aria-expanded={open}
           >
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-50">
