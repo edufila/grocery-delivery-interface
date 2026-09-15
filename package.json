@@ -5,6 +5,7 @@
   "scripts": {
     "al-dia": "node scripts/al-dia.mjs",
     "achicar-fotos": "node scripts/achicar-fotos.mjs",
+    "humo": "node scripts/humo.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",

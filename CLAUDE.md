@@ -26,6 +26,16 @@ qué carpeta se llame: mira el repo donde vive el script, no donde estés parado
 Al terminar algo, subirlo: `git add -A && git commit && git push`. Trabajo que
 se queda sin subir es trabajo que el otro va a pisar sin saber.
 
+Y un par de minutos después del push, cuando Vercel terminó de desplegar:
+
+```bash
+node scripts/humo.mjs
+```
+
+Abre las pantallas públicas de abastoweb.vercel.app como un teléfono y dice si
+alguna no responde o muestra "Se nos rompió algo". Solo lee, no toca nada. Un
+despliegue roto no avisa solo: queda así hasta que un cliente lo abre.
+
 ### Lo que nunca se hace en este repo
 
 | No | Por qué |
