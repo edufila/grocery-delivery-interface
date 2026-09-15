@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { User } from "lucide-react"
 
+import { usuarioEnTelefono } from "@/lib/sesion"
 import { createClient } from "@/lib/supabase/client"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 
@@ -36,9 +37,7 @@ export function ProfileAvatar() {
 
     void (async () => {
       const supabase = createClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+      const user = await usuarioEnTelefono(supabase)
 
       if (!user) {
         if (!cancelled) setState({ loading: false, photo: null, initials: null })

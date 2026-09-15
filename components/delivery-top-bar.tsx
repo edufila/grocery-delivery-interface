@@ -9,6 +9,7 @@ import { CartIndicator } from "@/components/cart-indicator"
 import { ProfileAvatar } from "@/components/profile/profile-avatar"
 import { UseMyLocation, type Coords } from "@/components/profile/use-my-location"
 import type { Address } from "@/lib/orders"
+import { usuarioEnTelefono } from "@/lib/sesion"
 import { createClient } from "@/lib/supabase/client"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 
@@ -34,9 +35,7 @@ export function DeliveryTopBar() {
     }
 
     const supabase = createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    const user = await usuarioEnTelefono(supabase)
 
     if (!user) {
       setUserId(null)

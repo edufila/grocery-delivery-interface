@@ -5,6 +5,7 @@ import Link from "next/link"
 import { ChevronRight, PackageSearch } from "lucide-react"
 
 import { STATUS_FLOW, statusLabel, type OrderStatus } from "@/lib/orders"
+import { usuarioEnTelefono } from "@/lib/sesion"
 import { createClient } from "@/lib/supabase/client"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 
@@ -39,9 +40,7 @@ export function PedidoEnCurso() {
 
     void (async () => {
       const supabase = createClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+      const user = await usuarioEnTelefono(supabase)
       if (!user || cancelado) return
 
       /**

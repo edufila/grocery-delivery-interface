@@ -6,6 +6,7 @@ import { ArrowRight, Clock, Bike, BadgePercent, Star } from "lucide-react"
 
 import type { Store } from "@/lib/admin"
 import { bsEquivalent, formatBolivares } from "@/lib/pagos"
+import { usuarioEnTelefono } from "@/lib/sesion"
 import { createClient } from "@/lib/supabase/client"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 
@@ -27,9 +28,7 @@ export function NearbyStores({ stores, tasaVes }: { stores: Store[]; tasaVes?: n
       if (!isSupabaseConfigured) return
 
       const supabase = createClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+      const user = await usuarioEnTelefono(supabase)
 
       if (cancelled) return
 
