@@ -49,6 +49,24 @@ export const ajustesPublicos = unstable_cache(
   { revalidate: MINUTO },
 )
 
+/**
+ * El WhatsApp de soporte (0050), o null si no está cargado o la columna todavía
+ * no existe. Aparte de `ajustesPublicos` para no tumbar la tasa si falla.
+ */
+export const soportePublico = unstable_cache(
+  async () => {
+    const { data, error } = await crearClientePublico()
+      .from("settings")
+      .select("soporte_whatsapp")
+      .eq("id", "global")
+      .maybeSingle<{ soporte_whatsapp: string | null }>()
+    if (error || !data?.soporte_whatsapp) return null
+    return data.soporte_whatsapp
+  },
+  ["soporte-publico"],
+  { revalidate: MINUTO },
+)
+
 export const tiendasActivas = unstable_cache(
   async () => {
     const { data } = await crearClientePublico()

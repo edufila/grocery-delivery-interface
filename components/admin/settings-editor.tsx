@@ -7,6 +7,7 @@ import { Check, Loader2 } from "lucide-react"
 import type { Settings } from "@/lib/admin"
 import { formatOrderDate } from "@/lib/orders"
 import { leerMonto } from "@/lib/pagos"
+import { enlaceWhatsApp } from "@/lib/profile"
 import { createClient } from "@/lib/supabase/client"
 
 export function SettingsEditor({ settings }: { settings: Settings }) {
@@ -18,6 +19,7 @@ export function SettingsEditor({ settings }: { settings: Settings }) {
   const [tasaTexto, setTasaTexto] = useState(
     settings.rate_ves ? String(settings.rate_ves).replace(".", ",") : "",
   )
+  const [soporte, setSoporte] = useState(settings.soporte_whatsapp ?? "")
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState("")
@@ -42,6 +44,15 @@ export function SettingsEditor({ settings }: { settings: Settings }) {
      *
      * Vaciar el campo ahora no borra nada: la deja como estaba.
      */
+    const soporteEnlace = enlaceWhatsApp(soporte)
+    if (soporte.trim() && !soporteEnlace) {
+      setError("El WhatsApp de soporte no parece un número venezolano. Escríbelo como 0414-123.45.67.")
+      return
+    }
+    // Se guarda como lo pide wa.me: 584141234567.
+    const soporteDigitos = soporteEnlace ? soporteEnlace.replace("https://wa.me/", "") : null
+    const cambioSoporte = soporteDigitos !== (settings.soporte_whatsapp ?? null)
+
     const cambioTasa = tasaNueva != null && tasaNueva !== Number(settings.rate_ves ?? 0)
 
     // El mismo freno que la corrida automática: un salto de más del doble casi
@@ -74,9 +85,23 @@ export function SettingsEditor({ settings }: { settings: Settings }) {
       })
       .eq("id", "global")
 
+    // Aparte: sin la 0050 la columna no existe y no debe tumbar lo demás.
+    let errorSoporte = false
+    if (!saveError && cambioSoporte) {
+      const { error } = await createClient()
+        .from("settings")
+        .update({ soporte_whatsapp: soporteDigitos })
+        .eq("id", "global")
+      errorSoporte = !!error
+    }
+
     setBusy(false)
     if (saveError) {
       setError("No pudimos guardar. ¿Tu rol sigue siendo admin o dev?")
+      return
+    }
+    if (errorSoporte) {
+      setError("Se guardó lo demás, pero no el WhatsApp de soporte: falta correr la migración 0050.")
       return
     }
     setSaved(true)
@@ -146,6 +171,28 @@ export function SettingsEditor({ settings }: { settings: Settings }) {
           .
         </p>
       )}
+
+      <label className="mt-5 block border-t border-gray-100 pt-4">
+        <span className="block text-sm font-medium text-gray-700">WhatsApp de soporte</span>
+        <input
+          id="soporte-whatsapp"
+          type="tel"
+          inputMode="tel"
+          autoComplete="off"
+          value={soporte}
+          onChange={(event) => {
+            setSoporte(event.target.value)
+            setSaved(false)
+            if (error) setError("")
+          }}
+          placeholder="0414-123.45.67"
+          className="mt-1 h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base tabular-nums text-gray-900 outline-none placeholder:text-gray-500 focus:border-emerald-500 sm:w-48"
+        />
+      </label>
+      <p className="mt-2 text-xs leading-relaxed text-gray-500">
+        A dónde escribe un cliente con un problema, o para pedir que borren sus datos. Sale en
+        Perfil, en el seguimiento del pedido y en Términos. Vacío, no sale en ningún lado.
+      </p>
 
       {error && (
         <p role="alert" className="mt-3 text-sm text-rose-600">

@@ -34,6 +34,7 @@ const CHEQUEOS = [
   { ruta: "/buscar?q=arroz", debe: ["encontrado"] },
   { ruta: "/login", debe: ["Tu mercado, sin salir de casa"] },
   { ruta: "/checkout", debe: ["Carrito y pago"] },
+  { ruta: "/terminos", debe: ["Términos y privacidad", "Borrar tus datos"] },
   { ruta: "/sin-conexion", debe: ["Te quedaste sin señal"] },
   { ruta: "/manifest.webmanifest", debe: ['"short_name"'] },
   { ruta: "/sw.js", debe: ["abasto-v"] },

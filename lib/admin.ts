@@ -38,6 +38,8 @@ export type Settings = {
   rate_ves_updated_at: string | null
   /** 'bcv' si la trajo sola la corrida diaria, 'manual' si la escribió un admin. */
   rate_ves_source: "bcv" | "manual" | null
+  /** WhatsApp de soporte, solo dígitos (0050). Opcional: no existe antes. */
+  soporte_whatsapp?: string | null
 }
 
 /** Los campos del catálogo del inicio que se editan como texto libre. */

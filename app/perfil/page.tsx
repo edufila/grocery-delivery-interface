@@ -1,13 +1,24 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { redirect } from "next/navigation"
-import { ArrowLeft, ChevronRight, LogOut, Mail, PackageSearch, SlidersHorizontal } from "lucide-react"
+import {
+  ArrowLeft,
+  ChevronRight,
+  FileText,
+  LogOut,
+  Mail,
+  MessageCircle,
+  PackageSearch,
+  SlidersHorizontal,
+} from "lucide-react"
 
 import { BottomNav } from "@/components/bottom-nav"
 import { AddressManager } from "@/components/profile/address-manager"
+import { BorrarMisDatos } from "@/components/profile/borrar-mis-datos"
 import { ProfileForm } from "@/components/profile/profile-form"
 import { InstalarApp } from "@/components/pwa/instalar-app"
 import { pageTitle } from "@/lib/brand"
+import { soportePublico } from "@/lib/datos-publicos"
 import { SHOPPER_ROLES, type Address, type Role } from "@/lib/orders"
 import { isProfileComplete, type Profile } from "@/lib/profile"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
@@ -50,7 +61,7 @@ export default async function PerfilPage({
    * Si la migración de perfiles todavía no corrió, `profile` viene vacío y el
    * formulario lo avisa en vez de romper la página.
    */
-  const [{ data: profile }, { data: addresses }, { count: pagosReportados }] = await Promise.all([
+  const [{ data: profile }, { data: addresses }, { count: pagosReportados }, soporte] = await Promise.all([
     supabase
       .from("profiles")
       .select("*")
@@ -68,6 +79,7 @@ export default async function PerfilPage({
       .select("id", { count: "exact", head: true })
       .not("payment_reported_at", "is", null)
       .is("payment_verified_at", null),
+    soportePublico(),
   ])
 
   const esShopper = !!profile?.role && SHOPPER_ROLES.includes(profile.role)
@@ -203,6 +215,35 @@ export default async function PerfilPage({
           <h2 className="mb-4 text-base font-semibold text-gray-900">Direcciones de entrega</h2>
           <AddressManager userId={user.id} addresses={addresses ?? []} />
         </section>
+
+        <nav
+          aria-label="Ayuda"
+          className="mt-4 overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm shadow-gray-900/[0.06]"
+        >
+          {soporte && (
+            <a
+              href={`https://wa.me/${soporte}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex min-h-14 items-center gap-3 border-b border-gray-100 px-5 text-sm font-medium text-gray-900 active:bg-gray-50"
+            >
+              <MessageCircle className="h-5 w-5 shrink-0 text-emerald-600" aria-hidden="true" />
+              <span className="flex-1">Ayuda por WhatsApp</span>
+              <ChevronRight className="h-5 w-5 shrink-0 text-gray-400" aria-hidden="true" />
+            </a>
+          )}
+          <Link
+            href="/terminos"
+            className="flex min-h-14 items-center gap-3 px-5 text-sm font-medium text-gray-900 active:bg-gray-50"
+          >
+            <FileText className="h-5 w-5 shrink-0 text-gray-500" aria-hidden="true" />
+            <span className="flex-1">Términos y privacidad</span>
+            <ChevronRight className="h-5 w-5 shrink-0 text-gray-400" aria-hidden="true" />
+          </Link>
+        </nav>
+
+        {/* Solo clientes: la base rechaza a shopper, admin y dev (0050). */}
+        {(!profile?.role || profile.role === "cliente") && <BorrarMisDatos />}
 
         <form action="/auth/sign-out" method="post" className="mt-6">
           <button

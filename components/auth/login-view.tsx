@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Bike, Loader2, MailCheck, MapPin, Smartphone } from "lucide-react"
 
@@ -342,10 +343,15 @@ export function LoginView({ next, initialError }: { next: string; initialError?:
         )}
       </div>
 
-      {/* Aquí decía "Al continuar aceptas los Términos y la Política de
-          Privacidad", y ninguno de los dos existe: se hacía aceptar algo que no
-          se puede leer. Vuelve cuando estén escritos y enlazados. */}
-      <div className="pb-[calc(env(safe-area-inset-bottom)+1.5rem)]" />
+      {/* Volvió cuando existió algo que leer: antes decía que aceptabas unos
+          términos que no estaban escritos en ningún lado. */}
+      <p className="mx-auto max-w-md px-5 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] pt-2 text-center text-xs leading-relaxed text-gray-500">
+        Al entrar aceptas los{" "}
+        <Link href="/terminos" className="font-medium text-gray-700 underline">
+          términos y la política de datos
+        </Link>
+        .
+      </p>
     </main>
   )
 }

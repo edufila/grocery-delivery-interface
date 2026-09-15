@@ -35,7 +35,7 @@ export async function proxy(request: NextRequest) {
    * sigue refrescando el cliente del navegador, y la próxima pantalla que sí
    * pase por aquí refresca las cookies.
    */
-  if (request.nextUrl.pathname === "/" || request.nextUrl.pathname === "/catalogo") {
+  if (["/", "/catalogo", "/terminos"].includes(request.nextUrl.pathname)) {
     // El catálogo tampoco lee la sesión en el servidor: sus datos son públicos
     // y se guardan un minuto (lib/datos-publicos.ts).
     return NextResponse.next()
