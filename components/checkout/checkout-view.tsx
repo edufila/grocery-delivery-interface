@@ -15,6 +15,7 @@ import { OrderSummary } from "./order-summary"
 import { DireccionRapida } from "./direccion-rapida"
 import { useCart } from "@/lib/cart"
 import { nombreDesdeId } from "@/lib/carrito"
+import { estimarEntrega, textoEstimado } from "@/lib/entrega"
 import { bsEquivalent, fetchMetodosPago, formatBolivares, sePuedeOfrecer, type MetodoPago } from "@/lib/pagos"
 import type { Address } from "@/lib/orders"
 import { avisarAlEquipo } from "@/lib/push-cliente"
@@ -44,6 +45,8 @@ type Tienda = {
   /** 0049: no existen antes de correr la migración. */
   abre?: string | null
   cierra?: string | null
+  lat?: number | null
+  lng?: number | null
 }
 
 /**
@@ -265,6 +268,14 @@ export function CheckoutView() {
   const tiendaUnica = tiendas.length === 1 ? tiendas[0] : null
   const horario = useHorario(tiendaUnica?.abre, tiendaUnica?.cierra)
   const cerrado = !!tiendaUnica && horario?.abierto === false
+  /**
+   * El tiempo de entrega según dónde queda la dirección, si se sabe dónde
+   * quedan los dos. Si no, el que escribió el abasto a mano, como antes.
+   */
+  const estimado = estimarEntrega(tiendaUnica, session.address)
+  const abastoDelCarrito = tiendaUnica
+    ? { ...tiendaUnica, eta: estimado ? textoEstimado(estimado) : tiendaUnica.eta }
+    : null
   const canPlace =
     hasItems &&
     !!session.userId &&
@@ -439,7 +450,7 @@ export function CheckoutView() {
               <TelefonoRapido userId={session.userId} onListo={() => setSinTelefono(false)} />
             )}
             <CartItemList
-              abasto={tiendas.length === 1 ? tiendas[0] : null}
+              abasto={abastoDelCarrito}
               items={items}
               onInc={add}
               onDec={removeOne}
