@@ -17,7 +17,7 @@ export default function SinConexionPage() {
     <main className="flex min-h-dvh items-center bg-white px-6">
       <div className="mx-auto w-full max-w-md text-center">
         <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
-          <WifiOff className="h-6 w-6 text-gray-400" aria-hidden="true" />
+          <WifiOff className="h-6 w-6 text-gray-500" aria-hidden="true" />
         </span>
 
         <h1 className="mt-5 text-xl font-semibold text-gray-900">Te quedaste sin señal</h1>
@@ -30,9 +30,15 @@ export default function SinConexionPage() {
           señal. Se retoma sola al volver la conexión.
         </p>
 
-        {/* Un enlace y no un botón: sin conexión, un onClick tampoco correría. */}
+        {/* Un enlace y no un botón: sin conexión, un onClick tampoco correría
+            -- el service worker guarda esta página, no el JavaScript.
+
+            href vacío y no "/": esta pantalla se muestra en la dirección que
+            se quería abrir (el service worker la sirve en su lugar), así que
+            vacío recarga ESA pantalla. Con "/" alguien que perdió la señal
+            abriendo su pedido volvía al inicio y tenía que buscarlo de nuevo. */}
         <a
-          href="/"
+          href=""
           className="mt-6 flex h-12 w-full items-center justify-center rounded-2xl bg-emerald-600 text-sm font-semibold text-white"
         >
           Reintentar
