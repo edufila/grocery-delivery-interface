@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 
 import { firstName } from "@/lib/profile"
+import { usuarioEnTelefono } from "@/lib/sesion"
 import { createClient } from "@/lib/supabase/client"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 
@@ -27,10 +28,7 @@ export function NombreSaludo() {
 
     void (async () => {
       const supabase = createClient()
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      const usuario = session?.user
+      const usuario = await usuarioEnTelefono(supabase)
       if (!usuario || cancelado) return
 
       const { data } = await supabase

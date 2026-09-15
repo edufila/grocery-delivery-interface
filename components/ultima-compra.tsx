@@ -5,6 +5,7 @@ import { History } from "lucide-react"
 
 import { RepetirPedido } from "@/components/tracking/repetir-pedido"
 import { formatOrderDate } from "@/lib/orders"
+import { usuarioEnTelefono } from "@/lib/sesion"
 import { createClient } from "@/lib/supabase/client"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 
@@ -36,10 +37,7 @@ export function UltimaCompra() {
 
     void (async () => {
       const supabase = createClient()
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      const usuario = session?.user
+      const usuario = await usuarioEnTelefono(supabase)
       if (!usuario || cancelado) return
 
       // Filtrado por usuario aunque haya RLS: a admin y dev la política les deja
