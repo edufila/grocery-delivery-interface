@@ -159,7 +159,7 @@ export function OrdersCleanup({ orders }: { orders: Row[] }) {
             type="button"
             onClick={selectAllShown}
             disabled={borrables.length === 0}
-            className="min-h-11 text-sm font-medium text-emerald-600 disabled:text-gray-400"
+            className="min-h-11 text-sm font-medium text-emerald-600 disabled:text-gray-600"
           >
             {borrables.length === shown.length
               ? `Seleccionar los ${shown.length}`

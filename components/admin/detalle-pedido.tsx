@@ -339,7 +339,7 @@ export function DetallePedido({ orderId, onClose }: { orderId: string; onClose: 
                           type="button"
                           onClick={() => void verificar()}
                           disabled={verificando}
-                          className="mt-2 flex h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white disabled:bg-gray-200 disabled:text-gray-400"
+                          className="mt-2 flex h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white disabled:bg-gray-200 disabled:text-gray-600"
                         >
                           {verificando && (
                             <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />

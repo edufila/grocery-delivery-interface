@@ -254,7 +254,7 @@ export function ConciliacionPagos({
             type="button"
             onClick={() => void registrar()}
             disabled={guardando || digitos.length < 4}
-            className="flex h-12 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white disabled:bg-gray-200 disabled:text-gray-400"
+            className="flex h-12 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white disabled:bg-gray-200 disabled:text-gray-600"
           >
             {guardando && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
             Registrar
@@ -458,7 +458,7 @@ function TarjetaPago({
         type="button"
         onClick={onVerificar}
         disabled={ocupado}
-        className="mt-2 flex h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white disabled:bg-gray-200 disabled:text-gray-400"
+        className="mt-2 flex h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white disabled:bg-gray-200 disabled:text-gray-600"
       >
         {ocupado ? (
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />

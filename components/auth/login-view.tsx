@@ -231,7 +231,7 @@ export function LoginView({ next, initialError }: { next: string; initialError?:
               <button
                 type="submit"
                 disabled={!isValidEmail(email) || pending}
-                className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 text-base font-semibold text-white transition active:scale-[0.99] disabled:bg-gray-200 disabled:text-gray-400"
+                className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 text-base font-semibold text-white transition active:scale-[0.99] disabled:bg-gray-200 disabled:text-gray-600"
               >
                 {pending && <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />}
                 {pending ? "Enviando..." : "Continuar"}
@@ -332,7 +332,7 @@ export function LoginView({ next, initialError }: { next: string; initialError?:
                   type="button"
                   onClick={() => void sendLink()}
                   disabled={pending}
-                  className="min-h-11 px-4 text-sm font-semibold text-emerald-600 disabled:text-gray-400"
+                  className="min-h-11 px-4 text-sm font-semibold text-emerald-600 disabled:text-gray-600"
                 >
                   Reenviar enlace
                 </button>

@@ -191,7 +191,7 @@ export function ShopperActions({
             disabled={blocked}
             placeholder="0000"
             aria-label="Código de entrega"
-            className="mt-4 h-16 w-full rounded-2xl border border-gray-200 bg-white text-center font-mono text-3xl tracking-[0.4em] text-gray-900 outline-none transition placeholder:text-gray-300 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 disabled:bg-gray-50 disabled:text-gray-400"
+            className="mt-4 h-16 w-full rounded-2xl border border-gray-200 bg-white text-center font-mono text-3xl tracking-[0.4em] text-gray-900 outline-none transition placeholder:text-gray-300 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 disabled:bg-gray-50 disabled:text-gray-600"
           />
 
           <button
@@ -207,7 +207,7 @@ export function ShopperActions({
             type="button"
             onClick={() => void deliver()}
             disabled={busy || code.length !== 4 || blocked}
-            className="mt-2 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 text-base font-semibold text-white transition active:scale-[0.99] disabled:bg-gray-200 disabled:text-gray-400"
+            className="mt-2 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 text-base font-semibold text-white transition active:scale-[0.99] disabled:bg-gray-200 disabled:text-gray-600"
           >
             {busy && <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />}
             Confirmar entrega
@@ -218,7 +218,7 @@ export function ShopperActions({
           type="button"
           onClick={() => void take()}
           disabled={busy}
-          className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 text-base font-semibold text-white transition active:scale-[0.99] disabled:bg-gray-200 disabled:text-gray-400"
+          className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 text-base font-semibold text-white transition active:scale-[0.99] disabled:bg-gray-200 disabled:text-gray-600"
         >
           {busy && <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />}
           Tomar este pedido
@@ -251,7 +251,7 @@ export function ShopperActions({
             type="button"
             onClick={() => void advance()}
             disabled={busy || bloqueadoPorUbicacion}
-            className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 text-base font-semibold text-white transition active:scale-[0.99] disabled:bg-gray-200 disabled:text-gray-400"
+            className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 text-base font-semibold text-white transition active:scale-[0.99] disabled:bg-gray-200 disabled:text-gray-600"
           >
             {busy && <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />}
             {NEXT_STATUS_ACTION[siguiente] ?? "Avanzar"}

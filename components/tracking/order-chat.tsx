@@ -264,7 +264,7 @@ export function OrderChat({
               <button
                 type="submit"
                 disabled={draft.trim().length === 0 || sending}
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-600 text-white transition active:scale-95 disabled:bg-gray-200 disabled:text-gray-400"
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-600 text-white transition active:scale-95 disabled:bg-gray-200 disabled:text-gray-600"
                 aria-label="Enviar mensaje"
               >
                 <Send className="h-5 w-5" aria-hidden="true" />

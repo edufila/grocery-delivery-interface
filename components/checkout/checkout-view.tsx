@@ -505,7 +505,7 @@ export function CheckoutView() {
               type="button"
               onClick={() => void placeOrder()}
               disabled={!canPlace}
-              className="flex h-14 w-full items-center justify-between gap-3 rounded-2xl bg-emerald-600 px-5 text-base font-semibold text-white shadow-lg shadow-emerald-600/25 transition active:scale-[0.99] disabled:bg-gray-200 disabled:text-gray-500 disabled:shadow-none"
+              className="flex h-14 w-full items-center justify-between gap-3 rounded-2xl bg-emerald-600 px-5 text-base font-semibold text-white shadow-lg shadow-emerald-600/25 transition active:scale-[0.99] disabled:bg-gray-200 disabled:text-gray-600 disabled:shadow-none"
             >
               {/**
                * La acción a un lado y el monto al otro, y no todo seguido.

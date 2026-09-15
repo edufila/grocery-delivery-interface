@@ -107,7 +107,7 @@ export function PaymentEditor({
                 type="button"
                 onClick={() => void save(metodo)}
                 disabled={busyId === metodo.id}
-                className="flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white disabled:bg-gray-200 disabled:text-gray-400"
+                className="flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white disabled:bg-gray-200 disabled:text-gray-600"
               >
                 {busyId === metodo.id ? (
                   <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />

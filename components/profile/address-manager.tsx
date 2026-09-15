@@ -152,7 +152,7 @@ export function AddressManager({ userId, addresses }: { userId: string; addresse
                       type="button"
                       onClick={() => startEdit(address)}
                       disabled={busy}
-                      className="flex min-h-11 items-center gap-1.5 text-sm font-medium text-emerald-600 disabled:text-gray-400"
+                      className="flex min-h-11 items-center gap-1.5 text-sm font-medium text-emerald-600 disabled:text-gray-600"
                     >
                       <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
                       Editar
@@ -163,7 +163,7 @@ export function AddressManager({ userId, addresses }: { userId: string; addresse
                         type="button"
                         onClick={() => void makeDefault(address.id)}
                         disabled={busy}
-                        className="min-h-11 text-sm font-medium text-emerald-600 disabled:text-gray-400"
+                        className="min-h-11 text-sm font-medium text-emerald-600 disabled:text-gray-600"
                       >
                         Usar como principal
                       </button>
@@ -251,7 +251,7 @@ export function AddressManager({ userId, addresses }: { userId: string; addresse
             <button
               type="submit"
               disabled={!canSave}
-              className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-semibold text-white disabled:bg-gray-200 disabled:text-gray-400"
+              className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-semibold text-white disabled:bg-gray-200 disabled:text-gray-600"
             >
               {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
               Guardar

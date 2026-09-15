@@ -157,7 +157,7 @@ export function SettingsEditor({ settings }: { settings: Settings }) {
         type="button"
         onClick={() => void save()}
         disabled={busy}
-        className="mt-4 flex h-12 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 text-sm font-semibold text-white transition active:scale-[0.99] disabled:bg-gray-200 disabled:text-gray-400"
+        className="mt-4 flex h-12 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 text-sm font-semibold text-white transition active:scale-[0.99] disabled:bg-gray-200 disabled:text-gray-600"
       >
         {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
         {saved && !busy && <Check className="h-4 w-4" aria-hidden="true" />}

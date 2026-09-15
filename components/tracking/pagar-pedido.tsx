@@ -203,7 +203,7 @@ export function PagarPedido({
         type="button"
         onClick={() => void reportar()}
         disabled={guardando || texto.trim().length < 4 || texto.trim() === (referencia ?? "")}
-        className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 text-sm font-semibold text-white transition active:scale-[0.99] disabled:bg-gray-200 disabled:text-gray-500"
+        className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 text-sm font-semibold text-white transition active:scale-[0.99] disabled:bg-gray-200 disabled:text-gray-600"
       >
         {guardando && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
         {referencia ? "Corregir la referencia" : "Ya pagué"}

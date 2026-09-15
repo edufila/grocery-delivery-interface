@@ -209,7 +209,7 @@ export function ProductEditor({ products }: { products: AdminProduct[] }) {
             type="button"
             onClick={() => void save(product)}
             disabled={busyId === product.id}
-            className="flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white transition active:scale-[0.99] disabled:bg-gray-200 disabled:text-gray-400"
+            className="flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white transition active:scale-[0.99] disabled:bg-gray-200 disabled:text-gray-600"
           >
             {busyId === product.id ? (
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />

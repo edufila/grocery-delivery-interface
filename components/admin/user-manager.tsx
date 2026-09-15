@@ -274,7 +274,7 @@ export function UserManager({
                     type="button"
                     onClick={() => void saveIdentity(user)}
                     disabled={busyId === user.id}
-                    className="mt-2 flex h-11 w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-semibold text-white transition active:scale-[0.99] disabled:bg-gray-200 disabled:text-gray-400"
+                    className="mt-2 flex h-11 w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-semibold text-white transition active:scale-[0.99] disabled:bg-gray-200 disabled:text-gray-600"
                   >
                     Guardar nombre y foto
                   </button>
@@ -302,7 +302,7 @@ export function UserManager({
                     type="button"
                     onClick={() => void saveHandle(user)}
                     disabled={busyId === user.id || !handleChanged}
-                    className="flex h-11 shrink-0 items-center gap-1.5 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white transition active:scale-[0.99] disabled:bg-gray-200 disabled:text-gray-400"
+                    className="flex h-11 shrink-0 items-center gap-1.5 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white transition active:scale-[0.99] disabled:bg-gray-200 disabled:text-gray-600"
                   >
                     {!handleChanged && user.handle && (
                       <Check className="h-4 w-4" aria-hidden="true" />

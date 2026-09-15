@@ -128,7 +128,7 @@ export function OrderProblem({ orderId }: { orderId: string }) {
               type="button"
               onClick={() => void cancel()}
               disabled={busy || reason.trim().length < 5}
-              className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-rose-600 text-sm font-semibold text-white disabled:bg-gray-200 disabled:text-gray-400"
+              className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-rose-600 text-sm font-semibold text-white disabled:bg-gray-200 disabled:text-gray-600"
             >
               {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
               Cancelar el pedido
