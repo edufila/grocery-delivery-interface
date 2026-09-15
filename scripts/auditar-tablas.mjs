@@ -185,7 +185,7 @@ const ESPERADAS = {
   products: ["in_stock", "nombre_busqueda"],
   stores: ["abre", "cierra"],
   payment_methods: ["currency"],
-  settings: ["rate_ves", "rate_ves_updated_at", "rate_ves_source"],
+  settings: ["rate_ves", "rate_ves_updated_at", "rate_ves_source", "soporte_whatsapp"],
   push_subscriptions: ["endpoint", "user_id", "p256dh", "auth"],
 }
 

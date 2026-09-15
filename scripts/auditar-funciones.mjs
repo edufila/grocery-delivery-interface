@@ -46,6 +46,7 @@ const FUNCIONES = [
   ["sin_acentos", { p_texto: "Café" }],
   ["marcar_devuelto", { p_order_id: CERO }],
   ["abasto_abierto", { p_abre: "07:00", p_cierra: "20:00" }],
+  ["borrar_mis_datos", {}],
 ]
 
 function leerEnv() {

@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
-import { ArrowLeft, MapPin } from "lucide-react"
+import { ArrowLeft, MapPin, MessageCircle } from "lucide-react"
 
 import { OrderLiveRefresh } from "@/components/live-refresh"
 import { AvisamePedido } from "@/components/tracking/avisame-pedido"
@@ -24,6 +24,7 @@ import {
   ZONA_HORARIA,
 } from "@/lib/orders"
 import { pageTitle } from "@/lib/brand"
+import { soportePublico } from "@/lib/datos-publicos"
 import { formatBolivares } from "@/lib/pagos"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/server"
@@ -86,6 +87,7 @@ const [
   { data: deliveryCode },
   { data: metodo },
   { data: fotos },
+  soporte,
 ] = await Promise.all([
     supabase.from("order_items").select("*").eq("order_id", order.id).returns<OrderItem[]>(),
     // Solo nombre, foto y @: no expone teléfono ni correo del shopper.
@@ -109,6 +111,8 @@ const [
       .select("id, image")
       .eq("store_id", order.store_id ?? "girasol")
       .returns<{ id: string; image: string | null }[]>(),
+    // Guardado un minuto y igual para todos: no suma un viaje por visita.
+    soportePublico(),
   ])
 
   const imagenes = new Map((fotos ?? []).map((f) => [f.id, f.image]))
@@ -379,8 +383,10 @@ const [
                   Entrega
                 </dt>
                 <dd className="text-gray-900">
-                  {order.address_label}
-                  {order.address_detail ? ` · ${order.address_detail}` : ""}
+                  {/* Vacía si la persona borró sus datos (0050). */}
+                  {order.address_label || order.address_detail
+                    ? `${order.address_label ?? ""}${order.address_detail ? ` · ${order.address_detail}` : ""}`
+                    : "Dirección borrada"}
                 </dd>
               </div>
             </div>
@@ -400,6 +406,21 @@ const [
             </div>
           </dl>
         </section>
+
+        {/* El chat es con el shopper, y solo existe mientras hay uno. Para lo
+            demás (un cobro, una devolución, un pedido que no llega) hace falta
+            alguien del equipo. Sin número cargado no sale. */}
+        {soporte && (
+          <a
+            href={`https://wa.me/${soporte}?text=${encodeURIComponent(`Hola, necesito ayuda con mi pedido ${order.code}.`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white px-4 text-sm font-semibold text-gray-700 transition active:scale-[0.99]"
+          >
+            <MessageCircle className="h-4 w-4 text-emerald-600" aria-hidden="true" />
+            ¿Un problema con este pedido? Escríbenos
+          </a>
+        )}
       </div>
     </main>
   )
