@@ -3,6 +3,7 @@ import { BadgePercent, Bike, Clock } from "lucide-react"
 import { bsEquivalent, formatBolivares } from "@/lib/pagos"
 
 import { CompartirAbasto } from "./compartir-abasto"
+import { PastillaHorario } from "@/components/estado-horario"
 import { fotoLigera } from "@/lib/fotos"
 
 type Props = {
@@ -13,6 +14,8 @@ type Props = {
   eta?: string | null
   deliveryFee?: number | null
   tasaVes?: number | null
+  abre?: string | null
+  cierra?: string | null
 }
 
 /**
@@ -27,7 +30,7 @@ type Props = {
  * No es fija: al bajar se va, y queda arriba solo la barra con el buscador y las
  * categorías, que es lo que se usa mientras se compra.
  */
-export function StoreHero({ id, name, image, tag, eta, deliveryFee, tasaVes }: Props) {
+export function StoreHero({ id, name, image, tag, eta, deliveryFee, tasaVes, abre, cierra }: Props) {
   const bs = deliveryFee != null ? bsEquivalent(Number(deliveryFee), tasaVes ?? null) : null
 
   return (
@@ -50,6 +53,10 @@ export function StoreHero({ id, name, image, tag, eta, deliveryFee, tasaVes }: P
             className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/0"
             aria-hidden="true"
           />
+
+          <div className="absolute left-3 right-16 top-3">
+            <PastillaHorario abre={abre} cierra={cierra} />
+          </div>
 
           <div className="absolute right-3 top-3">
             <CompartirAbasto storeId={id} storeName={name} />

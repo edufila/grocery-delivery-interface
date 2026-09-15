@@ -25,6 +25,8 @@ type Props = {
   storeTag?: string
   storeImage?: string | null
   storeEta?: string | null
+  storeAbre?: string | null
+  storeCierra?: string | null
   deliveryFee?: number | null
   initialQuery?: string
   initialCategory?: Category
@@ -39,6 +41,8 @@ export function ProductCatalog({
   storeTag,
   storeImage,
   storeEta,
+  storeAbre,
+  storeCierra,
   deliveryFee,
   initialQuery = "",
   initialCategory = "Todos",
@@ -135,6 +139,8 @@ export function ProductCatalog({
         image={storeImage}
         tag={storeTag}
         eta={storeEta}
+        abre={storeAbre}
+        cierra={storeCierra}
         deliveryFee={deliveryFee}
         tasaVes={tasaVes}
       />

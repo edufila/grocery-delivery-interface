@@ -105,6 +105,8 @@ export default async function CatalogoPage({
       storeTag={store.tag ?? undefined}
       storeImage={store.image}
       storeEta={store.eta}
+      storeAbre={store.abre}
+      storeCierra={store.cierra}
       deliveryFee={store.delivery_fee}
       initialQuery={params.q ?? ""}
       initialCategory={toCategory(params.categoria)}

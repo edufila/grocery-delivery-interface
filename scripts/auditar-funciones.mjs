@@ -45,6 +45,7 @@ const FUNCIONES = [
   ["pago_resuelto", { p_required: true, p_verified: null }],
   ["sin_acentos", { p_texto: "Café" }],
   ["marcar_devuelto", { p_order_id: CERO }],
+  ["abasto_abierto", { p_abre: "07:00", p_cierra: "20:00" }],
 ]
 
 function leerEnv() {

@@ -9,11 +9,16 @@ import { UseMyLocation, type Coords } from "@/components/profile/use-my-location
 import { STORE_TEXT_FIELDS, type Store } from "@/lib/admin"
 import { createClient } from "@/lib/supabase/client"
 import { leerMonto } from "@/lib/pagos"
+import { estadoHorario, horaParaCampo } from "@/lib/horario"
 
 export function StoreEditor({ store }: { store: Store }) {
   const router = useRouter()
   const [draft, setDraft] = useState<Store>(store)
   const [envioTexto, setEnvioTexto] = useState(String(store.delivery_fee))
+  const [abre, setAbre] = useState(horaParaCampo(store.abre))
+  const [cierra, setCierra] = useState(horaParaCampo(store.cierra))
+  // Una sola de las dos no sirve: la base lo toma como abierto siempre.
+  const horarioIncompleto = (abre === "") !== (cierra === "")
   const [coords, setCoords] = useState<Coords>(
     store.lat != null && store.lng != null ? { lat: store.lat, lng: store.lng } : null,
   )
@@ -28,25 +33,43 @@ export function StoreEditor({ store }: { store: Store }) {
     setError("")
     setSaved(false)
 
-    const { error: saveError } = await createClient()
+    if (horarioIncompleto) {
+      setBusy(false)
+      setError("Pon la hora a la que abre y la hora a la que cierra, o deja las dos vacías.")
+      return
+    }
+
+    const supabase = createClient()
+    const valores = {
+      name: draft.name,
+      tag: draft.tag,
+      eta: draft.eta,
+      image: draft.image,
+      delivery_fee: draft.delivery_fee,
+      active: draft.active,
+      lat: coords?.lat ?? null,
+      lng: coords?.lng ?? null,
+    }
+
+    let { error: saveError } = await supabase
       .from("stores")
-      .update({
-        name: draft.name,
-        tag: draft.tag,
-        eta: draft.eta,
-        image: draft.image,
-        delivery_fee: draft.delivery_fee,
-        active: draft.active,
-        lat: coords?.lat ?? null,
-        lng: coords?.lng ?? null,
-      })
+      .update({ ...valores, abre: abre || null, cierra: cierra || null })
       .eq("id", store.id)
+
+    // Sin la 0049 las columnas del horario no existen y PostgREST rechaza todo:
+    // se guarda lo demás y se avisa.
+    let sinHorario = false
+    if (saveError && /abre|cierra/.test(saveError.message)) {
+      sinHorario = true
+      ;({ error: saveError } = await supabase.from("stores").update(valores).eq("id", store.id))
+    }
 
     setBusy(false)
     if (saveError) {
       setError("No pudimos guardar. ¿Tu rol sigue siendo admin o dev?")
       return
     }
+    if (sinHorario) setError("Se guardó todo menos el horario: falta correr la migración 0049.")
     setSaved(true)
     router.refresh()
   }
@@ -74,6 +97,11 @@ export function StoreEditor({ store }: { store: Store }) {
             <span className="tabular-nums">${Number(draft.delivery_fee).toFixed(2)}</span>
             {!coords && <span className="text-amber-600">sin ubicar</span>}
             {!draft.active && <span className="text-gray-500">oculta</span>}
+            {store.abre && store.cierra && (
+              <span className="tabular-nums">
+                {horaParaCampo(store.abre)}–{horaParaCampo(store.cierra)}
+              </span>
+            )}
           </span>
         </span>
         <ChevronDown
@@ -133,6 +161,46 @@ export function StoreEditor({ store }: { store: Store }) {
           />
         </label>
       </div>
+
+      <fieldset className="mt-4">
+        <legend className="text-sm font-medium text-gray-700">Horario (hora de Venezuela)</legend>
+        <p className="text-xs text-gray-500">
+          Fuera de este horario no se puede pedir. Vacío = abierto siempre.
+        </p>
+        <div className="mt-2 grid grid-cols-2 gap-3">
+          <label className="block">
+            <span className="block text-xs text-gray-600">Abre</span>
+            <input
+              id={`abre-${store.id}`}
+              type="time"
+              value={abre}
+              onChange={(event) => setAbre(event.target.value)}
+              className="mt-1 h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base tabular-nums text-gray-900 outline-none focus:border-emerald-500"
+            />
+          </label>
+          <label className="block">
+            <span className="block text-xs text-gray-600">Cierra</span>
+            <input
+              id={`cierra-${store.id}`}
+              type="time"
+              value={cierra}
+              onChange={(event) => setCierra(event.target.value)}
+              className="mt-1 h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base tabular-nums text-gray-900 outline-none focus:border-emerald-500"
+            />
+          </label>
+        </div>
+        {horarioIncompleto ? (
+          <p className="mt-1.5 text-xs text-amber-800">Falta la otra hora.</p>
+        ) : (
+          abre &&
+          cierra && (
+            <p className="mt-1.5 text-xs text-gray-600">
+              Ahora mismo: {estadoHorario(abre, cierra).texto}
+              {abre > cierra && " · cruza la medianoche"}
+            </p>
+          )
+        )}
+      </fieldset>
 
       <div className="mt-4 flex items-center gap-3">
         <MapPin

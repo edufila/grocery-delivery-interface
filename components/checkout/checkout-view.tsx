@@ -6,6 +6,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 
 import { BackButton } from "@/components/back-button"
+import { useHorario } from "@/components/estado-horario"
 
 import { CartItemList, type CartLine } from "./cart-item-list"
 import { SubstitutionOptions } from "./substitution-options"
@@ -35,7 +36,15 @@ type Session = {
   address: Address | null
 }
 
-type Tienda = { id: string; name: string; delivery_fee: number; eta: string | null }
+type Tienda = {
+  id: string
+  name: string
+  delivery_fee: number
+  eta: string | null
+  /** 0049: no existen antes de correr la migración. */
+  abre?: string | null
+  cierra?: string | null
+}
 
 /**
  * `place_order` rechaza el pedido con mensajes escritos para que los lea una
@@ -57,6 +66,7 @@ function mensajeDeError(mensaje: string | undefined) {
     "El carrito está vacío",
     "Esa dirección no es tuya",
     "Hay que iniciar sesión",
+    "está cerrado ahora",
   ]) {
     if (mensaje.includes(conocido)) return mensaje
   }
@@ -156,7 +166,8 @@ export function CheckoutView() {
           .maybeSingle<{ service_fee: number; rate_ves: number | null }>(),
         supabase
           .from("stores")
-          .select("id, name, delivery_fee, eta")
+          // Todas: así el horario (0049) llega sin romper la consulta antes de la migración.
+          .select("*")
           .in("id", storeIds)
           .returns<Tienda[]>(),
       ])
@@ -246,12 +257,21 @@ export function CheckoutView() {
    * junto porque para el cliente el problema es el mismo, aunque la causa no.
    */
   const noPedibles = [...agotados.map((l) => l.product.id), ...perdidos]
+  /**
+   * El abasto cerrado se dice antes que nada: no tiene sentido pedirle la
+   * dirección a alguien que igual no va a poder pedir. Lo impone place_order;
+   * esto evita llegar al botón para enterarse.
+   */
+  const tiendaUnica = tiendas.length === 1 ? tiendas[0] : null
+  const horario = useHorario(tiendaUnica?.abre, tiendaUnica?.cierra)
+  const cerrado = !!tiendaUnica && horario?.abierto === false
   const canPlace =
     hasItems &&
     !!session.userId &&
     addressPinned &&
     !mezclado &&
     noPedibles.length === 0 &&
+    !cerrado &&
     // Sin método de pago no hay pedido: la base lo rechazaría igual.
     payment.length > 0 &&
     !placing
@@ -266,6 +286,8 @@ export function CheckoutView() {
    */
   const motivoBloqueo = !hasItems || placing
     ? null
+    : cerrado && tiendaUnica
+      ? `${tiendaUnica.name} está cerrado · ${horario?.texto?.replace("Cerrado · ", "") ?? ""}`
     : !session.loading && !session.userId
       ? "Entra a tu cuenta para hacer el pedido"
       : session.userId && !session.address

@@ -9,6 +9,9 @@ export type Store = {
   delivery_fee: number
   active: boolean
   sort_order: number
+  /** Hora de Venezuela, "07:00:00". Opcionales: no existen antes de la 0049. */
+  abre?: string | null
+  cierra?: string | null
 }
 
 export type AdminProduct = {

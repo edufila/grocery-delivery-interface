@@ -26,9 +26,11 @@ export const tiendaPublica = unstable_cache(
   async (storeId: string) => {
     const { data } = await crearClientePublico()
       .from("stores")
-      .select("id, name, tag, active, image, eta, delivery_fee")
+      // Todo: son datos públicos del local, y así el horario (0049) llega
+      // sin romper la consulta antes de correr la migración.
+      .select("*")
       .eq("id", storeId)
-      .maybeSingle<Pick<Store, "id" | "name" | "tag" | "active" | "image" | "eta" | "delivery_fee">>()
+      .maybeSingle<Store>()
     return data
   },
   ["tienda-publica"],

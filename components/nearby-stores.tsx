@@ -10,6 +10,7 @@ import { usuarioEnTelefono } from "@/lib/sesion"
 import { createClient } from "@/lib/supabase/client"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { fotoLigera } from "@/lib/fotos"
+import { PastillaHorario } from "@/components/estado-horario"
 
 const FAVORITES_KEY = "abastos-favoritos"
 
@@ -161,12 +162,15 @@ export function NearbyStores({ stores, tasaVes }: { stores: Store[]; tasaVes?: n
                   className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-black/0"
                   aria-hidden="true"
                 />
-                {store.tag && (
-                  <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white shadow-sm">
-                    <BadgePercent className="h-3.5 w-3.5" aria-hidden="true" />
-                    {store.tag}
-                  </span>
-                )}
+                <div className="absolute left-3 right-16 top-3 flex flex-col items-start gap-1.5">
+                  {store.tag && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white shadow-sm">
+                      <BadgePercent className="h-3.5 w-3.5" aria-hidden="true" />
+                      {store.tag}
+                    </span>
+                  )}
+                  <PastillaHorario abre={store.abre} cierra={store.cierra} />
+                </div>
                 <h3 className="absolute inset-x-0 bottom-0 truncate px-4 pb-3 text-xl font-bold tracking-tight text-white">
                   {store.name}
                 </h3>
