@@ -94,6 +94,8 @@ export type Order = {
   shopper_lat: number | null
   shopper_lng: number | null
   shopper_located_at: string | null
+  /** A partir de cuándo se entrega (0051). Nulo o ausente = lo antes posible. */
+  entregar_desde?: string | null
   address_label: string | null
   address_detail: string | null
   address_lat: number | null

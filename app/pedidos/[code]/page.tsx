@@ -25,6 +25,7 @@ import {
 } from "@/lib/orders"
 import { pageTitle } from "@/lib/brand"
 import { soportePublico } from "@/lib/datos-publicos"
+import { cuandoLlega } from "@/lib/horario"
 import { formatBolivares } from "@/lib/pagos"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/server"
@@ -166,6 +167,13 @@ const [
 
       <div className="mx-auto max-w-lg space-y-4 px-4 pb-10 pt-4">
         <EstadoHero order={order} esperaPago={esperaPago} />
+
+        {order.entregar_desde && order.status !== "entregado" && !cancelled && (
+          <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            <span className="font-semibold">Entrega programada:</span> llega{" "}
+            {cuandoLlega(order.entregar_desde)} o poco después.
+          </p>
+        )}
 
         {/* Solo con el pedido cerrado, y justo debajo del estado: antes estaba al
             fondo de la página, debajo del detalle y los totales. Mientras está en

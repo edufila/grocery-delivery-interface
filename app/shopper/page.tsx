@@ -18,6 +18,7 @@ import {
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/server"
 import { lunesEnVenezuela } from "@/lib/semana"
+import { cuandoLlega } from "@/lib/horario"
 
 export const metadata: Metadata = {
   title: pageTitle("Panel del shopper"),
@@ -34,6 +35,7 @@ type ShopperOrder = Pick<
   | "shopper_id"
   | "payment_required"
   | "payment_verified_at"
+  | "entregar_desde"
 >
 
 export default async function ShopperPage() {
@@ -51,13 +53,12 @@ export default async function ShopperPage() {
    * si no es shopper se descartan sin mostrarse, y la RLS igual no le habría
    * dado nada que no pueda ver.
    */
-  const [{ data: profile }, { data: orders }] = await Promise.all([
-    supabase.from("profiles").select("role").eq("id", user.id).maybeSingle<{ role: Role }>(),
+  const COLUMNAS =
+    "id, code, status, total, created_at, address_label, shopper_id, payment_required, payment_verified_at"
+  const pedir = (columnas: string) =>
     supabase
       .from("orders")
-      .select(
-        "id, code, status, total, created_at, address_label, shopper_id, payment_required, payment_verified_at",
-      )
+      .select(columnas)
       /**
        * Los suyos y los sin dueño, nada más.
        *
@@ -69,8 +70,14 @@ export default async function ShopperPage() {
       .or(`shopper_id.eq.${user.id},shopper_id.is.null`)
       .order("created_at", { ascending: false })
       .limit(300)
-      .returns<ShopperOrder[]>(),
+      .returns<ShopperOrder[]>()
+
+  const [{ data: profile }, conProgramada] = await Promise.all([
+    supabase.from("profiles").select("role").eq("id", user.id).maybeSingle<{ role: Role }>(),
+    pedir(`${COLUMNAS}, entregar_desde`),
   ])
+  // Sin la 0051 la columna no existe y PostgREST rechaza la consulta entera.
+  const { data: orders } = conProgramada.error ? await pedir(COLUMNAS) : conProgramada
 
   if (!profile || !SHOPPER_ROLES.includes(profile.role)) {
     return <SinPermiso rol={profile?.role ?? "cliente"} />
@@ -232,6 +239,11 @@ function Grupo({
                       {/* "Confirmado" no le dice nada a quien busca qué tomar. */}
                       {destacado ? "Nuevo" : STATUS_LABEL[order.status]}
                     </span>
+                    {order.entregar_desde && order.status !== "entregado" && order.status !== "cancelado" && (
+                      <span className="truncate rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-900">
+                        Para {cuandoLlega(order.entregar_desde)}
+                      </span>
+                    )}
                   </div>
                   <p className="mt-0.5 truncate text-sm text-gray-500">
                     {/* Para lo que se puede tomar, cuánto lleva esperando dice más

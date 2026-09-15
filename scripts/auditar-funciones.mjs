@@ -47,6 +47,7 @@ const FUNCIONES = [
   ["marcar_devuelto", { p_order_id: CERO }],
   ["abasto_abierto", { p_abre: "07:00", p_cierra: "20:00" }],
   ["borrar_mis_datos", {}],
+  ["abasto_abierto_en", { p_abre: "07:00", p_cierra: "20:00", p_momento: "2026-01-01T12:00:00Z" }],
 ]
 
 function leerEnv() {

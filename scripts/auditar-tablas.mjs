@@ -181,7 +181,7 @@ for (const nombre of ["orders", "profiles", "addresses", "payments_received", "p
 console.log("\nColumnas que el código ya usa\n")
 
 const ESPERADAS = {
-  orders: ["payment_required", "payment_verified_at", "amount_ves", "rate_ves", "payment_refunded_at"],
+  orders: ["payment_required", "payment_verified_at", "amount_ves", "rate_ves", "payment_refunded_at", "entregar_desde"],
   products: ["in_stock", "nombre_busqueda"],
   stores: ["abre", "cierra"],
   payment_methods: ["currency"],

@@ -9,6 +9,7 @@ import { BackButton } from "@/components/back-button"
 import { useHorario } from "@/components/estado-horario"
 
 import { CartItemList, type CartLine } from "./cart-item-list"
+import { CuandoEntregar } from "./cuando-entregar"
 import { SubstitutionOptions } from "./substitution-options"
 import { PaymentMethods } from "./payment-methods"
 import { OrderSummary } from "./order-summary"
@@ -70,6 +71,8 @@ function mensajeDeError(mensaje: string | undefined) {
     "Esa dirección no es tuya",
     "Hay que iniciar sesión",
     "está cerrado ahora",
+    "entrega programada",
+    "no está abierto. Elige otra",
   ]) {
     if (mensaje.includes(conocido)) return mensaje
   }
@@ -266,6 +269,10 @@ export function CheckoutView() {
    * esto evita llegar al botón para enterarse.
    */
   const tiendaUnica = tiendas.length === 1 ? tiendas[0] : null
+  // Entrega programada (0051): la hora elegida, y si se está eligiendo una.
+  const [programado, setProgramado] = useState<string | null>(null)
+  const [programar, setProgramar] = useState(false)
+  const faltaHora = programar && !programado
   const horario = useHorario(tiendaUnica?.abre, tiendaUnica?.cierra)
   const cerrado = !!tiendaUnica && horario?.abierto === false
   /**
@@ -282,7 +289,9 @@ export function CheckoutView() {
     addressPinned &&
     !mezclado &&
     noPedibles.length === 0 &&
-    !cerrado &&
+    // Cerrado se puede, si se programa: la tarjeta de cuándo pasa sola a programar.
+    !(cerrado && !programado) &&
+    !faltaHora &&
     // Sin método de pago no hay pedido: la base lo rechazaría igual.
     payment.length > 0 &&
     !placing
@@ -297,8 +306,8 @@ export function CheckoutView() {
    */
   const motivoBloqueo = !hasItems || placing
     ? null
-    : cerrado && tiendaUnica
-      ? `${tiendaUnica.name} está cerrado · ${horario?.texto?.replace("Cerrado · ", "") ?? ""}`
+    : cerrado && tiendaUnica && !programado
+      ? `${tiendaUnica.name} está cerrado · elige cuándo te lo llevamos`
     : !session.loading && !session.userId
       ? "Entra a tu cuenta para hacer el pedido"
       : session.userId && !session.address
@@ -309,9 +318,11 @@ export function CheckoutView() {
           ? "Elige con qué abasto te quedas"
           : noPedibles.length > 0
             ? "Quita lo que ya no se puede pedir"
-            : payment.length === 0
-              ? "Elige cómo vas a pagar"
-              : null
+            : faltaHora
+              ? "Elige a qué hora te lo llevamos"
+              : payment.length === 0
+                ? "Elige cómo vas a pagar"
+                : null
 
   async function placeOrder() {
     if (!session.userId || !session.address || placing) return
@@ -329,6 +340,9 @@ export function CheckoutView() {
       p_payment_method: payment,
       p_substitution: substitution,
       p_note: note.trim() || null,
+      // Solo si se eligió: sin la 0051 la base no conoce el parámetro, y así el
+      // pedido de lo antes posible sigue entrando igual.
+      ...(programar && programado ? { p_programado: programado } : {}),
     })
 
     if (rpcError || !code) {
@@ -457,6 +471,17 @@ export function CheckoutView() {
               onRemove={removeAll}
               tasaVes={tasaVes}
             />
+            {tiendaUnica && (
+              <CuandoEntregar
+                abre={tiendaUnica.abre}
+                cierra={tiendaUnica.cierra}
+                cerrado={cerrado}
+                eta={abastoDelCarrito?.eta}
+                value={programado}
+                onChange={setProgramado}
+                onProgramar={setProgramar}
+              />
+            )}
             <section className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
               <label htmlFor="nota" className="block text-base font-semibold text-gray-900">
                 Indicaciones para la entrega

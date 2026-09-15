@@ -20,6 +20,7 @@ import { pageTitle } from "@/lib/brand"
 import { enlaceWhatsApp, firstName } from "@/lib/profile"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/server"
+import { cuandoLlega } from "@/lib/horario"
 
 export const metadata: Metadata = {
   title: pageTitle("Preparar pedido"),
@@ -110,6 +111,12 @@ export default async function ShopperOrderPage({
       <OrderLiveRefresh orderId={order.id} status={order.status} shopperId={order.shopper_id} />
 
       <div className="mx-auto flex max-w-lg flex-col gap-4 px-4 pb-10 pt-4">
+        {/* Entrega programada (0051): que no llegue antes de tiempo a una casa vacía. */}
+        {order.entregar_desde && order.status !== "entregado" && order.status !== "cancelado" && (
+          <p className="rounded-2xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">
+            Entregar {cuandoLlega(order.entregar_desde)} o después, no antes.
+          </p>
+        )}
         <section className="rounded-2xl border border-gray-100 bg-white p-4">
           <div className="flex items-start gap-3">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-50">

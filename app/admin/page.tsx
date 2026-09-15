@@ -174,6 +174,11 @@ export default async function AdminPage() {
         !o.shopper_id &&
         (o.payment_required === false || o.payment_verified_at != null),
     )
+    // Uno programado para más tarde no está "esperando": se toma cerca de la hora.
+    .filter((o) => {
+      const programado = (o as { entregar_desde?: string | null }).entregar_desde
+      return !programado || new Date(programado).getTime() - ahora < 60 * 60 * 1000
+    })
     .map((o) => ({ ...o, libreDesde: o.payment_verified_at ?? o.created_at }))
     .filter((o) => ahora - new Date(o.libreDesde).getTime() > 15 * 60 * 1000)
 
