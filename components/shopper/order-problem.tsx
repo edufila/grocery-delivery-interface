@@ -28,7 +28,7 @@ export function OrderProblem({ orderId }: { orderId: string }) {
     setBusy(false)
 
     if (rpcError || data !== true) {
-      setError("No se pudo soltar. Si ya saliste a entregar, cancelalo con un motivo.")
+      setError("No se pudo soltar. Si ya saliste a entregar, cancélalo con un motivo.")
       return
     }
     router.push("/shopper")
@@ -45,7 +45,14 @@ export function OrderProblem({ orderId }: { orderId: string }) {
     setBusy(false)
 
     if (rpcError || data !== true) {
-      setError(rpcError?.message ?? "No se pudo cancelar.")
+      // El de la base puede venir en inglés o con nombres de funciones; solo
+      // se muestra si es uno de los que ella misma escribe en español.
+      const mensaje = rpcError?.message ?? ""
+      setError(
+        /^[A-ZÁÉÍÓÚÑ¿][^_]*$/.test(mensaje) && !/permission|function|violates|column/i.test(mensaje)
+          ? mensaje
+          : "No se pudo cancelar. Prueba de nuevo.",
+      )
       return
     }
     router.push("/shopper")
@@ -76,8 +83,8 @@ export function OrderProblem({ orderId }: { orderId: string }) {
         <>
           <h2 className="text-sm font-semibold text-amber-900">¿Qué pasó?</h2>
           <p className="mt-1 text-sm leading-relaxed text-amber-800">
-            Si puedes seguir pero no ahora, soltalo y vuelve a la lista para otro shopper. Si el
-            pedido no se puede cumplir, cancelalo explicando por qué: el cliente lo va a leer.
+            Si puedes seguir pero no ahora, suéltalo y vuelve a la lista para otro shopper. Si el
+            pedido no se puede cumplir, cancélalo explicando por qué: el cliente lo va a leer.
           </p>
 
           <div className="mt-3 flex flex-col gap-2">
