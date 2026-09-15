@@ -148,6 +148,9 @@ export function NearbyStores({ stores, tasaVes }: { stores: Store[]; tasaVes?: n
                   alt={`Fachada de ${store.name}`}
                   className="h-full w-full object-cover"
                   loading={indice === 0 ? "eager" : "lazy"}
+                  // La del primero es lo más grande que se ve al abrir: medido,
+                  // tardaba medio segundo en empezar a bajar detrás del resto.
+                  fetchPriority={indice === 0 ? "high" : "auto"}
                   decoding="async"
                 />
                 {/* Oscurece desde abajo para que el nombre se lea encima de la
