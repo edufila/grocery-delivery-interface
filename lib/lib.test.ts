@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import { toCategory } from "./categories"
 import {
   formatMoney,
+  diaEnVenezuela,
   formatOrderDate,
   haceCuanto,
   nextStatus,
@@ -158,5 +159,12 @@ describe("enlaceWhatsApp", () => {
   it("sin número suficiente no inventa uno", () => {
     expect(enlaceWhatsApp(null)).toBeNull()
     expect(enlaceWhatsApp("0414")).toBeNull()
+  })
+})
+
+describe("diaEnVenezuela", () => {
+  it("cambia de día a medianoche de Venezuela, no de UTC", () => {
+    expect(diaEnVenezuela("2026-09-14T03:59:00Z")).toBe("2026-09-13")
+    expect(diaEnVenezuela("2026-09-14T04:00:00Z")).toBe("2026-09-14")
   })
 })

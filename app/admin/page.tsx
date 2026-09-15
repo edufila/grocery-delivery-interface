@@ -13,7 +13,7 @@ import { PaymentEditor } from "@/components/admin/payment-editor"
 import { pageTitle } from "@/lib/brand"
 import { fetchMetodosPago } from "@/lib/pagos"
 import type { AdminProduct, Settings, Store } from "@/lib/admin"
-import type { Order, Role } from "@/lib/orders"
+import { diaEnVenezuela, formatMoney, type Order, type Role } from "@/lib/orders"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/server"
 
@@ -109,6 +109,24 @@ export default async function AdminPage() {
     )
   }
 
+  /**
+   * El día de hoy de un vistazo, arriba de todo.
+   *
+   * Sale de los últimos cien pedidos que ya se traen para las listas: no cuesta
+   * otra consulta. Con más de cien pedidos en un día el número se queda corto,
+   * y para ese momento hará falta contarlo en la base.
+   */
+  const hoy = diaEnVenezuela(new Date())
+  const deHoy = (orders ?? []).filter(
+    (o) => diaEnVenezuela(o.created_at) === hoy && o.status !== "cancelado",
+  )
+  const vendidoHoy = deHoy
+    .filter((o) => o.status === "entregado")
+    .reduce((suma, o) => suma + Number(o.final_total ?? o.total ?? 0), 0)
+  const enCursoHoy = (orders ?? []).filter((o) =>
+    ["confirmado", "preparando", "en_camino"].includes(o.status),
+  ).length
+
   const porVerificar = (orders ?? []).filter(
     (o) => o.payment_reported_at != null && o.payment_verified_at == null && o.status !== "cancelado",
   )
@@ -197,6 +215,22 @@ export default async function AdminPage() {
       </div>
 
       <div className="mx-auto flex max-w-3xl flex-col gap-8 px-4 pb-16 pt-6">
+        <section className="grid grid-cols-3 gap-2" aria-label="Resumen de hoy">
+          {[
+            { valor: String(deHoy.length), etiqueta: "pedidos hoy" },
+            { valor: formatMoney(vendidoHoy), etiqueta: "entregado hoy" },
+            { valor: String(enCursoHoy), etiqueta: "en curso" },
+          ].map(({ valor, etiqueta }) => (
+            <div
+              key={etiqueta}
+              className="rounded-2xl border border-gray-100 bg-white px-3 py-3 text-center shadow-sm shadow-gray-900/[0.06]"
+            >
+              <p className="text-lg font-bold tabular-nums text-gray-900">{valor}</p>
+              <p className="mt-0.5 text-xs leading-tight text-gray-500">{etiqueta}</p>
+            </div>
+          ))}
+        </section>
+
         {/* Lo urgente primero: es a donde lleva el aviso de un pago reportado, y
             antes quedaba sexto, debajo del catálogo entero. */}
         <Section

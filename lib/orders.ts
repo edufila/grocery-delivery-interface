@@ -184,3 +184,8 @@ export function haceCuanto(iso: string, ahora: number = Date.now()) {
   const dias = Math.floor(horas / 24)
   return dias === 1 ? "hace 1 día" : `hace ${dias} días`
 }
+
+/** "2026-09-14" en Venezuela, para comparar días sin que la zona del servidor mande. */
+export function diaEnVenezuela(fecha: Date | string) {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: ZONA_HORARIA }).format(new Date(fecha))
+}
