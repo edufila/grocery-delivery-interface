@@ -307,7 +307,25 @@ export function DetallePedido({ orderId, onClose }: { orderId: string; onClose: 
                       Referencia reportada:{" "}
                       <span className="font-mono font-semibold">{orden.payment_reference}</span>
                     </p>
-                    {orden.payment_verified_at ? (
+                    {/* Cancelado, el pago no se confirma: va a devolución (0048).
+                        Mostrar el botón aquí llevaba a un error de la base. */}
+                    {orden.status === "cancelado" ? (
+                      (orden as Order & { payment_refunded_at?: string | null })
+                        .payment_refunded_at ? (
+                        <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-emerald-700">
+                          <BadgeCheck className="h-4 w-4" aria-hidden="true" />
+                          Devuelto el{" "}
+                          {formatOrderDate(
+                            (orden as Order & { payment_refunded_at?: string | null })
+                              .payment_refunded_at!,
+                          )}
+                        </p>
+                      ) : (
+                        <p className="mt-1 text-sm font-medium text-rose-700">
+                          Pedido cancelado: este pago hay que devolverlo. Se marca en Pagos.
+                        </p>
+                      )
+                    ) : orden.payment_verified_at ? (
                       <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-emerald-700">
                         <BadgeCheck className="h-4 w-4" aria-hidden="true" />
                         Verificada
