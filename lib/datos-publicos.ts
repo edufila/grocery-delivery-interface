@@ -46,3 +46,78 @@ export const ajustesPublicos = unstable_cache(
   ["ajustes-publicos"],
   { revalidate: MINUTO },
 )
+
+export const tiendasActivas = unstable_cache(
+  async () => {
+    const { data } = await crearClientePublico()
+      .from("stores")
+      .select("id, name")
+      .eq("active", true)
+      .returns<{ id: string; name: string }[]>()
+    return data ?? []
+  },
+  ["tiendas-activas"],
+  { revalidate: MINUTO },
+)
+
+/** Solo categoría y abasto de cada producto: alcanza para saber qué categorías tienen algo. */
+export const categoriasVendidas = unstable_cache(
+  async () => {
+    const { data } = await crearClientePublico()
+      .from("products")
+      .select("category, store_id")
+      .eq("active", true)
+      .limit(5000)
+      .returns<{ category: string; store_id: string }[]>()
+    return data ?? []
+  },
+  ["categorias-vendidas"],
+  { revalidate: MINUTO },
+)
+
+export type FilaBusqueda = {
+  id: string
+  name: string
+  unit: string
+  price: number
+  image: string | null
+  store_id: string
+}
+
+/**
+ * La lista de Explorar para un filtro. Guardada por filtro: "arroz" que busca
+ * uno lo reaprovecha el siguiente.
+ *
+ * El texto va contra `nombre_busqueda` (0046, sin acentos) y, si esa columna
+ * no existe, contra `name` como antes.
+ */
+export const buscarProductosPublicos = unstable_cache(
+  async (textoNormalizado: string, textoOriginal: string, categoria: string, soloMayorista: boolean) => {
+    const supabase = crearClientePublico()
+    const hayFiltro = textoOriginal.length >= 2 || categoria !== "Todos" || soloMayorista
+
+    const pedir = (columna: "nombre_busqueda" | "name") => {
+      let consulta = supabase
+        .from("products")
+        .select("id, name, unit, price, image, store_id")
+        .eq("active", true)
+      if (textoOriginal.length >= 2) {
+        // El % a los dos lados: la gente escribe "pan" buscando "Harina PAN".
+        const buscado = columna === "nombre_busqueda" ? textoNormalizado : textoOriginal
+        consulta = consulta.ilike(columna, `%${buscado}%`)
+      }
+      if (categoria !== "Todos") consulta = consulta.eq("category", categoria)
+      if (soloMayorista) consulta = consulta.eq("wholesale", true)
+      return consulta
+        .order("name")
+        .limit(hayFiltro ? 90 : 30)
+        .returns<FilaBusqueda[]>()
+    }
+
+    if (textoOriginal.length < 2) return (await pedir("name")).data ?? []
+    const sinAcentos = await pedir("nombre_busqueda")
+    return (sinAcentos.error ? (await pedir("name")).data : sinAcentos.data) ?? []
+  },
+  ["buscar-productos-publicos"],
+  { revalidate: MINUTO },
+)

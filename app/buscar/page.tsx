@@ -8,7 +8,12 @@ import { CategoriaChips } from "@/components/buscar/categoria-chips"
 import { pageTitle } from "@/lib/brand"
 import { toCategory, type Category } from "@/lib/categories"
 import { bsEquivalent, formatBolivares } from "@/lib/pagos"
-import { fetchSettings } from "@/lib/settings"
+import {
+  ajustesPublicos,
+  buscarProductosPublicos,
+  categoriasVendidas,
+  tiendasActivas,
+} from "@/lib/datos-publicos"
 import { isSupabaseConfigured } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/server"
 import { normalizarTexto } from "@/lib/texto"
@@ -63,108 +68,51 @@ export default async function BuscarPage({
   let conProductos: Set<string> | undefined
 
   if (isSupabaseConfigured) {
-    const supabase = await createClient()
-
     /**
-     * Todo lo que no depende de nada, junto.
+     * Lo público, de caché; lo personal, con la sesión.
      *
-     * Antes iba en cadena: la tasa, después los habituales, después sus
-     * productos, después la muestra -- hasta cuatro viajes a Supabase uno
-     * detrás de otro en la segunda pestaña de la barra. Ahora la tasa, los
-     * abastos, los marcados y la lista salen a la vez, y solo los productos de
-     * los marcados esperan, porque necesitan saber cuáles son.
-     */
-    const locales = supabase
-      .from("stores")
-      .select("id, name")
-      .eq("active", true)
-      .returns<{ id: string; name: string }[]>()
-
-    /**
-     * El texto se busca en `nombre_busqueda`, el nombre sin acentos que
-     * mantiene la base (0046): así "cafe" encuentra "Café". Si esa migración
-     * todavía no corrió, la columna no existe y PostgREST rechaza la consulta
-     * entera; entonces se vuelve a pedir contra `name`, como antes.
-     */
-    const pedirLista = (columna: "nombre_busqueda" | "name") => {
-      let consulta = supabase
-        .from("products")
-        .select("id, name, unit, price, image, store_id")
-        .eq("active", true)
-
-      if (hayFiltro) {
-        // El % a los dos lados: la gente escribe "pan" buscando "Harina PAN".
-        if (filtraTexto) {
-          const buscado = columna === "nombre_busqueda" ? normalizarTexto(termino) : termino
-          consulta = consulta.ilike(columna, `%${buscado}%`)
-        }
-        if (filtraCategoria) consulta = consulta.eq("category", categoria)
-        if (soloMayorista) consulta = consulta.eq("wholesale", true)
-      }
-
-      return consulta
-        .order("name")
-        .limit(hayFiltro ? 90 : 30)
-        .returns<Fila[]>()
-    }
-
-    const lista = (async () => {
-      if (!filtraTexto) return pedirLista("name")
-      const sinAcentos = await pedirLista("nombre_busqueda")
-      return sinAcentos.error ? pedirLista("name") : sinAcentos
-    })()
-
-    /**
-     * Sin filtro, esta pantalla solo decía "elige una categoría". Ese es el
-     * lugar natural para lo que la persona compra siempre, y además para lo que
-     * hay: quien entra por primera vez es quien menos sabe qué escribir.
-     * Treinta alcanza para que se vea llena y no pesa en datos móviles.
+     * Abastos, tasa, categorías y la lista para cada filtro son iguales para
+     * todos: salen de lib/datos-publicos.ts, guardados un minuto. Solo "Lo que
+     * compras siempre" necesita saber quién mira, y solo sin filtro, que es
+     * cuando se muestra.
      */
     const marcados = hayFiltro
-      ? Promise.resolve({ data: [] as { product_id: string }[] })
-      : // RLS limita a los propios, así que no hace falta filtrar por usuario.
-        supabase
-          .from("product_favorites")
-          .select("product_id")
-          .order("created_at", { ascending: false })
-          .limit(30)
-          .returns<{ product_id: string }[]>()
+      ? Promise.resolve([] as string[])
+      : createClient().then(async (supabase) => {
+          // RLS limita a los propios, así que no hace falta filtrar por usuario.
+          const { data } = await supabase
+            .from("product_favorites")
+            .select("product_id")
+            .order("created_at", { ascending: false })
+            .limit(30)
+            .returns<{ product_id: string }[]>()
+          return { supabase, ids: (data ?? []).map((f) => f.product_id) }
+        })
 
-    const [
-      settings,
-      { data: abastos },
-      { data: productos },
-      { data: favoritos },
-      { data: categoriasVendidas },
-    ] = await Promise.all([
-      fetchSettings(supabase),
-      locales,
-      lista,
+    const [settings, abastos, productos, vendidas, favoritos] = await Promise.all([
+      ajustesPublicos(),
+      tiendasActivas(),
+      buscarProductosPublicos(
+        filtraTexto ? normalizarTexto(termino) : "",
+        filtraTexto ? termino : "",
+        categoria,
+        soloMayorista,
+      ),
+      categoriasVendidas(),
       marcados,
-      // Solo dos columnas cortas por producto: alcanza para saber qué
-      // categorías tienen algo sin traer el catálogo entero.
-      supabase
-        .from("products")
-        .select("category, store_id")
-        .eq("active", true)
-        .limit(5000)
-        .returns<{ category: string; store_id: string }[]>(),
     ])
 
     tasaVes = settings?.rate_ves ?? null
-    tiendas = new Map((abastos ?? []).map((t) => [t.id, t.name]))
-    conProductos = new Set(
-      (categoriasVendidas ?? []).filter((p) => tiendas.has(p.store_id)).map((p) => p.category),
-    )
+    tiendas = new Map(abastos.map((t) => [t.id, t.name]))
+    conProductos = new Set(vendidas.filter((p) => tiendas.has(p.store_id)).map((p) => p.category))
     // Un producto de un abasto apagado no debe aparecer.
-    resultados = (productos ?? []).filter((p) => tiendas.has(p.store_id))
+    resultados = productos.filter((p) => tiendas.has(p.store_id))
 
-    const ids = (favoritos ?? []).map((f) => f.product_id)
-    if (ids.length > 0) {
-      const { data: suyos } = await supabase
+    if (!Array.isArray(favoritos) && favoritos.ids.length > 0) {
+      const { data: suyos } = await favoritos.supabase
         .from("products")
         .select("id, name, unit, price, image, store_id")
-        .in("id", ids)
+        .in("id", favoritos.ids)
         .eq("active", true)
         .returns<Fila[]>()
       habituales = (suyos ?? []).filter((p) => tiendas.has(p.store_id))
