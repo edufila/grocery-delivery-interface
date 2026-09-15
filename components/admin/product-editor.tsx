@@ -7,6 +7,7 @@ import { Check, Loader2 } from "lucide-react"
 import { ImagePicker } from "@/components/admin/image-picker"
 import type { AdminProduct } from "@/lib/admin"
 import { createClient } from "@/lib/supabase/client"
+import { leerMonto } from "@/lib/pagos"
 import { contieneTexto } from "@/lib/texto"
 
 /**
@@ -22,6 +23,13 @@ export function ProductEditor({ products }: { products: AdminProduct[] }) {
   /** De qué producto es el error: se muestra en su tarjeta, no arriba de todo. */
   const [errorId, setErrorId] = useState<string | null>(null)
   const [busca, setBusca] = useState("")
+  /**
+   * El precio como se escribe, aparte del número. Con type="number" no entraba
+   * la coma -- "1,85" es como se escribe aquí -- y el campo vacío se volvía 0.
+   */
+  const [precios, setPrecios] = useState<Record<string, string>>(() =>
+    Object.fromEntries(products.map((p) => [p.id, String(p.price)])),
+  )
 
   /**
    * Con muchos productos, cambiar un precio era bajar por la lista entera
@@ -72,7 +80,8 @@ export function ProductEditor({ products }: { products: AdminProduct[] }) {
      * (solo pide que no sea negativo). Si no hay, lo que corresponde es
      * marcarlo agotado.
      */
-    if (!(Number(product.price) > 0)) {
+    const precio = leerMonto(precios[product.id] ?? String(product.price))
+    if (precio == null || !(precio > 0)) {
       setErrorId(product.id)
       setError("Quedó sin precio. Escríbelo antes de guardar, o márcalo sin existencia.")
       return
@@ -85,7 +94,7 @@ export function ProductEditor({ products }: { products: AdminProduct[] }) {
     const { error: saveError } = await createClient()
       .from("products")
       .update({
-        price: product.price,
+        price: precio,
         active: product.active,
         in_stock: product.in_stock,
         image: product.image,
@@ -135,13 +144,13 @@ export function ProductEditor({ products }: { products: AdminProduct[] }) {
           <label className="flex items-center gap-1.5">
             <span className="text-sm text-gray-500">$</span>
             <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={product.price}
-              onChange={(event) =>
-                edit(product.id, { price: Number(event.target.value) || 0 })
-              }
+              inputMode="decimal"
+              value={precios[product.id] ?? ""}
+              onChange={(event) => {
+                const texto = event.target.value
+                setPrecios((prev) => ({ ...prev, [product.id]: texto }))
+                setSavedId(null)
+              }}
               aria-label={`Precio de ${product.name}`}
               className="h-11 w-24 rounded-xl border border-gray-200 bg-white px-2 text-base tabular-nums text-gray-900 outline-none focus:border-emerald-500"
             />
