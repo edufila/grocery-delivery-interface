@@ -133,6 +133,7 @@ const [
    */
   const hayQuePagar =
     !cancelled && order.status !== "entregado" && order.payment_required !== false
+  const esperaPago = hayQuePagar && order.payment_verified_at == null
 
   return (
     <main className="min-h-dvh bg-gray-50">
@@ -164,7 +165,7 @@ const [
       />
 
       <div className="mx-auto max-w-lg space-y-4 px-4 pb-10 pt-4">
-        <EstadoHero order={order} esperaPago={hayQuePagar && order.payment_verified_at == null} />
+        <EstadoHero order={order} esperaPago={esperaPago} />
 
         {/* Solo con el pedido cerrado, y justo debajo del estado: antes estaba al
             fondo de la página, debajo del detalle y los totales. Mientras está en
@@ -175,11 +176,27 @@ const [
           />
         )}
 
+        {/* Justo debajo del estado mientras no esté pagado: es lo único que la
+            persona puede hacer para que el pedido avance. Antes quedaba debajo
+            del aviso y de un mapa que, sin shopper todavía, solo mostraba su
+            propia casa. */}
+        {hayQuePagar && (
+          <PagarPedido
+            orderId={order.id}
+            total={order.final_total ?? order.total}
+            montoVes={order.amount_ves}
+            instrucciones={metodo?.instructions?.trim() ?? ""}
+            referencia={order.payment_reference}
+            verificado={order.payment_verified_at != null}
+          />
+        )}
+
         {/* Mientras hay algo por pasar: con el pedido cerrado no queda qué avisar. */}
         {!cancelled && order.status !== "entregado" && <AvisamePedido />}
 
-        {/* Entregado, el mapa ya no dice nada: se va y lo de arriba sube. */}
-        {!cancelled && order.status !== "entregado" && (
+        {/* Entregado, el mapa ya no dice nada; esperando pago, tampoco -- nadie
+            salió todavía y solo mostraría la casa del cliente. */}
+        {!cancelled && order.status !== "entregado" && !esperaPago && (
           <MapaSeguimiento
             orderId={order.id}
             destino={
@@ -194,18 +211,6 @@ const [
             }
             enVivo
             enCamino={order.status === "en_camino"}
-          />
-        )}
-
-        {/* Arriba de todo mientras no esté pagado: es lo que traba el pedido. */}
-        {hayQuePagar && (
-          <PagarPedido
-            orderId={order.id}
-            total={order.final_total ?? order.total}
-            montoVes={order.amount_ves}
-            instrucciones={metodo?.instructions?.trim() ?? ""}
-            referencia={order.payment_reference}
-            verificado={order.payment_verified_at != null}
           />
         )}
 
