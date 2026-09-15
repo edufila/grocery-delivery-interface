@@ -1,6 +1,5 @@
 // Generado por scripts/a-webp.mjs. No editar a mano: correr el script.
 export const FOTOS_CON_WEBP: ReadonlySet<string> = new Set([
-  "/images/map-route.png",
   "/images/store-cosecha.png",
   "/images/store-girasol.png",
   "/products/aceite.png",
