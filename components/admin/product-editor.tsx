@@ -23,6 +23,7 @@ export function ProductEditor({ products }: { products: AdminProduct[] }) {
   /** De qué producto es el error: se muestra en su tarjeta, no arriba de todo. */
   const [errorId, setErrorId] = useState<string | null>(null)
   const [busca, setBusca] = useState("")
+  const [confirmarAlto, setConfirmarAlto] = useState<string | null>(null)
   /**
    * El precio como se escribe, aparte del número. Con type="number" no entraba
    * la coma -- "1,85" es como se escribe aquí -- y el campo vacío se volvía 0.
@@ -87,6 +88,21 @@ export function ProductEditor({ products }: { products: AdminProduct[] }) {
       return
     }
 
+    /**
+     * "2.500" se lee como dos mil quinientos: el punto con tres dígitos es de
+     * miles, que es lo correcto para un monto en bolívares. En un precio en
+     * dólares casi siempre es alguien que quiso poner 2,50. Se pregunta en vez
+     * de guardarlo: un bulto a $2.500 no lo pide nadie, y uno a $2,50 que quedó
+     * en $2.500 espanta a todo el que lo ve.
+     */
+    if (precio > 500 && confirmarAlto !== product.id) {
+      setConfirmarAlto(product.id)
+      setErrorId(product.id)
+      setError(`¿De verdad $${precio.toFixed(2)}? Si era menos, usa coma para los céntimos (2,50). Toca Guardar otra vez para confirmar.`)
+      return
+    }
+    setConfirmarAlto(null)
+
     setBusyId(product.id)
     setError("")
     setErrorId(null)
@@ -150,6 +166,7 @@ export function ProductEditor({ products }: { products: AdminProduct[] }) {
                 const texto = event.target.value
                 setPrecios((prev) => ({ ...prev, [product.id]: texto }))
                 setSavedId(null)
+                setConfirmarAlto(null)
               }}
               aria-label={`Precio de ${product.name}`}
               className="h-11 w-24 rounded-xl border border-gray-200 bg-white px-2 text-base tabular-nums text-gray-900 outline-none focus:border-emerald-500"
