@@ -12,6 +12,7 @@ import { createClient } from "@/lib/supabase/client"
 export function SettingsEditor({ settings }: { settings: Settings }) {
   const router = useRouter()
   const [serviceFee, setServiceFee] = useState(settings.service_fee)
+  const [servicioTexto, setServicioTexto] = useState(String(settings.service_fee))
   // Como texto y no como número: así se puede escribir "832,49", que es como
   // se lee la tasa aquí. Con type="number" la coma no entraba.
   const [tasaTexto, setTasaTexto] = useState(
@@ -87,12 +88,11 @@ export function SettingsEditor({ settings }: { settings: Settings }) {
       <label className="block">
         <span className="block text-sm font-medium text-gray-700">Tarifa de servicio ($)</span>
         <input
-          type="number"
-          step="0.01"
-          min="0"
-          value={serviceFee}
+          inputMode="decimal"
+          value={servicioTexto}
           onChange={(event) => {
-            setServiceFee(Number(event.target.value) || 0)
+            setServicioTexto(event.target.value)
+            setServiceFee(leerMonto(event.target.value) ?? 0)
             setSaved(false)
           }}
           className="mt-1 h-12 w-full rounded-xl border border-gray-200 bg-white px-3 text-base tabular-nums text-gray-900 outline-none focus:border-emerald-500 sm:w-48"
